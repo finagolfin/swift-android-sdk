@@ -2,8 +2,9 @@
 
 To build with an SDK, first download
 [the latest Android NDK 21d](https://developer.android.com/ndk/downloads)
-and [Swift 5.3.1 compiler](https://swift.org/download/#releases). Unpack these
-archives and the SDK.
+and [Swift 5.3.1 compiler](https://swift.org/download/#releases) (make sure to
+install the Swift compiler's dependencies listed there). Unpack these archives
+and the SDK.
 
 The SDK will need to be modified with the path to your NDK and Swift compiler
 in the following ways (I'll show aarch64 below, the same will need to be done
@@ -52,12 +53,12 @@ environment.
 You can copy these executables and the SDK to an emulator or
 [a USB debugging-enabled device with adb](https://github.com/apple/swift/blob/release/5.3/docs/Android.md#4-deploying-the-build-products-to-the-device),
 or put them on an Android device with a terminal emulator app like
-[Termux](https://termux.com]. I only test with Termux, so I'll show how to run
+[Termux](https://termux.com). I only test with Termux so I'll show how to run
 the test binary there, but the process is similar with adb.
 
 The test runner and its example executables will need to have the right runtime
-path for the SDK, so run patchelf, which is available as a package on most linux
-distros or in Termux, to add the SDK to their rpath:
+path for the SDK, so run `patchelf`, which is available as a package on most
+linux distros or in Termux, to add the SDK to their rpath:
 ```
 patchelf --set-rpath \$ORIGIN/swift-android-aarch64-24-sdk/usr/lib/swift/android
 swift-argument-parserPackageTests.xctest math repeat roll
@@ -76,8 +77,8 @@ scp -r yourname@192.168.1.1:{swift-android-aarch64-24-sdk,swift-argument-parserP
 I tried a handful of Swift packages, including some mostly written in C or C++,
 and all the cross-compiled tests passed.
 
-You can even run armv7 tests on an aarch64 device in Termux, by running
-`unset LD_PRELOAD` before invoking the test runner. Revert with
-`export LD_PRELOAD=/data/data/com.termux/files/usr/lib/libtermux-exec.so`
+You can even run armv7 tests on an aarch64 device, though Termux requires
+running `unset LD_PRELOAD` before invoking an armv7 test runner on aarch64.
+Revert that with `export LD_PRELOAD=/data/data/com.termux/files/usr/lib/libtermux-exec.so`
 when you're done running armv7 tests and want to go back to the normal aarch64
 mode.
