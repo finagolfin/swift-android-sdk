@@ -1,0 +1,201 @@
+diff --git a/swift/CMakeLists.txt b/swift/CMakeLists.txt
+index d616fad4a6..1b7f1f231e 100644
+--- a/swift/CMakeLists.txt
++++ b/swift/CMakeLists.txt
+@@ -949,7 +949,7 @@ if (LLVM_ENABLE_DOXYGEN)
+   message(STATUS "Doxygen: enabled")
+ endif()
+ 
+-if(SWIFT_BUILD_SYNTAXPARSERLIB OR SWIFT_BUILD_SOURCEKIT)
++if(FALSE)#SWIFT_BUILD_SYNTAXPARSERLIB OR SWIFT_BUILD_SOURCEKIT)
+   if(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
+     if(CMAKE_C_COMPILER_ID STREQUAL Clang AND
+        CMAKE_C_COMPILER_VERSION VERSION_GREATER 3.8
+diff --git a/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake b/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
+index 2be3e20d06..2c9a32b26f 100644
+--- a/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
++++ b/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
+@@ -956,7 +956,7 @@ function(_add_swift_target_library_single target name)
+     if(NOT "${SWIFT_ANDROID_NATIVE_SYSROOT}" STREQUAL "")
+       set_target_properties("${target}"
+         PROPERTIES
+-        INSTALL_RPATH "$ORIGIN")
++        INSTALL_RPATH "$ORIGIN:$ORIGIN/../..")
+     endif()
+   endif()
+ 
+diff --git a/swift/stdlib/public/SwiftShims/CMakeLists.txt b/swift/stdlib/public/SwiftShims/CMakeLists.txt
+index 99c098a5ea..0095eea069 100644
+--- a/swift/stdlib/public/SwiftShims/CMakeLists.txt
++++ b/swift/stdlib/public/SwiftShims/CMakeLists.txt
+@@ -208,13 +208,13 @@ endif()
+ 
+ swift_install_symlink_component(clang-resource-dir-symlink
+   LINK_NAME clang
+-  TARGET ../clang/${CLANG_VERSION}
++  TARGET ${SWIFT_NATIVE_SWIFT_TOOLS_PATH}/../lib/clang/${CLANG_VERSION}
+   DESTINATION "lib/swift")
+ 
+ if(SWIFT_BUILD_STATIC_STDLIB)
+   swift_install_symlink_component(clang-resource-dir-symlink
+     LINK_NAME clang
+-    TARGET ../clang/${CLANG_VERSION}
++    TARGET ${SWIFT_NATIVE_SWIFT_TOOLS_PATH}/../lib/clang/${CLANG_VERSION}
+     DESTINATION "lib/swift_static")
+ endif()
+ 
+diff --git a/swift/utils/build-script-impl b/swift/utils/build-script-impl
+index a5fb6cb780..1f1db7513d 100755
+--- a/swift/utils/build-script-impl
++++ b/swift/utils/build-script-impl
+@@ -1012,7 +1012,7 @@ function false_true() {
+ CROSS_COMPILE_HOSTS=($CROSS_COMPILE_HOSTS)
+ for t in "${CROSS_COMPILE_HOSTS[@]}"; do
+     case ${t} in
+-        macosx-arm64* | iphone* | appletv* | watch* | linux-armv6 | linux-armv7 )
++        macosx-arm64* | iphone* | appletv* | watch* | linux-armv6 | linux-armv7 | android-* )
+             ;;
+         *)
+             echo "Unknown host to cross-compile for: ${t}"
+@@ -1047,7 +1047,7 @@ function get_host_install_destdir() {
+             # This assumes that all hosts are merged to the lipo.
+             local host_install_destdir="${INSTALL_DESTDIR}"
+         else
+-            local host_install_destdir="${INSTALL_DESTDIR}/${host}"
++            local host_install_destdir="${INSTALL_DESTDIR}"
+         fi
+     else
+         local host_install_destdir="${INSTALL_DESTDIR}"
+@@ -1344,6 +1344,40 @@ function swift_c_flags() {
+     fi
+ }
+ 
++function common_swift_flags() {
++    local host=$1
++    if [[ $(is_cross_tools_host ${host}) ]] ; then
++        echo -n "-target ${SWIFT_HOST_TRIPLE} -resource-dir $(build_directory ${host} swift)/lib/swift"
++        case $host in
++            android-*)
++                echo -n " -sdk ${ANDROID_NDK}/toolchains/llvm/prebuilt/${LOCAL_HOST}/sysroot"
++                echo -n " -tools-directory ${ANDROID_NDK}/toolchains/llvm/prebuilt/${LOCAL_HOST}/bin"
++                ;;
++            *)
++                echo "error: Swift cross-compilation flags for ${host} have not been set."
++                exit 1
++                ;;
++        esac
++    fi
++}
++
++function add_cross_cmake_options() {
++    local host=$1
++    local -n options=$2
++    case $host in
++        android-*)
++            local NDK_ARCH=$ANDROID_ARCH
++            test $NDK_ARCH == 'armv7' && NDK_ARCH='armv7-a'
++            options+=(
++                -DCMAKE_SYSTEM_NAME=Android
++                -DCMAKE_SYSTEM_VERSION=${ANDROID_API_LEVEL}
++                -DCMAKE_SYSTEM_PROCESSOR=${NDK_ARCH}
++                -DCMAKE_ANDROID_NDK:PATH=${ANDROID_NDK}
++            )
++            ;;
++    esac
++}
++
+ function cmake_config_opt() {
+     product=$1
+     if [[ "${CMAKE_GENERATOR}" == "Xcode" ]] ; then
+@@ -2283,6 +2317,7 @@ for host in "${ALL_HOSTS[@]}"; do
+                     cmake_options+=(
+                         -DCMAKE_FIND_ROOT_PATH:PATH="${CROSS_COMPILE_DEPS_PATH}"
+                         -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER
++                        -DCMAKE_HAVE_LIBC_PTHREAD=True
+                     )
+                 fi
+ 
+@@ -2323,6 +2358,9 @@ for host in "${ALL_HOSTS[@]}"; do
+                   )
+                   if [[ $(is_cross_tools_host ${host}) ]] ; then
+                       add_cross_cmake_options ${host} cmake_options
++                      cmake_options+=(
++                        -DBUILD_TESTING=OFF
++                      )
+                   fi
+                 ;;
+                 esac
+@@ -2449,7 +2487,7 @@ for host in "${ALL_HOSTS[@]}"; do
+         # some LLVM tools like TableGen. In the LLVM configure rules
+         # above, a small subset of LLVM build_targets are selected
+         # when SKIP_BUILD is set.
+-        if [[ $(not ${SKIP_BUILD}) || "${product}" == "llvm" ]]; then
++        if [[ $(not ${SKIP_BUILD}) && "${product}" != "llvm" ]]; then
+             if [[ "${CMAKE_GENERATOR}" == "Xcode" ]] ; then
+                 # Xcode generator uses "ALL_BUILD" instead of "all".
+                 # Also, xcodebuild uses -target instead of bare names.
+diff --git a/swift-corelibs-libdispatch/CMakeLists.txt b/swift-corelibs-libdispatch/CMakeLists.txt
+index 75c419c..36da011 100644
+--- a/swift-corelibs-libdispatch/CMakeLists.txt
++++ b/swift-corelibs-libdispatch/CMakeLists.txt
+@@ -113,7 +113,9 @@ if(__BUILTIN_TRAP)
+   set(HAVE_NORETURN_BUILTIN_TRAP 1)
+ endif()
+ 
+-find_package(LibRT)
++if(NOT CMAKE_SYSTEM_NAME STREQUAL Android)
++  find_package(LibRT)
++endif()
+ 
+ check_function_exists(_pthread_workqueue_init HAVE__PTHREAD_WORKQUEUE_INIT)
+ check_function_exists(getprogname HAVE_GETPROGNAME)
+diff --git a/swift-corelibs-libdispatch/src/swift/CMakeLists.txt b/swift-corelibs-libdispatch/src/swift/CMakeLists.txt
+index 5392472..ffc012d 100644
+--- a/swift-corelibs-libdispatch/src/swift/CMakeLists.txt
++++ b/swift-corelibs-libdispatch/src/swift/CMakeLists.txt
+@@ -61,5 +61,5 @@ if(NOT BUILD_SHARED_LIBS)
+     DESTINATION ${INSTALL_TARGET_DIR})
+ elseif(NOT CMAKE_SYSTEM_NAME MATCHES "Darwin|Windows")
+   target_link_options(swiftDispatch PRIVATE "SHELL:-no-toolchain-stdlib-rpath")
+-  set_target_properties(swiftDispatch PROPERTIES INSTALL_RPATH "$ORIGIN")
++  set_target_properties(swiftDispatch PROPERTIES INSTALL_RPATH "$ORIGIN:$ORIGIN/../..")
+ endif()
+diff --git a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt b/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
+index 5628fdae..6856a117 100644
+--- a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
++++ b/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
+@@ -147,7 +147,7 @@ target_link_libraries(Foundation
+   PUBLIC
+     swiftDispatch)
+ set_target_properties(Foundation PROPERTIES
+-  INSTALL_RPATH "$ORIGIN"
++  INSTALL_RPATH "$ORIGIN:$ORIGIN/../.."
+   BUILD_RPATH "$<TARGET_FILE_DIR:swiftDispatch>"
+   Swift_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/swift
+   INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_BINARY_DIR}/swift)
+diff --git a/swift-corelibs-foundation/Sources/FoundationNetworking/CMakeLists.txt b/swift-corelibs-foundation/Sources/FoundationNetworking/CMakeLists.txt
+index 2ea3924c..8e03d3ca 100644
+--- a/swift-corelibs-foundation/Sources/FoundationNetworking/CMakeLists.txt
++++ b/swift-corelibs-foundation/Sources/FoundationNetworking/CMakeLists.txt
+@@ -62,7 +62,7 @@ target_link_libraries(FoundationNetworking
+   PUBLIC
+     Foundation)
+ set_target_properties(FoundationNetworking PROPERTIES
+-  INSTALL_RPATH "$ORIGIN"
++  INSTALL_RPATH "$ORIGIN:$ORIGIN/../.."
+   Swift_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/swift
+   INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_BINARY_DIR}/swift)
+ 
+diff --git a/swift-corelibs-foundation/Sources/FoundationXML/CMakeLists.txt b/swift-corelibs-foundation/Sources/FoundationXML/CMakeLists.txt
+index a11e0272..a3551e4c 100644
+--- a/swift-corelibs-foundation/Sources/FoundationXML/CMakeLists.txt
++++ b/swift-corelibs-foundation/Sources/FoundationXML/CMakeLists.txt
+@@ -16,7 +16,7 @@ target_link_libraries(FoundationXML
+   PUBLIC
+     Foundation)
+ set_target_properties(FoundationXML PROPERTIES
+-  INSTALL_RPATH "$ORIGIN"
++  INSTALL_RPATH "$ORIGIN:$ORIGIN/../.."
+   Swift_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/swift
+   INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_BINARY_DIR}/swift)
+ 
