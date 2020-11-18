@@ -65,6 +65,9 @@ The test runner and its example executables will need to have the right runtime
 path for the SDK, so run `patchelf`, which is available as a package on most
 linux distros or in Termux, to add the SDK to their rpath:
 ```
+cp .build/aarch64-unknown-linux-android/debug/{swift-argument-parserPackageTests.xctest,math,repeat,roll} ..
+cd ../
+
 patchelf --set-rpath \$ORIGIN/swift-android-aarch64-24-sdk/usr/lib/swift/android
 swift-argument-parserPackageTests.xctest math repeat roll
 ```
@@ -75,8 +78,10 @@ uname -m # check if you're running on the right architecture, should say `aarch6
 cd       # move to the Termux app's home directory
 pkg install openssh
 
-scp -r yourname@192.168.1.1:{swift-android-aarch64-24-sdk,
+scp yourname@192.168.1.1:{swift-android-aarch64-24-sdk.tar.xz,
 swift-argument-parserPackageTests.xctest,math,repeat,roll} .
+
+tar xf swift-android-aarch64-24-sdk.tar.xz
 
 ./swift-argument-parserPackageTests.xctest
 ```
@@ -117,6 +122,7 @@ Termux rpath from all Termux shared libraries:
 rm swift-android-aarch64-24-sdk/usr/bin/*-config
 cd swift-android-aarch64-24-sdk/usr/lib
 patchelf --set-rpath \$ORIGIN libcurl.so libicu*so.67.1 libxml2.so
+cd ../../../
 ```
 The libcurl and libxml2 packages are [only needed for the FoundationNetworking
 and FoundationXML libraries respectively](https://github.com/apple/swift-corelibs-foundation/blob/release/5.3/Docs/ReleaseNotes_Swift5.md),
