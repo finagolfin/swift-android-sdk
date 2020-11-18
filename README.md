@@ -1,5 +1,7 @@
 # Swift cross-compilation SDKs for Android
 
+All patches used to build these SDKs are open source and listed below.
+
 To build with an SDK, first download
 [the latest Android NDK 21d](https://developer.android.com/ndk/downloads)
 and [Swift 5.3.1 compiler](https://swift.org/download/#releases) (make sure to
