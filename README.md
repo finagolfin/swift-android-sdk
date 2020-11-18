@@ -53,8 +53,8 @@ repo, I've had success moving this data with the test runner, after modifying
 the test source so it has the path to this test data in the Android test
 environment.
 
-You can copy these executables and the SDK to an emulator or
-[a USB debugging-enabled device with adb](https://github.com/apple/swift/blob/release/5.3/docs/Android.md#4-deploying-the-build-products-to-the-device),
+You can copy these executables and the SDK to an emulator or [a USB
+debugging-enabled device with adb](https://github.com/apple/swift/blob/release/5.3/docs/Android.md#4-deploying-the-build-products-to-the-device),
 or put them on an Android device with [a terminal emulator app like Termux](https://termux.com).
 I only test with Termux so I'll show how to run the test runner there, but the
 process is similar with adb.
@@ -73,7 +73,8 @@ uname -m # check if you're running on the right architecture, should say `aarch6
 cd       # move to the Termux app's home directory
 pkg install openssh
 
-scp -r yourname@192.168.1.1:{swift-android-aarch64-24-sdk,swift-argument-parserPackageTests.xctest,math,repeat,roll} .
+scp -r yourname@192.168.1.1:{swift-android-aarch64-24-sdk,
+swift-argument-parserPackageTests.xctest,math,repeat,roll} .
 
 ./swift-argument-parserPackageTests.xctest
 ```
@@ -97,12 +98,13 @@ These prebuilt SDKs were compiled against Android API 24, because the Swift
 stdlib and corelibs require some libraries like libicu, that I pulled from the
 prebuilt library packages used by the Termux app which are built against Android
 API 24. Specifically, I downloaded the libicu, libicu-static, libc++, libcurl,
-and libxml2 packages from the [Termux package repository](http://dl.bintray.com/termux/termux-packages-24/)
-(the package URLs are obfuscated with an extra colon before the filename, remove
-it and you should be able to download them).
+and libxml2 packages from the [Termux package
+repository](http://dl.bintray.com/termux/termux-packages-24/) (the package URLs
+are obfuscated with an extra colon before the filename, remove it and you should
+be able to download them).
 
 I unpacked each one with `ar x libicu_67.1_aarch64.deb; tar xf data.tar.xz` and
-moved the resulting files to the SDK directory:
+moved the resulting files to a newly-created SDK directory:
 ```
 mkdir swift-android-aarch64-24-sdk
 mv data/data/com.termux/files/usr swift-android-aarch64-24-sdk
@@ -117,7 +119,7 @@ patchelf --set-rpath \$ORIGIN libcurl.so libicu*so.67.1 libxml2.so
 The libcurl and libxml2 packages are [only needed for the FoundationNetworking
 and FoundationXML libraries respectively](https://github.com/apple/swift-corelibs-foundation/blob/release/5.3/Docs/ReleaseNotes_Swift5.md),
 so you don't have to deploy them on the Android device if you don't use those
-Foundation libraries.
+extra Foundation libraries.
 
 I simply include all four libraries since there's currently no way to disable
 building them in the CMake configuration, but they won't actually run on
@@ -126,24 +128,26 @@ that aren't included. If you want to use either of these separate Foundation
 libraries, you will have to track down those other library dependencies and
 include them.
 
-The libicu dependency can be
-[cross-compiled for Android from scratch using these instructions](https://github.com/apple/swift/blob/release/5.3/docs/Android.md#1-downloading-or-building-the-swift-android-stdlib-dependencies)
-instead and the libc++ package simply copies `libc++_shared.so` over from the
-NDK, so this SDK could be built without any prebuilt Termux packages, if you're
-willing to put in the time to cross-compile them yourself.
+The libicu dependency can be [cross-compiled for Android from scratch using
+these instructions](https://github.com/apple/swift/blob/release/5.3/docs/Android.md#1-downloading-or-building-the-swift-android-stdlib-dependencies)
+instead and the libc++ package simply copies the prebuilt `libc++_shared.so`
+over from the NDK, so this Swift SDK for Android could be built without using
+any prebuilt Termux packages, if you're willing to put in the effort to
+cross-compile them yourself.
 
 Next, I got [the 5.3.1 source](https://github.com/apple/swift/releases/tag/swift-5.3.1-RELEASE)
 tarballs for five Swift repos and renamed them to `llvm-project/`, `swift/`,
 `swift-corelibs-libdispatch`, `swift-corelibs-foundation`, and
 `swift-corelibs-xctest`, as required by the Swift `build-script`. After creating
-an empty directory `mkdir cmark`, I downloaded seven patches that have been
+an empty directory, `mkdir cmark`, I downloaded seven patches that have been
 backported to build the Termux package for Swift 5.3.1 (all Termux patches are
-available under the [same license as the Termux package, the Apache license used by Swift in this case](https://github.com/termux/termux-packages/blob/master/LICENSE.md#license-for-package-patches)):
+available under the [same license as the Termux package, the Apache license used
+by Swift in this case](https://github.com/termux/termux-packages/blob/master/LICENSE.md#license-for-package-patches)):
 
 - [Android ARMv7](https://github.com/termux/termux-packages/blob/master/packages/swift/swift-armv7.patch)
 - [XCTest rpath](https://github.com/termux/termux-packages/blob/master/packages/swift/swift-corelibs-xctest-CMakeLists.txt.patch)
 - [Native clang path](https://github.com/termux/termux-packages/blob/master/packages/swift/swift-native-tools.patch)
-- [Build stdlib with NDK clang](https://github.com/termux/termux-packages/blob/master/packages/swift/swift-runtime-flag.patch)
+- [Build the stdlib with NDK clang](https://github.com/termux/termux-packages/blob/master/packages/swift/swift-runtime-flag.patch)
 - [Build with prebuilt Swift toolchain](https://github.com/termux/termux-packages/blob/master/packages/swift/swift-utils-build-script-impl-build.patch)
 - [Pass cross-compilation Swift flags to the corelibs](https://github.com/termux/termux-packages/blob/master/packages/swift/swift-utils-build-script-impl-cross.patch)
 - [Android x86_64](https://github.com/termux/termux-packages/blob/master/packages/swift/swift-x86_64.patch)
@@ -179,12 +183,12 @@ PATH=/home/butta/.termux-build/_cache/cmake-3.18.4/bin:$PATH ./swift/utils/build
 --install-swift --install-libdispatch --install-foundation --install-xctest
 --install-destdir=/home/butta/swift/swift-android-aarch64-24-sdk -j9
 ```
-The first CMake directory is added to my path to have a more up-to-date CMake
+The first CMake directory is added to my `PATH` to have a more up-to-date CMake
 than the Ubuntu 20.04 package. The `--host-cc` and `--host-cxx` flags are not
-needed if you have a `clang` and `clang++` in your path already, but I don't and
-they're unused for this build anyway but required by `build-script`. Substitute
-armv7 or x86_64 for aarch64 into this command to build for those architectures
-instead.
+needed if you have a `clang` and `clang++` in your `PATH` already, but I don't
+and they're unused for this build anyway but required by `build-script`.
+Substitute armv7 or x86_64 for aarch64 into this command to build for those
+architectures instead.
 
 Finally, I had to modify the cross-compiled `libdispatch.so` to include
 `$ORIGIN` in its rpath:
