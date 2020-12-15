@@ -1,0 +1,10 @@
+name: SDKs
+on: [push]
+jobs:
+  check-tools:
+    runs-on: ubuntu-latest
+    steps:
+      - run: swift --version
+      - run: ls /usr/local/lib/android/ndk
+      - run: find /usr/local/lib/android/ndk/toolchains
+      - run: cat /usr/local/lib/android/ndk/source.properties
