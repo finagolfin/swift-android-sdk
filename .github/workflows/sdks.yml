@@ -5,6 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: swift --version
-      - run: find /usr/bin /usr/local/ -name clang
-      - run: find /usr/local/lib/android/sdk/ndk/toolchains
-      - run: cat /usr/local/lib/android/sdk/ndk/source.properties
+      - run: ls /usr/local/lib/android/sdk/ndk-bundle
+      - run: cat /usr/local/lib/android/sdk/ndk-bundle/source.properties
+      - run: df -h
+      - run: du -sk /usr/*
