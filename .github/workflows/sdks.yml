@@ -10,7 +10,7 @@ jobs:
           tar xf swift-android-aarch64-24-sdk.tar.xz
           ln -sf /usr/share/swift/usr/lib/swift/clang swift-android-aarch64-24-sdk/usr/lib/swift/clang
           sed -i 's%/home/butta/swift/swift-5.3.1-RELEASE-ubuntu20.04/usr/bin%/usr/local/bin%' android-aarch64.json
-          sed -i 's%/home/butta/swift/swift-android%`pwd`/swift-android%' android-aarch64.json
+          sed -i 's%/home/butta/swift/swift-android%$(pwd)/swift-android%' android-aarch64.json
           sed -i 's%/home/butta/swift/android-ndk-r21d%/usr/local/lib/android/sdk/ndk-bundle%g' android-aarch64.json
           sed -i 's%/home/butta/swift/android-ndk-r21d%/usr/local/lib/android/sdk/ndk-bundle%g' swift-android-aarch64-24-sdk/usr/lib/swift/android/aarch64/glibc.modulemap
           cat android-aarch64.json
