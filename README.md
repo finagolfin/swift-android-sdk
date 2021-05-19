@@ -17,7 +17,8 @@ for the armv7 or x86_64 SDKs):
 
 1. Change all paths in `swift-android-aarch64-24-sdk/usr/lib/swift/android/aarch64/glibc.modulemap`
 from `/home/butta/swift/android-ndk-r21d` to the path to your NDK, ie something
-like `/home/yourname/android-ndk-r21d`.
+like `/home/yourname/android-ndk-r21d` (for Swift 5.4, change the one line from
+`/home/butta/swift-5.4-android-aarch64-24-sdk` to the path to the Android SDK).
 
 2. Change the symbolic link at `swift-android-aarch64-24-sdk/usr/lib/swift/clang`
 to point to the clang headers next to your swift compiler, eg
