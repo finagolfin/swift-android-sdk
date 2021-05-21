@@ -1,0 +1,122 @@
+diff --git a/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake b/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
+index 38191b01a64..1f851d3409c 100644
+--- a/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
++++ b/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
+@@ -397,6 +397,9 @@ function(_add_target_variant_link_flags)
+     list(APPEND result "-Wl,-Bsymbolic")
+   elseif("${LFLAGS_SDK}" STREQUAL "ANDROID")
+     list(APPEND link_libraries "dl" "log")
++    if(LFLAGS_ARCH STREQUAL "armv7")
++      list(APPEND link_libraries "atomic")
++    endif()
+     # We need to add the math library, which is linked implicitly by libc++
+     list(APPEND result "-lm")
+ 
+diff --git a/swift/stdlib/public/Platform/CMakeLists.txt b/swift/stdlib/public/Platform/CMakeLists.txt
+index c7e7bac1092..710c5658972 100644
+--- a/swift/stdlib/public/Platform/CMakeLists.txt
++++ b/swift/stdlib/public/Platform/CMakeLists.txt
+@@ -99,6 +99,7 @@ foreach(sdk ${SWIFT_SDKS})
+         OUTPUT "${glibc_modulemap_out}"
+         FLAGS
+             "-DCMAKE_SDK=${sdk}"
++            "-DSDK_INCLUDE_PATH=/home/butta/swift-5.4-android-${arch}-24-sdk/usr/include"
+             "-DGLIBC_INCLUDE_PATH=${SWIFT_SDK_${sdk}_ARCH_${arch}_LIBC_INCLUDE_DIRECTORY}"
+             "-DGLIBC_ARCH_INCLUDE_PATH=${SWIFT_SDK_${sdk}_ARCH_${arch}_LIBC_ARCHITECTURE_INCLUDE_DIRECTORY}")
+ 
+diff --git a/swift/stdlib/public/Platform/bionic.modulemap.gyb b/swift/stdlib/public/Platform/bionic.modulemap.gyb
+index e44f9082653..9ed6719e17d 100644
+--- a/swift/stdlib/public/Platform/bionic.modulemap.gyb
++++ b/swift/stdlib/public/Platform/bionic.modulemap.gyb
+@@ -185,7 +185,7 @@ module SwiftGlibc [system] {
+       export *
+     }
+     module spawn {
+-      header "${GLIBC_INCLUDE_PATH}/spawn.h"
++      header "${SDK_INCLUDE_PATH}/spawn.h"
+       export *
+     }
+     module syslog {
+diff --git a/swift/stdlib/public/SwiftShims/CMakeLists.txt b/swift/stdlib/public/SwiftShims/CMakeLists.txt
+index 99c098a5ea..0095eea069 100644
+--- a/swift/stdlib/public/SwiftShims/CMakeLists.txt
++++ b/swift/stdlib/public/SwiftShims/CMakeLists.txt
+@@ -208,13 +208,13 @@ endif()
+ 
+ swift_install_symlink_component(clang-resource-dir-symlink
+   LINK_NAME clang
+-  TARGET ../clang/${CLANG_VERSION}
++  TARGET ${SWIFT_NATIVE_SWIFT_TOOLS_PATH}/../lib/clang/${CLANG_VERSION}
+   DESTINATION "lib/swift")
+ 
+ if(SWIFT_BUILD_STATIC_STDLIB)
+   swift_install_symlink_component(clang-resource-dir-symlink
+     LINK_NAME clang
+-    TARGET ../clang/${CLANG_VERSION}
++    TARGET ${SWIFT_NATIVE_SWIFT_TOOLS_PATH}/../lib/clang/${CLANG_VERSION}
+     DESTINATION "lib/swift_static")
+ endif()
+ 
+diff --git a/swift/utils/build-script-impl b/swift/utils/build-script-impl
+index a5fb6cb780..1f1db7513d 100755
+--- a/swift/utils/build-script-impl
++++ b/swift/utils/build-script-impl
+@@ -1047,7 +1047,7 @@ function get_host_install_destdir() {
+             # This assumes that all hosts are merged to the lipo.
+             local host_install_destdir="${INSTALL_DESTDIR}"
+         else
+-            local host_install_destdir="${INSTALL_DESTDIR}/${host}"
++            local host_install_destdir="${INSTALL_DESTDIR}"
+         fi
+     else
+         local host_install_destdir="${INSTALL_DESTDIR}"
+@@ -2449,7 +2487,7 @@ for host in "${ALL_HOSTS[@]}"; do
+         # some LLVM tools like TableGen. In the LLVM configure rules
+         # above, a small subset of LLVM build_targets are selected
+         # when SKIP_BUILD is set.
+-        if [[ $(not ${SKIP_BUILD}) || "${product}" == "llvm" ]]; then
++        if [[ $(not ${SKIP_BUILD}) && "${product}" != "llvm" ]]; then
+             if [[ "${CMAKE_GENERATOR}" == "Xcode" ]] ; then
+                 # Xcode generator uses "ALL_BUILD" instead of "all".
+                 # Also, xcodebuild uses -target instead of bare names.
+diff --git a/swift/utils/swift_build_support/swift_build_support/targets.py b/swift/utils/swift_build_support/swift_build_support/targets.py
+index 69d71e4e630..e222a510d58 100644
+--- a/swift/utils/swift_build_support/swift_build_support/targets.py
++++ b/swift/utils/swift_build_support/swift_build_support/targets.py
+@@ -152,16 +152,21 @@ class Target(object):
+     def name(self):
+         return "{}-{}".format(self.platform.name, self.arch)
+ 
+-    def swift_flags(self, args):
++    def swift_flags(self, args, resource_dir_root=""):
+         flags = ''
+         if self.platform.name == 'android':
++            android_toolchain_path = '%s/toolchains/llvm/prebuilt/%s' % (
++                args.android_ndk, StdlibDeploymentTarget.host_target().name)
++
+             flags = '-target %s-unknown-linux-android%s ' % (self.arch,
+                 args.android_api_level)
+-            flags += '-resource-dir %s/swift-%s/lib/swift ' % (
+-                args.build_root, self.name)
+-            flags += '-sdk %s/sysroot ' % (args.android_ndk)
+-            flags += '-tools-directory %s/bin' % (args.android_ndk)
+-            flags += ' -Xlinker -rpath -Xlinker @TERMUX_PREFIX@/lib'
++            if resource_dir_root:
++                flags += '-resource-dir %s/lib/swift ' % (resource_dir_root)
++            else:
++                flags += '-resource-dir %s/swift-%s/lib/swift ' % (
++                    args.build_root, self.name)
++            flags += '-sdk %s/sysroot ' % (android_toolchain_path)
++            flags += '-tools-directory %s/bin' % (android_toolchain_path)
+ 
+         return flags
+ 
+@@ -172,7 +177,7 @@ class Target(object):
+             options += '-DCMAKE_SYSTEM_VERSION=%s ' % (args.android_api_level)
+             options += '-DCMAKE_SYSTEM_PROCESSOR=%s ' % (args.android_arch if not
+                 args.android_arch == 'armv7' else 'armv7-a')
+-            options += '-DCMAKE_ANDROID_STANDALONE_TOOLCHAIN:PATH=%s' % (args.android_ndk)
++            options += '-DCMAKE_ANDROID_NDK:PATH=%s' % (args.android_ndk)
+ 
+         return options
+ 

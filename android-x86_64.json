@@ -1,16 +1,16 @@
 {
     "version": 1,
     "target": "x86_64-unknown-linux-android",
-    "toolchain-bin-dir": "/home/butta/swift/swift-5.3.1-RELEASE-ubuntu20.04/usr/bin",
-    "sdk": "/home/butta/swift/android-ndk-r21d/toolchains/llvm/prebuilt/linux-x86_64/sysroot",
+    "toolchain-bin-dir": "/home/butta/swift-5.4-RELEASE-ubuntu20.04/usr/bin",
+    "sdk": "/home/butta/src/android-ndk-r21e/toolchains/llvm/prebuilt/linux-x86_64/sysroot",
     "extra-cc-flags": [
         "-fPIC"
     ],
     "extra-swiftc-flags": [
-        "-resource-dir", "/home/butta/swift/swift-android-x86_64-24-sdk/usr/lib/swift",
-        "-tools-directory", "/home/butta/swift/android-ndk-r21d/toolchains/llvm/prebuilt/linux-x86_64/bin",
+        "-resource-dir", "/home/butta/swift-5.4-android-x86_64-24-sdk/usr/lib/swift",
+        "-tools-directory", "/home/butta/src/android-ndk-r21e/toolchains/llvm/prebuilt/linux-x86_64/bin",
         "-Xclang-linker", "--target=x86_64-linux-android24",
-        "-L/home/butta/swift/android-ndk-r21d/toolchains/llvm/prebuilt/linux-x86_64/lib/gcc/x86_64-linux-android/4.9.x",
+        "-L/home/butta/src/android-ndk-r21e/toolchains/llvm/prebuilt/linux-x86_64/lib/gcc/x86_64-linux-android/4.9.x",
     ],
     "extra-cpp-flags": [
         "-lstdc++"
