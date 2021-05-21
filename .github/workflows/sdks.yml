@@ -27,11 +27,11 @@ jobs:
         run: |
           cd main
           tar xf ~/swift-5.4-android-${{ matrix.arch }}-24-sdk.tar.xz
-          ln -sf /usr/share/swift/usr/lib/swift/clang swift-5.4-android-${{ matrix.arch }}-24-sdk/usr/lib/swift/clang
-          sed -i 's%/home/butta/swift-5.4-RELEASE-ubuntu20.04/usr/bin%/usr/local/bin%' android-${{ matrix.arch }}.json
+          ln -sf ${SWIFT_PATH}/../lib/swift/clang swift-5.4-android-${{ matrix.arch }}-24-sdk/usr/lib/swift/clang
+          sed -i "s%/home/butta/swift-5.4-RELEASE-ubuntu20.04/usr/bin%${SWIFT_PATH}%" android-${{ matrix.arch }}.json
           sed -i "s%/home/butta/swift-5.4-android%`pwd`/swift-5.4-android%" android-${{ matrix.arch }}.json
-          sed -i 's%/home/butta/src/android-ndk-r21e%/usr/local/lib/android/sdk/ndk-bundle%' android-${{ matrix.arch }}.json
-          sed -i 's%/home/butta/src/android-ndk-r21e%/usr/local/lib/android/sdk/ndk-bundle%' swift-5.4-android-${{ matrix.arch }}-24-sdk/usr/lib/swift/android/${{ matrix.arch }}/glibc.modulemap
+          sed -i "s%/home/butta/src/android-ndk-r21e%${ANDROID_NDK_HOME}%" android-${{ matrix.arch }}.json
+          sed -i "s%/home/butta/src/android-ndk-r21e%${ANDROID_NDK_HOME}%" swift-5.4-android-${{ matrix.arch }}-24-sdk/usr/lib/swift/android/${{ matrix.arch }}/glibc.modulemap
           sed -i "s%/home/butta/swift-5.4-android%`pwd`/swift-5.4-android%" swift-5.4-android-${{ matrix.arch }}-24-sdk/usr/lib/swift/android/${{ matrix.arch }}/glibc.modulemap
           cat android-${{ matrix.arch }}.json
       - name: Get Swift package
@@ -59,7 +59,7 @@ jobs:
         with:
           repository: apple/swift-nio
           path: snio
-      - name: Build Swift crypto package
+      - name: Build Swift NIO package
         run: |
           cd snio
           swift build --build-tests --enable-test-discovery --destination ../main/android-${{ matrix.arch }}.json
