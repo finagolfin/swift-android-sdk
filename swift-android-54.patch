@@ -20,7 +20,7 @@ index c7e7bac1092..710c5658972 100644
          OUTPUT "${glibc_modulemap_out}"
          FLAGS
              "-DCMAKE_SDK=${sdk}"
-+            "-DSDK_INCLUDE_PATH=/home/butta/swift-5.4-android-${arch}-24-sdk/usr/include"
++            "-DSDK_INCLUDE_PATH=/home/butta/swift-${SWIFT_VERSION}-android-${arch}-${SWIFT_ANDROID_API_LEVEL}-sdk/usr/include"
              "-DGLIBC_INCLUDE_PATH=${SWIFT_SDK_${sdk}_ARCH_${arch}_LIBC_INCLUDE_DIRECTORY}"
              "-DGLIBC_ARCH_INCLUDE_PATH=${SWIFT_SDK_${sdk}_ARCH_${arch}_LIBC_ARCHITECTURE_INCLUDE_DIRECTORY}")
  

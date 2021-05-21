@@ -1,21 +1,66 @@
 name: SDKs
-on: [push]
+on:
+  pull_request:
+  schedule:
+    - cron: '0 9 * * *'
 jobs:
-  check-tools:
+  build-tests:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [aarch64, x86_64]
     steps:
-      - uses: actions/checkout@v2
-      - run: |
-          wget https://github.com/buttaface/swift-android-sdk/releases/download/5.4/swift-5.4-android-aarch64-24-sdk.tar.xz
-          tar xf swift-5.4-android-aarch64-24-sdk.tar.xz
-          ln -sf /usr/share/swift/usr/lib/swift/clang swift-5.4-android-aarch64-24-sdk/usr/lib/swift/clang
-          sed -i 's%/home/butta/swift-5.4-RELEASE-ubuntu20.04/usr/bin%/usr/local/bin%' android-aarch64.json
-          sed -i "s%/home/butta/swift-5.4-android%`pwd`/swift-5.4-android%" android-aarch64.json
-          sed -i 's%/home/butta/src/android-ndk-r21e%/usr/local/lib/android/sdk/ndk-bundle%' android-aarch64.json
-          sed -i 's%/home/butta/src/android-ndk-r21e%/usr/local/lib/android/sdk/ndk-bundle%' swift-5.4-android-aarch64-24-sdk/usr/lib/swift/android/aarch64/glibc.modulemap
-          sed -i "s%/home/butta/swift-5.4-android%`pwd`/swift-5.4-android%" swift-5.4-android-aarch64-24-sdk/usr/lib/swift/android/aarch64/glibc.modulemap
-          cat android-aarch64.json
-          git clone https://github.com/apple/swift-argument-parser.git
-          cd swift-argument-parser
-          swift build -j 2 --build-tests --enable-test-discovery --destination ../android-aarch64.json
+      - name: Clone
+        uses: actions/checkout@v2
+        with:
+          path: main
+      - name: Cache SDK
+        id: cache-sdk
+        uses: actions/cache@v2
+        with:
+          path: ~/swift-5.4-android-${{ matrix.arch }}-24-sdk.tar.xz
+          key: ${{ matrix.arch }}-sdk
+      - name: Get Android SDK if not cached
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        run: wget -O ~/swift-5.4-android-${{ matrix.arch }}-24-sdk.tar.xz https://github.com/buttaface/swift-android-sdk/releases/download/5.4/swift-5.4-android-${{ matrix.arch }}-24-sdk.tar.xz
+      - name: Patch SDK and SPM config
+        run: |
+          cd main
+          tar xf ~/swift-5.4-android-${{ matrix.arch }}-24-sdk.tar.xz
+          ln -sf /usr/share/swift/usr/lib/swift/clang swift-5.4-android-${{ matrix.arch }}-24-sdk/usr/lib/swift/clang
+          sed -i 's%/home/butta/swift-5.4-RELEASE-ubuntu20.04/usr/bin%/usr/local/bin%' android-${{ matrix.arch }}.json
+          sed -i "s%/home/butta/swift-5.4-android%`pwd`/swift-5.4-android%" android-${{ matrix.arch }}.json
+          sed -i 's%/home/butta/src/android-ndk-r21e%/usr/local/lib/android/sdk/ndk-bundle%' android-${{ matrix.arch }}.json
+          sed -i 's%/home/butta/src/android-ndk-r21e%/usr/local/lib/android/sdk/ndk-bundle%' swift-5.4-android-${{ matrix.arch }}-24-sdk/usr/lib/swift/android/${{ matrix.arch }}/glibc.modulemap
+          sed -i "s%/home/butta/swift-5.4-android%`pwd`/swift-5.4-android%" swift-5.4-android-${{ matrix.arch }}-24-sdk/usr/lib/swift/android/${{ matrix.arch }}/glibc.modulemap
+          cat android-${{ matrix.arch }}.json
+      - name: Get Swift package
+        uses: actions/checkout@v2
+        with:
+          repository: apple/swift-argument-parser
+          path: sap
+      - name: Build Swift package
+        run: |
+          cd sap
+          swift build --build-tests --enable-test-discovery --destination ../main/android-${{ matrix.arch }}.json
+          find .build -name "*.xctest"
+      - name: Get Swift crypto package
+        uses: actions/checkout@v2
+        with:
+          repository: apple/swift-crypto
+          path: sc
+      - name: Build Swift crypto package
+        run: |
+          cd sc
+          swift build --build-tests --enable-test-discovery --destination ../main/android-${{ matrix.arch }}.json
+          find .build -name "*.xctest"
+      - name: Get Swift NIO package
+        uses: actions/checkout@v2
+        with:
+          repository: apple/swift-nio
+          path: snio
+      - name: Build Swift crypto package
+        run: |
+          cd snio
+          swift build --build-tests --enable-test-discovery --destination ../main/android-${{ matrix.arch }}.json
           find .build -name "*.xctest"
