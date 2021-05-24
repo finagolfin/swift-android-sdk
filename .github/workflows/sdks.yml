@@ -61,13 +61,33 @@ jobs:
         run: |
           cd snio
           swift build --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift Numerics package
+        uses: actions/checkout@v2
+        with:
+          repository: apple/swift-numerics
+          path: sn
+      - name: Build Swift Numerics package
+        run: |
+          cd sn
+          swift build --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android -Xlinker -lm
+      - name: Get Swift System package
+        uses: actions/checkout@v2
+        with:
+          repository: apple/swift-system
+          path: ss
+      - name: Build Swift System package
+        run: |
+          cd ss
+          git apply ../sdk-config/package-patches/swift-system-test.patch
+          swift build --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Put tests in one directory to push to Android x86_64 emulator
         if: ${{ matrix.arch == 'x86_64' }}
         run: |
           mkdir -p pack/lib/swift/android
           cp sap/.build/x86_64-unknown-linux-android/debug/{math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
           cp sc/.build/x86_64-unknown-linux-android/debug/swift-cryptoPackageTests.xctest pack
-          cp snio/.build/x86_64-unknown-linux-android/debug/swift-nioPackageTests.xctest pack
+          cp sn/.build/x86_64-unknown-linux-android/debug/swift-numericsPackageTests.xctest pack
+          cp ss/.build/x86_64-unknown-linux-android/debug/swift-systemPackageTests.xctest pack
           mkdir pack/crypto-vectors
           cp sc/Tests/Test\ Vectors/* sc/Tests/_CryptoExtrasVectors/* pack/crypto-vectors
           cp sdk-config/swift-5.4-android-x86_64-24-sdk/usr/lib/lib*so pack/lib
@@ -82,3 +102,5 @@ jobs:
             adb push pack /data/local/tmp
             adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-cryptoPackageTests.xctest
+            adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest
+            adb shell /data/local/tmp/pack/swift-systemPackageTests.xctest

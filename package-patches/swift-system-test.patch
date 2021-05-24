@@ -1,0 +1,13 @@
+diff --git a/Tests/SystemTests/FileOperationsTest.swift b/Tests/SystemTests/FileOperationsTest.swift
+index f39a052..6ca4a64 100644
+--- a/Tests/SystemTests/FileOperationsTest.swift
++++ b/Tests/SystemTests/FileOperationsTest.swift
+@@ -94,7 +94,7 @@ final class FileOperationsTest: XCTestCase {
+     // Ad-hoc test touching a file system.
+     do {
+       // TODO: Test this against a virtual in-memory file system
+-      let fd = try FileDescriptor.open("/tmp/b.txt", .readWrite, options: [.create, .truncate], permissions: .ownerReadWrite)
++      let fd = try FileDescriptor.open("/data/local/tmp/b.txt", .readWrite, options: [.create, .truncate], permissions: .ownerReadWrite)
+       try fd.closeAfter {
+         try fd.writeAll("abc".utf8)
+         var def = "def"
