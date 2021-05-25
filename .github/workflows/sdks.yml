@@ -2,7 +2,7 @@ name: SDKs
 on:
   pull_request:
   schedule:
-    - cron: '0 9 * * *'
+    - cron: '0 13 * * *'
 jobs:
   build-tests:
     runs-on: ubuntu-latest
@@ -23,6 +23,13 @@ jobs:
       - name: Get Android SDK if not cached
         if: steps.cache-sdk.outputs.cache-hit != 'true'
         run: wget -O ~/swift-5.4-android-${{ matrix.arch }}-24-sdk.tar.xz https://github.com/buttaface/swift-android-sdk/releases/download/5.4/swift-5.4-android-${{ matrix.arch }}-24-sdk.tar.xz
+      - name: Cache Termux debug app for NIO tests
+        if: ${{ matrix.arch == 'x86_64' }}
+        id: cache-termux
+        uses: actions/cache@v2
+        with:
+          path: ~/app-debug.apk
+          key: termux-app
       - name: Patch SDK and SPM config
         run: |
           cd sdk-config
@@ -50,7 +57,6 @@ jobs:
       - name: Build Swift crypto package
         run: |
           cd sc
-          git apply ../sdk-config/package-patches/swift-crypto-armv7.patch
           git apply ../sdk-config/package-patches/swift-crypto-test-vectors.patch
           swift build --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO package
@@ -61,7 +67,8 @@ jobs:
       - name: Build Swift NIO package
         run: |
           cd snio
-          swift build --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          git apply ../sdk-config/package-patches/swift-nio-change-tmp-and-disable-tests.patch
+          swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Numerics package
         uses: actions/checkout@v2
         with:
@@ -87,6 +94,7 @@ jobs:
           mkdir -p pack/lib/swift/android
           cp sap/.build/x86_64-unknown-linux-android/debug/{math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
           cp sc/.build/x86_64-unknown-linux-android/debug/swift-cryptoPackageTests.xctest pack
+          cp snio/.build/x86_64-unknown-linux-android/debug/swift-nioPackageTests.xctest pack
           cp sn/.build/x86_64-unknown-linux-android/debug/swift-numericsPackageTests.xctest pack
           cp ss/.build/x86_64-unknown-linux-android/debug/swift-systemPackageTests.xctest pack
           mkdir pack/crypto-vectors
@@ -100,8 +108,12 @@ jobs:
           api-level: 24
           arch: x86_64
           script: |
+            adb install ~/app-debug.apk
             adb push pack /data/local/tmp
+
             adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-cryptoPackageTests.xctest
+            adb shell "run-as com.termux cp -r /data/local/tmp/pack /data/data/com.termux/"
+            adb shell "run-as com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest"
             adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-systemPackageTests.xctest
