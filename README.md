@@ -3,7 +3,7 @@
 All patches used to build these SDKs are open source and listed below.
 
 To build with an SDK, first download [the latest Android LTS NDK
-21e](https://developer.android.com/ndk/downloads) and [Swift 5.4
+21e](https://developer.android.com/ndk/downloads) and [Swift 5.4.1
 compiler](https://swift.org/download/#releases) (make sure to install the Swift
 compiler's dependencies listed there). Unpack these archives and the SDK.
 
@@ -27,7 +27,7 @@ path where you unpacked this SDK, such as `/home/yourname/swift-5.4-android-aarc
 to point to the clang headers next to your swift compiler, eg
 
 ```
-ln -sf /home/yourname/swift-5.4-RELEASE-ubuntu20.04/usr/lib/clang/10.0.0
+ln -sf /home/yourname/swift-5.4.1-RELEASE-ubuntu20.04/usr/lib/clang/10.0.0
 swift-5.4-android-aarch64-24-sdk/usr/lib/swift/clang
 ```
 Finally, modify the cross-compilation JSON file in this repo similarly:
@@ -35,8 +35,8 @@ Finally, modify the cross-compilation JSON file in this repo similarly:
 1. All paths to the NDK should change from `/home/butta/src/android-ndk-r21e`
 to the path to your NDK, `/home/yourname/android-ndk-r21e`.
 
-2. The path to the compiler should change from `/home/butta/swift-5.4-RELEASE-ubuntu20.04`
-to the path to your Swift compiler, `/home/yourname/swift-5.4-RELEASE-centos8`.
+2. The path to the compiler should change from `/home/butta/swift-5.4.1-RELEASE-ubuntu20.04`
+to the path to your Swift compiler, `/home/yourname/swift-5.4.1-RELEASE-centos8`.
 
 3. The path to the Android SDK should change from `/home/butta/swift-5.4-android-aarch64-24-sdk`
 to the path where you unpacked the Android SDK, `/home/yourname/swift-5.4-android-aarch64-24-sdk`.
@@ -47,7 +47,7 @@ I'll demonstrate with the swift-argument-parser package:
 ```
 git clone --depth 1 https://github.com/apple/swift-argument-parser.git
 cd swift-argument-parser/
-/home/yourname/swift-5.4-RELEASE-ubuntu20.04/usr/bin/swift build --build-tests
+/home/yourname/swift-5.4.1-RELEASE-ubuntu20.04/usr/bin/swift build --build-tests
 --enable-test-discovery --destination ~/swift-android-sdk/android-aarch64.json
 -Xlinker -rpath -Xlinker \$ORIGIN/swift-5.4-android-aarch64-24-sdk/usr/lib/swift/android
 ```

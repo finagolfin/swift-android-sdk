@@ -28,7 +28,7 @@ jobs:
           cd sdk-config
           tar xf ~/swift-5.4-android-${{ matrix.arch }}-24-sdk.tar.xz
           ln -sf ${SWIFT_PATH}/../lib/swift/clang swift-5.4-android-${{ matrix.arch }}-24-sdk/usr/lib/swift/clang
-          sed -i "s%/home/butta/swift-5.4-RELEASE-ubuntu20.04/usr/bin%${SWIFT_PATH}%" android-${{ matrix.arch }}.json
+          sed -i "s%/home/butta/swift-5.4.1-RELEASE-ubuntu20.04/usr/bin%${SWIFT_PATH}%" android-${{ matrix.arch }}.json
           sed -i "s%/home/butta/swift-5.4-android%`pwd`/swift-5.4-android%" android-${{ matrix.arch }}.json
           sed -i "s%/home/butta/src/android-ndk-r21e%${ANDROID_NDK_HOME}%" android-${{ matrix.arch }}.json
           sed -i "s%/home/butta/src/android-ndk-r21e%${ANDROID_NDK_HOME}%" swift-5.4-android-${{ matrix.arch }}-24-sdk/usr/lib/swift/android/${{ matrix.arch }}/glibc.modulemap

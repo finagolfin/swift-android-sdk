@@ -1,7 +1,7 @@
 {
     "version": 1,
     "target": "armv7-unknown-linux-androideabi",
-    "toolchain-bin-dir": "/home/butta/swift-5.4-RELEASE-ubuntu20.04/usr/bin",
+    "toolchain-bin-dir": "/home/butta/swift-5.4.1-RELEASE-ubuntu20.04/usr/bin",
     "sdk": "/home/butta/src/android-ndk-r21e/toolchains/llvm/prebuilt/linux-x86_64/sysroot",
     "extra-cc-flags": [
         "-fPIC"
