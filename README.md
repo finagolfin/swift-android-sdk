@@ -161,12 +161,12 @@ Next, I got [the 5.4 source](https://github.com/apple/swift/releases/tag/swift-5
 tarballs for five Swift repos and renamed them to `llvm-project/`, `swift/`,
 `swift-corelibs-libdispatch`, `swift-corelibs-foundation`, and
 `swift-corelibs-xctest`, as required by the Swift `build-script`. After creating
-an empty directory, `mkdir cmark`, I downloaded seven patches that have been
+an empty directory, `mkdir cmark`, I downloaded six patches that have been
 backported to build the Termux package for Swift 5.4 (all Termux patches are
 available under the [same license as the Termux package, the Apache license used
-by Swift in this case](https://github.com/termux/termux-packages/blob/master/LICENSE.md#license-for-package-patches)):
+by Swift in this case](https://github.com/termux/termux-packages/blob/master/LICENSE.md#license-for-package-patches))
+and applied each of them:
 
-- [Fix an issue with the ARMv7 stdlib](https://github.com/termux/termux-packages/blob/master/packages/swift/swift-fix-arm-stdlib.patch)
 - [Only build the stdlib for Android, not linux](https://github.com/termux/termux-packages/blob/master/packages/swift/swift-host.patch)
 - [Native clang path](https://github.com/termux/termux-packages/blob/master/packages/swift/swift-native-tools.patch)
 - [Pass cross-compilation Swift flags to the corelibs](https://github.com/termux/termux-packages/blob/master/packages/swift/swift-utils-build-script-impl-cross.patch)
@@ -174,13 +174,14 @@ by Swift in this case](https://github.com/termux/termux-packages/blob/master/LIC
 - [Libdispatch fixes for Android](https://github.com/termux/termux-packages/blob/master/packages/swift/swift-corelibs-libdispatch-arm.patch)
 - [XCTest rpath](https://github.com/termux/termux-packages/blob/master/packages/swift/swift-corelibs-xctest-CMakeLists.txt.patch)
 
-The seven patches should be applied in the above order.
-
 Four of the patches have been submitted upstream, with the Android stdlib,
 native clang, and libdispatch patches already merged in the main branch and the
-cross-compilation flags patch under review. The armv7 stdlib issue is fixed
-in the compiler upstream, and the tiny Foundation and XCTest patches are
-specific to Android.
+cross-compilation flags patch under review. The tiny Foundation and XCTest
+patches are specific to Android.
+
+For armv7, I also had to patch the compiler source with [this pull](https://github.com/apple/swift/pull/36658)
+and build it for the linux x86_64 host first, as opposed to using the official
+prebuilt Swift compiler to cross-compile for aarch64 and x86_64.
 
 Last, apply the `swift-android-54.patch` from this repo: these are all build
 configuration tweaks specific to building this Android SDK.
