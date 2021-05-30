@@ -50,6 +50,7 @@ jobs:
       - name: Build Swift crypto package
         run: |
           cd sc
+          git apply ../sdk-config/package-patches/swift-crypto-armv7.patch
           git apply ../sdk-config/package-patches/swift-crypto-test-vectors.patch
           swift build --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO package
