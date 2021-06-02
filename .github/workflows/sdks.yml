@@ -2,7 +2,7 @@ name: SDKs
 on:
   pull_request:
   schedule:
-    - cron: '0 15 * * *'
+    - cron: '0 9 * * *'
 jobs:
   build-tests:
     runs-on: ubuntu-latest
