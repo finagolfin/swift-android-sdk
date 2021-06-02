@@ -28,8 +28,11 @@ jobs:
         id: cache-termux
         uses: actions/cache@v2
         with:
-          path: ~/app-debug.apk
+          path: ~/termux-debug.apk
           key: termux-app
+      - name: Get Termux debug app if not cached
+        if: ${{ matrix.arch == 'x86_64' && steps.cache-termux.outputs.cache-hit != 'true'}}
+        run: wget -O ~/termux-debug.apk https://github.com/buttaface/swift-android-sdk/releases/download/5.4/termux-debug.apk
       - name: Patch SDK and SPM config
         run: |
           cd sdk-config
@@ -108,7 +111,7 @@ jobs:
           api-level: 24
           arch: x86_64
           script: |
-            adb install ~/app-debug.apk
+            adb install ~/termux-debug.apk
             adb push pack /data/local/tmp
 
             adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest
