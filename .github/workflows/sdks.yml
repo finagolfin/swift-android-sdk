@@ -90,6 +90,25 @@ jobs:
         run: |
           cd ss
           git apply ../sdk-config/package-patches/swift-system-test.patch
+          swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift Collections package
+        uses: actions/checkout@v2
+        with:
+          repository: apple/swift-collections
+          path: sco
+      - name: Build Swift Collections package
+        run: |
+          cd sco
+          swift build -j 1 --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift NIO SSH package
+        uses: actions/checkout@v2
+        with:
+          repository: apple/swift-nio-ssh
+          path: sns
+      - name: Build Swift NIO SSH package
+        run: |
+          cd sns
+          git apply ../sdk-config/package-patches/swift-nio-ssh-package-deps.patch
           swift build --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Put tests in one directory to push to Android x86_64 emulator
         if: ${{ matrix.arch == 'x86_64' }}
@@ -100,6 +119,8 @@ jobs:
           cp snio/.build/x86_64-unknown-linux-android/debug/swift-nioPackageTests.xctest pack
           cp sn/.build/x86_64-unknown-linux-android/debug/swift-numericsPackageTests.xctest pack
           cp ss/.build/x86_64-unknown-linux-android/debug/swift-systemPackageTests.xctest pack
+          cp sco/.build/x86_64-unknown-linux-android/debug/swift-collectionsPackageTests.xctest pack
+          cp sns/.build/x86_64-unknown-linux-android/debug/swift-nio-sshPackageTests.xctest pack
           mkdir pack/crypto-vectors
           cp sc/Tests/Test\ Vectors/* sc/Tests/_CryptoExtrasVectors/* pack/crypto-vectors
           cp sdk-config/swift-5.4-android-x86_64-24-sdk/usr/lib/lib*so pack/lib
@@ -120,3 +141,5 @@ jobs:
             adb shell "run-as com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest"
             adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-systemPackageTests.xctest
+            adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest
+            adb shell /data/local/tmp/pack/swift-nio-sshPackageTests.xctest
