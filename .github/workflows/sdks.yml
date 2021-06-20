@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [aarch64, x86_64, armv7]
+        arch: [aarch64]
     steps:
       - name: Clone
         uses: actions/checkout@v2
@@ -36,6 +36,20 @@ jobs:
       - name: Patch SDK and SPM config
         run: |
           cd sdk-config
+          swift --version
+          swiftc check.swift -Xfrontend -dump-clang-diagnostics -Xcc -v
+          ./check
+          swiftc check.swift -Xfrontend -dump-clang-diagnostics -Xcc -v -sdk / -resource-dir ${SWIFT_PATH}/../lib/swift
+          ./check
+
+          wget -q https://swift.org/builds/development/ubuntu2004/swift-DEVELOPMENT-SNAPSHOT-2021-07-15-a/swift-DEVELOPMENT-SNAPSHOT-2021-07-15-a-ubuntu20.04.tar.gz
+          tar xf swift-DEVELOPMENT-SNAPSHOT-2021-07-15-a-ubuntu20.04.tar.gz
+          
+          ./swift-DEVELOPMENT-SNAPSHOT-2021-07-15-a-ubuntu20.04/usr/bin/swiftc check.swift -Xfrontend -dump-clang-diagnostics -Xcc -v
+          ./check
+          ./swift-DEVELOPMENT-SNAPSHOT-2021-07-15-a-ubuntu20.04/usr/bin/swiftc check.swift -Xfrontend -dump-clang-diagnostics -Xcc -v -sdk / -resource-dir swift-DEVELOPMENT-SNAPSHOT-2021-07-15-a-ubuntu20.04/usr/lib/swift
+          ./check
+
           tar xf ~/swift-5.4-android-${{ matrix.arch }}-24-sdk.tar.xz
           ln -sf ${SWIFT_PATH}/../lib/swift/clang swift-5.4-android-${{ matrix.arch }}-24-sdk/usr/lib/swift/clang
           sed -i "s%/home/butta/swift-5.4.2-RELEASE-ubuntu20.04/usr/bin%${SWIFT_PATH}%" android-${{ matrix.arch }}.json
