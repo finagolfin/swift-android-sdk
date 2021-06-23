@@ -1,0 +1,13 @@
+diff --git a/Package.swift b/Package.swift
+index 8368ff8..4d39f83 100644
+--- a/Package.swift
++++ b/Package.swift
+@@ -35,7 +35,7 @@ let package = Package(
+ MANGLE_END */
+     ],
+     dependencies: [
+-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.19.0"),
++        .package(path: "../swift-nio")
+     ],
+     targets: [
+         .target(name: "CNIOBoringSSL"),
