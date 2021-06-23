@@ -1,0 +1,13 @@
+diff --git a/Tests/YamsTests/PerformanceTests.swift b/Tests/YamsTests/PerformanceTests.swift
+index 8e5a434..d4d6a5c 100644
+--- a/Tests/YamsTests/PerformanceTests.swift
++++ b/Tests/YamsTests/PerformanceTests.swift
+@@ -61,7 +61,7 @@ class PerformanceTests: XCTestCase {
+     ]
+ 
+     func loadYAML() throws -> String {
+-        let data = try Data(contentsOf: URL(fileURLWithPath: fixturesDirectory + "/SourceKitten#289/debug.yaml"))
++        let data = try Data(contentsOf: URL(fileURLWithPath: "/data/local/tmp/pack/debug.yaml"))
+         return String(data: data, encoding: .utf8)!
+     }
+ 

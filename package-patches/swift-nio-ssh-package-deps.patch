@@ -8,11 +8,11 @@ index b46487a..f77e1b2 100644
      dependencies: [
 -        .package(url: "https://github.com/apple/swift-nio.git", from: "2.27.0"),
 -        .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"),
-+        .package(path: "../snio"),
-+        .package(path: "../sc"),
++        .package(path: "../swift-nio"),
++        .package(path: "../swift-crypto"),
      ],
      targets: [
-         .target(name: "NIOSSH", dependencies: ["NIO", "NIOFoundationCompat", "Crypto"]),
+         .target(
 diff --git a/Sources/NIOSSHClient/InteractivePasswordPromptDelegate.swift b/Sources/NIOSSHClient/InteractivePasswordPromptDelegate.swift
 index f615cc1..c0b6143 100644
 --- a/Sources/NIOSSHClient/InteractivePasswordPromptDelegate.swift
