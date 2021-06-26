@@ -118,7 +118,7 @@ jobs:
       - name: Build Swift NIO SSL package
         run: |
           cd snl
-          git apply ../sdk-config/package-patches/swift-nio-ssl-package-deps.patch
+          #git apply ../sdk-config/package-patches/swift-nio-ssl-package-deps.patch
           #swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
         uses: actions/checkout@v2
