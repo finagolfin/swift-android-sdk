@@ -173,14 +173,13 @@ and applied each of them:
 - [Libdispatch fixes for Android](https://github.com/termux/termux-packages/blob/master/packages/swift/swift-corelibs-libdispatch-arm.patch)
 - [XCTest rpath](https://github.com/termux/termux-packages/blob/master/packages/swift/swift-corelibs-xctest-CMakeLists.txt.patch)
 
-Four of the patches have been submitted upstream, with the Android stdlib,
-native clang, and libdispatch patches already merged in the main branch and the
-cross-compilation flags patch under review. The tiny Foundation and XCTest
-patches are specific to Android.
+Four of the patches have been merged upstream, with only the tiny Foundation and
+XCTest patches that are specific to Android not upstreamed.
 
-For armv7, I also had to patch the compiler source with [this pull](https://github.com/apple/swift/pull/36658)
-and build it for the linux x86_64 host first, as opposed to using the official
-prebuilt Swift compiler to cross-compile for aarch64 and x86_64.
+For armv7 before Swift 5.4.2, I also had to patch the compiler source with
+[this pull](https://github.com/apple/swift/pull/36658) and build it for the
+linux x86_64 host first, as opposed to using the official prebuilt Swift
+compiler to cross-compile for Android aarch64 and x86_64.
 
 Last, apply the `swift-android-54.patch` from this repo: these are all build
 configuration tweaks specific to building this Android SDK.
