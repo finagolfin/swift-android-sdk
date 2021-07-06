@@ -181,7 +181,7 @@ For armv7 before Swift 5.4.2, I also had to patch the compiler source with
 linux x86_64 host first, as opposed to using the official prebuilt Swift
 compiler to cross-compile for Android aarch64 and x86_64.
 
-Last, apply the `swift-android-54.patch` from this repo: these are all build
+Last, apply the `swift-android-5.4.patch` from this repo: these are all build
 configuration tweaks specific to building this Android SDK.
 
 After making sure [needed build tools like python 3, CMake, and ninja](https://github.com/apple/swift/blob/release/5.4/docs/HowToGuides/GettingStarted.md#ubuntu-linux)
