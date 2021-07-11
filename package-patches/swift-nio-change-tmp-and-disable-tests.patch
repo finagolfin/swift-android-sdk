@@ -29,7 +29,7 @@ index f3e452dc..a2db1282 100644
 +//                ("testEcnSendReceiveIPV4VectorReadVectorWrite", testEcnSendReceiveIPV4VectorReadVectorWrite),
                  ("testEcnSendReceiveIPV6VectorReadVectorWrite", testEcnSendReceiveIPV6VectorReadVectorWrite),
                  ("testWritabilityChangeDuringReentrantFlushNow", testWritabilityChangeDuringReentrantFlushNow),
-            ]
+                 ("testSetGetPktInfoOption", testSetGetPktInfoOption),
 diff --git a/Tests/NIOTests/TestUtils.swift b/Tests/NIOTests/TestUtils.swift
 index d5c6b516..f9845029 100644
 --- a/Tests/NIOTests/TestUtils.swift
