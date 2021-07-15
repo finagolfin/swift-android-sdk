@@ -4,45 +4,127 @@ on:
   schedule:
     - cron: '0 9 * * *'
 jobs:
-  build-tests:
+  get-latest-toolchain:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [aarch64, x86_64, armv7]
+        version: [5.4, 5.5]
+    outputs:
+      release-version: ${{ steps.check.outputs.release-tag }}
+      devel-version: ${{ steps.check.outputs.devel-tag }}
     steps:
+      - name: Check for latest Swift ${{ matrix.version }} toolchain
+        id: check
+        run: |
+          if [ ${{ matrix.version }} = '5.4' ]; then
+            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://swift.org/download | grep -m1 swift-5.4 | cut -d- -f2)
+            SWIFT_TAG="swift-${LATEST_TOOLCHAIN_VERSION}-RELEASE"
+            echo "::set-output name=release-tag::$SWIFT_TAG"
+          else
+            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-5.5-DEV | cut -d- -f5-7)
+            SWIFT_TAG="swift-5.5-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
+            echo "::set-output name=devel-tag::$SWIFT_TAG"
+          fi
+          echo "::set-output name=latest-tag::$SWIFT_TAG"
+      - name: Get cached toolchain
+        id: cache-toolchain
+        uses: actions/cache@v2
+        with:
+          path: ~/${{ steps.check.outputs.latest-tag }}-ubuntu20.04.tar.gz
+          key: ${{ steps.check.outputs.latest-tag }}-toolchain
+      - name: Get latest toolchain if not cached
+        if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' }}
+        run: |
+          if [ ${{ matrix.version }} = '5.4' ]; then
+            SWIFT_BRANCH="$(echo ${{ steps.check.outputs.release-tag }} | cut -d- -f2)-release"
+            SWIFT_TAG="${{ steps.check.outputs.release-tag }}"
+          else
+            SWIFT_BRANCH="5.5-branch"
+            SWIFT_TAG="${{ steps.check.outputs.devel-tag }}"
+          fi
+          cd
+          wget -q https://swift.org/builds/swift-$SWIFT_BRANCH/ubuntu2004/$SWIFT_TAG/$SWIFT_TAG-ubuntu20.04.tar.gz
+          echo "got latest toolchain: ${SWIFT_TAG}"
+  build-sdk-and-tests:
+    runs-on: ubuntu-latest
+    needs: get-latest-toolchain
+    strategy:
+      fail-fast: false
+      matrix:
+        version: [5.4, 5.5]
+        arch: [aarch64, x86_64, armv7]
+    env:
+      ANDROID_API_LEVEL: 24
+    steps:
+      - name: Get cached release toolchain
+        if: ${{ matrix.version == '5.4' }}
+        id: cache-release-toolchain
+        uses: actions/cache@v2
+        with:
+          path: ~/${{ needs.get-latest-toolchain.outputs.release-version }}-ubuntu20.04.tar.gz
+          key: ${{ needs.get-latest-toolchain.outputs.release-version }}-toolchain
+      - name: Get cached devel toolchain
+        if: ${{ matrix.version == '5.5' }}
+        id: cache-devel-toolchain
+        uses: actions/cache@v2
+        with:
+          path: ~/${{ needs.get-latest-toolchain.outputs.devel-version }}-ubuntu20.04.tar.gz
+          key: ${{ needs.get-latest-toolchain.outputs.devel-version }}-toolchain
+      - name: Extract the latest version string
+        id: version
+        run: |
+          if [ ${{ matrix.version }} = '5.4' ]; then
+            echo "::set-output name=latest::$(echo ${{ needs.get-latest-toolchain.outputs.release-version }} | cut -d- -f2)"
+          else
+            echo "::set-output name=latest::$(echo ${{ needs.get-latest-toolchain.outputs.devel-version }} | cut -d- -f5-7)"
+          fi
+      - name: Get cached SDK if its the latest
+        id: cache-sdk
+        uses: actions/cache@v2
+        with:
+          path: ~/swift-${{ matrix.version }}*-android-${{ matrix.arch }}-*-sdk.tar.xz
+          key: ${{ steps.version.outputs.latest }}-${{ matrix.arch }}-sdk
       - name: Clone
         uses: actions/checkout@v2
         with:
           path: sdk-config
-      - name: Cache SDK
-        id: cache-sdk
-        uses: actions/cache@v2
-        with:
-          path: ~/swift-5.4-android-${{ matrix.arch }}-24-sdk.tar.xz
-          key: ${{ matrix.arch }}-sdk
-      - name: Get Android SDK if not cached
-        if: steps.cache-sdk.outputs.cache-hit != 'true'
-        run: wget -O ~/swift-5.4-android-${{ matrix.arch }}-24-sdk.tar.xz https://github.com/buttaface/swift-android-sdk/releases/download/5.4/swift-5.4-android-${{ matrix.arch }}-24-sdk.tar.xz
-      - name: Cache Termux debug app for NIO tests
-        if: ${{ matrix.arch == 'x86_64' }}
-        id: cache-termux
-        uses: actions/cache@v2
-        with:
-          path: ~/termux-debug.apk
-          key: termux-app
-      - name: Get Termux debug app if not cached
-        if: ${{ matrix.arch == 'x86_64' && steps.cache-termux.outputs.cache-hit != 'true'}}
-        run: wget -O ~/termux-debug.apk https://github.com/buttaface/swift-android-sdk/releases/download/5.4/termux-debug.apk
+      - name: Build Swift ${{ matrix.version }} Android SDK if not the latest
+        if: ${{ steps.cache-sdk.outputs.cache-hit != 'true' }}
+        run: |
+          if [ ${{ matrix.version }} = '5.4' ]; then
+            export SWIFT_TAG="${{ needs.get-latest-toolchain.outputs.release-version }}"
+          else
+            export SWIFT_TAG="${{ needs.get-latest-toolchain.outputs.devel-version }}"
+          fi
+
+          cd sdk-config
+          sudo apt install ninja-build
+          ANDROID_ARCH=${{ matrix.arch }} swift get-packages-and-swift-source.swift
+
+          SDK_NAME=$(ls | grep swift-${{ matrix.version }}.*-android-${{ matrix.arch }})
+          SDK=`pwd`/$SDK_NAME
+
+          tar xf ~/$SWIFT_TAG-ubuntu20.04.tar.gz
+
+          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_HOME --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --android-icu-uc $SDK/usr/lib/libicuuc.so --android-icu-uc-include $SDK/usr/include --android-icu-i18n $SDK/usr/lib/libicui18n.so --android-icu-i18n-include $SDK/usr/include --android-icu-data $SDK/usr/lib/libicudata.so --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay'
+
+          patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN $SDK/usr/lib/swift/android/lib*.so
+
+          tar cJf ~/$SDK_NAME.tar.xz $SDK_NAME
+          rm -rf $SDK_NAME
       - name: Patch SDK and SPM config
         run: |
           cd sdk-config
-          tar xf ~/swift-5.4-android-${{ matrix.arch }}-24-sdk.tar.xz
-          ln -sf ${SWIFT_PATH}/../lib/swift/clang swift-5.4-android-${{ matrix.arch }}-24-sdk/usr/lib/swift/clang
-          sed -i "s%/home/butta/swift-5.4.2-RELEASE-ubuntu20.04/usr/bin%${SWIFT_PATH}%" android-${{ matrix.arch }}.json
-          sed -i "s%/home/butta/swift-5.4-android%`pwd`/swift-5.4-android%" android-${{ matrix.arch }}.json
+
+          tar xf ~/swift-${{ matrix.version }}*-ubuntu20.04.tar.gz
+          TOOLCHAIN_NAME=$(ls | grep swift-${{ matrix.version }}.*-ubuntu20.04)
+          sed -i "s%/home/butta/swift-5.4.2-RELEASE-ubuntu20.04%`pwd`/${TOOLCHAIN_NAME}%" android-${{ matrix.arch }}.json
+
+          tar xf ~/swift-${{ matrix.version }}*-android-${{ matrix.arch }}*-${ANDROID_API_LEVEL}-sdk.tar.xz
+          SDK_NAME=$(ls | grep swift-${{ matrix.version }}.*-sdk)
+          sed -i "s%/home/butta/swift-5.4-android-${{ matrix.arch }}-${ANDROID_API_LEVEL}-sdk%`pwd`/${SDK_NAME}%" android-${{ matrix.arch }}.json
+
           sed -i "s%/home/butta/src/android-ndk-r21e%${ANDROID_NDK_HOME}%" android-${{ matrix.arch }}.json
-          sed -i "s%/home/butta/src/android-ndk-r21e%${ANDROID_NDK_HOME}%" swift-5.4-android-${{ matrix.arch }}-24-sdk/usr/lib/swift/android/${{ matrix.arch }}/glibc.modulemap
-          sed -i "s%/home/butta/swift-5.4-android%`pwd`/swift-5.4-android%" swift-5.4-android-${{ matrix.arch }}-24-sdk/usr/lib/swift/android/${{ matrix.arch }}/glibc.modulemap
       - name: Get Swift package
         uses: actions/checkout@v2
         with:
@@ -68,6 +150,7 @@ jobs:
           repository: apple/swift-nio
           path: swift-nio
       - name: Build Swift NIO package
+        if: ${{ matrix.version == '5.4' }}
         run: |
           cd swift-nio
           git apply ../sdk-config/package-patches/swift-nio-change-tmp-and-disable-tests.patch
@@ -139,13 +222,22 @@ jobs:
         run: |
           cd swift-tools-support-core
           #swift build --build-tests --enable-test-discovery -Xswiftc -Xcc -Xswiftc -U_GNU_SOURCE --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get cached Termux debug app for NIO tests
+        if: ${{ matrix.arch == 'x86_64' }}
+        id: cache-termux
+        uses: actions/cache@v2
+        with:
+          path: ~/termux-debug.apk
+          key: termux-app
       - name: Put tests in one directory to push to Android x86_64 emulator
         if: ${{ matrix.arch == 'x86_64' }}
         run: |
           mkdir -p pack/lib/swift/android
           cp swift-argument-parser/.build/x86_64-unknown-linux-android/debug/{math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
           cp swift-crypto/.build/x86_64-unknown-linux-android/debug/swift-cryptoPackageTests.xctest pack
-          cp swift-nio/.build/x86_64-unknown-linux-android/debug/swift-nioPackageTests.xctest pack
+          if [ ${{ matrix.version }} = '5.4' ]; then
+            cp swift-nio/.build/x86_64-unknown-linux-android/debug/swift-nioPackageTests.xctest pack
+          fi
           cp sn/.build/x86_64-unknown-linux-android/debug/swift-numericsPackageTests.xctest pack
           cp ss/.build/x86_64-unknown-linux-android/debug/swift-systemPackageTests.xctest pack
           cp sco/.build/x86_64-unknown-linux-android/debug/swift-collectionsPackageTests.xctest pack
@@ -156,8 +248,8 @@ jobs:
           mkdir pack/crypto-vectors
           cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/_CryptoExtrasVectors/* pack/crypto-vectors
           cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
-          cp sdk-config/swift-5.4-android-x86_64-24-sdk/usr/lib/lib*so pack/lib
-          cp sdk-config/swift-5.4-android-x86_64-24-sdk/usr/lib/swift/android/lib*so pack/lib/swift/android
+          cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/lib*so pack/lib
+          cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/swift/android/lib*so pack/lib/swift/android
           cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so pack/lib/swift/android
       - name: Run tests on Android x86_64 emulator
         if: ${{ matrix.arch == 'x86_64' }}
@@ -171,8 +263,8 @@ jobs:
 
             adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-cryptoPackageTests.xctest
-            adb shell "run-as com.termux cp -r /data/local/tmp/pack /data/data/com.termux/"
-            adb shell "run-as com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest"
+            if [ ${{ matrix.version }} = '5.4' ]; then adb shell "run-as com.termux cp -r /data/local/tmp/pack /data/data/com.termux/"; fi
+            if [ ${{ matrix.version }} = '5.4' ]; then adb shell "run-as com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest"; fi
             adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-systemPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest
