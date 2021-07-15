@@ -70,67 +70,43 @@ index a5fb6cb780..1f1db7513d 100755
          fi
      else
          local host_install_destdir="${INSTALL_DESTDIR}"
-@@ -2449,7 +2487,7 @@ for host in "${ALL_HOSTS[@]}"; do
-         # some LLVM tools like TableGen. In the LLVM configure rules
-         # above, a small subset of LLVM build_targets are selected
-         # when SKIP_BUILD is set.
--        if [[ $(not ${SKIP_BUILD}) || "${product}" == "llvm" ]]; then
-+        if [[ $(not ${SKIP_BUILD}) && "${product}" != "llvm" ]]; then
-             if [[ "${CMAKE_GENERATOR}" == "Xcode" ]] ; then
-                 # Xcode generator uses "ALL_BUILD" instead of "all".
-                 # Also, xcodebuild uses -target instead of bare names.
-diff --git a/swift/utils/swift_build_support/swift_build_support/targets.py b/swift/utils/swift_build_support/swift_build_support/targets.py
-index 69d71e4e630..e222a510d58 100644
---- a/swift/utils/swift_build_support/swift_build_support/targets.py
-+++ b/swift/utils/swift_build_support/swift_build_support/targets.py
-@@ -152,16 +152,21 @@ class Target(object):
-     def name(self):
-         return "{}-{}".format(self.platform.name, self.arch)
- 
--    def swift_flags(self, args):
-+    def swift_flags(self, args, resource_dir_root=""):
-         flags = ''
-         if self.platform.name == 'android':
-+            android_toolchain_path = '%s/toolchains/llvm/prebuilt/%s' % (
-+                args.android_ndk, StdlibDeploymentTarget.host_target().name)
-+
-             flags = '-target %s-unknown-linux-android%s ' % (self.arch,
-                 args.android_api_level)
--            flags += '-resource-dir %s/swift-%s/lib/swift ' % (
--                args.build_root, self.name)
--            flags += '-sdk %s/sysroot ' % (args.android_ndk)
--            flags += '-tools-directory %s/bin' % (args.android_ndk)
--            flags += ' -Xlinker -rpath -Xlinker @TERMUX_PREFIX@/lib'
-+            if resource_dir_root:
-+                flags += '-resource-dir %s/lib/swift ' % (resource_dir_root)
-+            else:
-+                flags += '-resource-dir %s/swift-%s/lib/swift ' % (
-+                    args.build_root, self.name)
-+            flags += '-sdk %s/sysroot ' % (android_toolchain_path)
-+            flags += '-tools-directory %s/bin' % (android_toolchain_path)
- 
-         return flags
- 
-@@ -172,7 +177,7 @@ class Target(object):
-             options += '-DCMAKE_SYSTEM_VERSION=%s ' % (args.android_api_level)
-             options += '-DCMAKE_SYSTEM_PROCESSOR=%s ' % (args.android_arch if not
-                 args.android_arch == 'armv7' else 'armv7-a')
--            options += '-DCMAKE_ANDROID_STANDALONE_TOOLCHAIN:PATH=%s' % (args.android_ndk)
-+            options += '-DCMAKE_ANDROID_NDK:PATH=%s' % (args.android_ndk)
- 
-         return options
- 
+@@ -1946,6 +1946,7 @@ for host in "${ALL_HOSTS[@]}"; do
+                     -DSWIFT_ENABLE_COMPATIBILITY_OVERRIDES:BOOL=$(true_false "${SWIFT_ENABLE_COMPATIBILITY_OVERRIDES}")
+                     -DSWIFT_STDLIB_SINGLE_THREADED_RUNTIME:BOOL=$(true_false "${SWIFT_STDLIB_SINGLE_THREADED_RUNTIME}")
+                     -DSWIFT_ENABLE_RUNTIME_FUNCTION_COUNTERS:BOOL=$(true_false "${SWIFT_ENABLE_RUNTIME_FUNCTION_COUNTERS}")
++                    -DSWIFT_ENABLE_EXPERIMENTAL_CONCURRENCY:BOOL=TRUE
+                     -DSWIFT_RUNTIME_MACHO_NO_DYLD:BOOL=$(true_false "${SWIFT_RUNTIME_MACHO_NO_DYLD}")
+                     -DSWIFT_STDLIB_OS_VERSIONING:BOOL=$(true_false "${SWIFT_STDLIB_OS_VERSIONING}")
+                     -DSWIFT_NATIVE_LLVM_TOOLS_PATH:STRING="${native_llvm_tools_path}"
 diff --git a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt b/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
-index 617e27e3..0e4c233b 100644
+index 016bf294..5c42986a 100644
 --- a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
 +++ b/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
-@@ -155,7 +155,8 @@ target_link_libraries(Foundation
-     android-spawn
-   PUBLIC
-     swiftDispatch)
--target_link_directories(Foundation PUBLIC ${CMAKE_FIND_ROOT_PATH}/usr/lib)
-+list(GET CMAKE_FIND_ROOT_PATH 0 SPAWN_DIR)
-+target_link_directories(Foundation PUBLIC ${SPAWN_DIR}/usr/lib)
- set_target_properties(Foundation PROPERTIES
-   INSTALL_RPATH "$ORIGIN"
-   BUILD_RPATH "$<TARGET_FILE_DIR:swiftDispatch>"
+@@ -166,7 +166,15 @@ if(CMAKE_SYSTEM_NAME STREQUAL Windows)
+   target_link_options(Foundation PRIVATE
+     $<TARGET_OBJECTS:CoreFoundationResources>)
+ elseif(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
++  if(NOT BUILD_SHARED_LIBS)
++    target_compile_options(Foundation PRIVATE "SHELL:-disallow-use-new-driver")
++  endif()
+   target_link_options(Foundation PRIVATE "SHELL:-no-toolchain-stdlib-rpath")
++  if(${CMAKE_SYSTEM_NAME} STREQUAL Android)
++    target_link_libraries(Foundation PRIVATE android-spawn)
++    list(GET CMAKE_FIND_ROOT_PATH 0 SPAWN_DIR)
++    target_link_directories(Foundation PUBLIC ${SPAWN_DIR}/usr/lib)
++  endif()
+ endif()
+ 
+ 
+diff --git a/swift-corelibs-xctest/CMakeLists.txt b/swift-corelibs-xctest/CMakeLists.txt
+index 531e7c0..589930f 100644
+--- a/swift-corelibs-xctest/CMakeLists.txt
++++ b/swift-corelibs-xctest/CMakeLists.txt
+@@ -58,6 +58,7 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
+     Foundation)
+   if(NOT CMAKE_SYSTEM_NAME STREQUAL Windows)
+     target_link_options(XCTest PRIVATE "SHELL:-no-toolchain-stdlib-rpath")
++    set_target_properties(XCTest PROPERTIES INSTALL_RPATH "$ORIGIN")
+   endif()
+ endif()
+ set_target_properties(XCTest PROPERTIES
