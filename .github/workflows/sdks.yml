@@ -118,8 +118,8 @@ jobs:
       - name: Build Swift NIO SSL package
         run: |
           cd snl
-          #git apply ../sdk-config/package-patches/swift-nio-ssl-package-deps.patch
-          #swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          git apply ../sdk-config/package-patches/swift-nio-ssl-package-deps.patch
+          swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
         uses: actions/checkout@v2
         with:
@@ -138,7 +138,8 @@ jobs:
       - name: Build Swift tools support core package
         run: |
           cd swift-tools-support-core
-          #swift build --build-tests --enable-test-discovery -Xswiftc -Xcc -Xswiftc -U_GNU_SOURCE -Xcc -D__ANDROID_API__=23 --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          git apply ../sdk-config/package-patches/swift-tools-support-core-FILE.patch
+          #swift build --build-tests --enable-test-discovery -Xswiftc -Xcc -Xswiftc -U_GNU_SOURCE --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Put tests in one directory to push to Android x86_64 emulator
         if: ${{ matrix.arch == 'x86_64' }}
         run: |
@@ -150,6 +151,7 @@ jobs:
           cp ss/.build/x86_64-unknown-linux-android/debug/swift-systemPackageTests.xctest pack
           cp sco/.build/x86_64-unknown-linux-android/debug/swift-collectionsPackageTests.xctest pack
           cp sns/.build/x86_64-unknown-linux-android/debug/swift-nio-sshPackageTests.xctest pack
+          cp snl/.build/x86_64-unknown-linux-android/debug/swift-nio-sslPackageTests.xctest pack
           cp yams/.build/x86_64-unknown-linux-android/debug/YamsPackageTests.xctest pack
           #cp swift-tools-support-core/.build/x86_64-unknown-linux-android/debug/swift-tools-support-corePackageTests.xctest pack
           mkdir pack/crypto-vectors
@@ -157,6 +159,7 @@ jobs:
           cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
           cp sdk-config/swift-5.4-android-x86_64-24-sdk/usr/lib/lib*so pack/lib
           cp sdk-config/swift-5.4-android-x86_64-24-sdk/usr/lib/swift/android/lib*so pack/lib/swift/android
+          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so pack/lib/swift/android
       - name: Run tests on Android x86_64 emulator
         if: ${{ matrix.arch == 'x86_64' }}
         uses: reactivecircus/android-emulator-runner@v2
@@ -175,5 +178,6 @@ jobs:
             adb shell /data/local/tmp/pack/swift-systemPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-nio-sshPackageTests.xctest
+            adb shell /data/local/tmp/pack/swift-nio-sslPackageTests.xctest
             adb shell /data/local/tmp/pack/YamsPackageTests.xctest
             #adb shell /data/local/tmp/pack/swift-tools-support-corePackageTests.xctest
