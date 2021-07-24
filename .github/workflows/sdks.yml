@@ -71,7 +71,7 @@ jobs:
         run: |
           cd swift-nio
           git apply ../sdk-config/package-patches/swift-nio-change-tmp-and-disable-tests.patch
-          swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          #swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Numerics package
         uses: actions/checkout@v2
         with:
@@ -109,7 +109,7 @@ jobs:
         run: |
           cd sns
           git apply ../sdk-config/package-patches/swift-nio-ssh-package-deps.patch
-          swift build --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          #swift build --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO SSL package
         uses: actions/checkout@v2
         with:
@@ -119,7 +119,7 @@ jobs:
         run: |
           cd snl
           git apply ../sdk-config/package-patches/swift-nio-ssl-package-deps.patch
-          swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          #swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
         uses: actions/checkout@v2
         with:
@@ -146,12 +146,12 @@ jobs:
           mkdir -p pack/lib/swift/android
           cp swift-argument-parser/.build/x86_64-unknown-linux-android/debug/{math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
           cp swift-crypto/.build/x86_64-unknown-linux-android/debug/swift-cryptoPackageTests.xctest pack
-          cp swift-nio/.build/x86_64-unknown-linux-android/debug/swift-nioPackageTests.xctest pack
+          #cp swift-nio/.build/x86_64-unknown-linux-android/debug/swift-nioPackageTests.xctest pack
           cp sn/.build/x86_64-unknown-linux-android/debug/swift-numericsPackageTests.xctest pack
           cp ss/.build/x86_64-unknown-linux-android/debug/swift-systemPackageTests.xctest pack
           cp sco/.build/x86_64-unknown-linux-android/debug/swift-collectionsPackageTests.xctest pack
-          cp sns/.build/x86_64-unknown-linux-android/debug/swift-nio-sshPackageTests.xctest pack
-          cp snl/.build/x86_64-unknown-linux-android/debug/swift-nio-sslPackageTests.xctest pack
+          #cp sns/.build/x86_64-unknown-linux-android/debug/swift-nio-sshPackageTests.xctest pack
+          #cp snl/.build/x86_64-unknown-linux-android/debug/swift-nio-sslPackageTests.xctest pack
           cp yams/.build/x86_64-unknown-linux-android/debug/YamsPackageTests.xctest pack
           #cp swift-tools-support-core/.build/x86_64-unknown-linux-android/debug/swift-tools-support-corePackageTests.xctest pack
           mkdir pack/crypto-vectors
@@ -172,12 +172,12 @@ jobs:
 
             adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-cryptoPackageTests.xctest
-            adb shell "run-as com.termux cp -r /data/local/tmp/pack /data/data/com.termux/"
-            adb shell "run-as com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest"
+            #adb shell "run-as com.termux cp -r /data/local/tmp/pack /data/data/com.termux/"
+            #adb shell "run-as com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest"
             adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-systemPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest
-            adb shell /data/local/tmp/pack/swift-nio-sshPackageTests.xctest
-            adb shell /data/local/tmp/pack/swift-nio-sslPackageTests.xctest
+            #adb shell /data/local/tmp/pack/swift-nio-sshPackageTests.xctest
+            #adb shell /data/local/tmp/pack/swift-nio-sslPackageTests.xctest
             adb shell /data/local/tmp/pack/YamsPackageTests.xctest
             #adb shell /data/local/tmp/pack/swift-tools-support-corePackageTests.xctest
