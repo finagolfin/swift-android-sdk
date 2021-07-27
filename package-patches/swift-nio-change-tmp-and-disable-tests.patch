@@ -1,18 +1,3 @@
-diff --git a/Sources/NIOCore/BSDSocketAPI.swift b/Sources/NIOCore/BSDSocketAPI.swift
-index 6f809484..bdad7f85 100644
---- a/Sources/NIOCore/BSDSocketAPI.swift
-+++ b/Sources/NIOCore/BSDSocketAPI.swift
-@@ -56,6 +56,10 @@ import func WinSDK.inet_ntop
- import func WinSDK.inet_pton
- #elseif os(Linux) || os(Android)
- import Glibc
-+#if arch(arm)
-+let SO_RCVTIMEO = SO_RCVTIMEO_OLD
-+let SO_TIMESTAMP = SO_TIMESTAMP_OLD
-+#endif
- 
- private let sysInet_ntop: @convention(c) (CInt, UnsafeRawPointer?, UnsafeMutablePointer<CChar>?, socklen_t) -> UnsafePointer<CChar>? = inet_ntop
- private let sysInet_pton: @convention(c) (CInt, UnsafePointer<CChar>?, UnsafeMutableRawPointer?) -> CInt = inet_pton
 diff --git a/Tests/NIOTests/BootstrapTest+XCTest.swift b/Tests/NIOTests/BootstrapTest+XCTest.swift
 index 33eddb21..b0062c0c 100644
 --- a/Tests/NIOTests/BootstrapTest+XCTest.swift
