@@ -138,7 +138,6 @@ jobs:
       - name: Build Swift tools support core package
         run: |
           cd swift-tools-support-core
-          git apply ../sdk-config/package-patches/swift-tools-support-core-FILE.patch
           #swift build --build-tests --enable-test-discovery -Xswiftc -Xcc -Xswiftc -U_GNU_SOURCE --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Put tests in one directory to push to Android x86_64 emulator
         if: ${{ matrix.arch == 'x86_64' }}
