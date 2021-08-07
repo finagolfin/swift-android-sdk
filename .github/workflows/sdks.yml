@@ -56,29 +56,24 @@ jobs:
     env:
       ANDROID_API_LEVEL: 24
     steps:
-      - name: Get cached release toolchain
-        if: ${{ matrix.version == '5.4' }}
-        id: cache-release-toolchain
-        uses: actions/cache@v2
-        with:
-          path: ~/${{ needs.get-latest-toolchain.outputs.release-version }}-ubuntu20.04.tar.gz
-          key: ${{ needs.get-latest-toolchain.outputs.release-version }}-toolchain
-      - name: Get cached devel toolchain
-        if: ${{ matrix.version == '5.5' }}
-        id: cache-devel-toolchain
-        uses: actions/cache@v2
-        with:
-          path: ~/${{ needs.get-latest-toolchain.outputs.devel-version }}-ubuntu20.04.tar.gz
-          key: ${{ needs.get-latest-toolchain.outputs.devel-version }}-toolchain
       - name: Extract the latest version string
         id: version
         run: |
           if [ ${{ matrix.version }} = '5.4' ]; then
-            echo "::set-output name=latest::$(echo ${{ needs.get-latest-toolchain.outputs.release-version }} | cut -d- -f2)"
+            TAG="${{ needs.get-latest-toolchain.outputs.release-version }}"
+            echo "::set-output name=latest::$(echo $TAG | cut -d- -f2)"
           else
-            echo "::set-output name=latest::$(echo ${{ needs.get-latest-toolchain.outputs.devel-version }} | cut -d- -f5-7)"
+            TAG="${{ needs.get-latest-toolchain.outputs.devel-version }}"
+            echo "::set-output name=latest::$(echo $TAG | cut -d- -f5-7)"
           fi
-      - name: Get cached SDK if its the latest
+          echo "::set-output name=tag::$TAG"
+      - name: Get cached Swift ${{ matrix.version }} toolchain
+        id: cache-toolchain
+        uses: actions/cache@v2
+        with:
+          path: ~/${{ steps.version.outputs.tag }}-ubuntu20.04.tar.gz
+          key: ${{ steps.version.outputs.tag }}-toolchain
+      - name: Get cached SDK
         id: cache-sdk
         uses: actions/cache@v2
         with:
@@ -90,16 +85,13 @@ jobs:
           path: sdk-config
       - name: Build Swift ${{ matrix.version }} Android SDK if not the latest
         if: ${{ steps.cache-sdk.outputs.cache-hit != 'true' }}
+        env:
+          SWIFT_TAG: ${{ steps.version.outputs.tag }}
+          ANDROID_ARCH: ${{ matrix.arch }}
         run: |
-          if [ ${{ matrix.version }} = '5.4' ]; then
-            export SWIFT_TAG="${{ needs.get-latest-toolchain.outputs.release-version }}"
-          else
-            export SWIFT_TAG="${{ needs.get-latest-toolchain.outputs.devel-version }}"
-          fi
-
           cd sdk-config
           sudo apt install ninja-build
-          ANDROID_ARCH=${{ matrix.arch }} swift get-packages-and-swift-source.swift
+          swift get-packages-and-swift-source.swift
 
           SDK_NAME=$(ls | grep swift-${{ matrix.version }}.*-android-${{ matrix.arch }})
           SDK=`pwd`/$SDK_NAME
@@ -112,7 +104,7 @@ jobs:
 
           tar cJf ~/$SDK_NAME.tar.xz $SDK_NAME
           rm -rf $SDK_NAME
-      - name: Patch SDK and SPM config
+      - name: Patch SPM ${{ matrix.version }} config
         run: |
           cd sdk-config
 
@@ -213,15 +205,6 @@ jobs:
           cd yams
           git apply ../sdk-config/package-patches/yams-fixture-path.patch
           swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
-      - name: Get Swift tools support core package
-        uses: actions/checkout@v2
-        with:
-          repository: apple/swift-tools-support-core
-          path: swift-tools-support-core
-      - name: Build Swift tools support core package
-        run: |
-          cd swift-tools-support-core
-          #swift build --build-tests --enable-test-discovery -Xswiftc -Xcc -Xswiftc -U_GNU_SOURCE --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get cached Termux debug app for NIO tests
         if: ${{ matrix.arch == 'x86_64' }}
         id: cache-termux
@@ -244,7 +227,6 @@ jobs:
           cp sns/.build/x86_64-unknown-linux-android/debug/swift-nio-sshPackageTests.xctest pack
           cp snl/.build/x86_64-unknown-linux-android/debug/swift-nio-sslPackageTests.xctest pack
           cp yams/.build/x86_64-unknown-linux-android/debug/YamsPackageTests.xctest pack
-          #cp swift-tools-support-core/.build/x86_64-unknown-linux-android/debug/swift-tools-support-corePackageTests.xctest pack
           mkdir pack/crypto-vectors
           cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/_CryptoExtrasVectors/* pack/crypto-vectors
           cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
@@ -271,4 +253,3 @@ jobs:
             adb shell /data/local/tmp/pack/swift-nio-sshPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-nio-sslPackageTests.xctest
             adb shell /data/local/tmp/pack/YamsPackageTests.xctest
-            #adb shell /data/local/tmp/pack/swift-tools-support-corePackageTests.xctest
