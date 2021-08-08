@@ -1,0 +1,104 @@
+diff --git a/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake b/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
+index 38191b01a64..1f851d3409c 100644
+--- a/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
++++ b/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
+@@ -397,6 +397,9 @@ function(_add_target_variant_link_flags)
+     list(APPEND result "-Wl,-Bsymbolic")
+   elseif("${LFLAGS_SDK}" STREQUAL "ANDROID")
+     list(APPEND link_libraries "dl" "log")
++    if(LFLAGS_ARCH STREQUAL "armv7")
++      list(APPEND link_libraries "atomic")
++    endif()
+     # We need to add the math library, which is linked implicitly by libc++
+     list(APPEND result "-lm")
+ 
+diff --git a/swift/stdlib/public/Platform/CMakeLists.txt b/swift/stdlib/public/Platform/CMakeLists.txt
+index c7e7bac1092..710c5658972 100644
+--- a/swift/stdlib/public/Platform/CMakeLists.txt
++++ b/swift/stdlib/public/Platform/CMakeLists.txt
+@@ -99,6 +99,7 @@ foreach(sdk ${SWIFT_SDKS})
+         OUTPUT "${glibc_modulemap_out}"
+         FLAGS
+             "-DCMAKE_SDK=${sdk}"
++            "-DSDK_INCLUDE_PATH=${SWIFT_${sdk}_${arch}_ICU_UC_INCLUDE}"
+             "-DGLIBC_INCLUDE_PATH=${SWIFT_SDK_${sdk}_ARCH_${arch}_LIBC_INCLUDE_DIRECTORY}"
+             "-DGLIBC_ARCH_INCLUDE_PATH=${SWIFT_SDK_${sdk}_ARCH_${arch}_LIBC_ARCHITECTURE_INCLUDE_DIRECTORY}")
+ 
+diff --git a/swift/stdlib/public/Platform/bionic.modulemap.gyb b/swift/stdlib/public/Platform/bionic.modulemap.gyb
+index e44f9082653..9ed6719e17d 100644
+--- a/swift/stdlib/public/Platform/bionic.modulemap.gyb
++++ b/swift/stdlib/public/Platform/bionic.modulemap.gyb
+@@ -185,7 +185,7 @@ module SwiftGlibc [system] {
+       export *
+     }
+     module spawn {
+-      header "${GLIBC_INCLUDE_PATH}/spawn.h"
++      header "${SDK_INCLUDE_PATH}/spawn.h"
+       export *
+     }
+     module syslog {
+diff --git a/swift/stdlib/public/SwiftShims/CMakeLists.txt b/swift/stdlib/public/SwiftShims/CMakeLists.txt
+index 99c098a5ea..0095eea069 100644
+--- a/swift/stdlib/public/SwiftShims/CMakeLists.txt
++++ b/swift/stdlib/public/SwiftShims/CMakeLists.txt
+@@ -208,13 +208,13 @@ endif()
+ 
+ swift_install_symlink_component(clang-resource-dir-symlink
+   LINK_NAME clang
+-  TARGET ../clang/${CLANG_VERSION}
++  TARGET ${SWIFT_NATIVE_SWIFT_TOOLS_PATH}/../lib/clang/${CLANG_VERSION}
+   DESTINATION "lib/swift")
+ 
+ if(SWIFT_BUILD_STATIC_STDLIB)
+   swift_install_symlink_component(clang-resource-dir-symlink
+     LINK_NAME clang
+-    TARGET ../clang/${CLANG_VERSION}
++    TARGET ${SWIFT_NATIVE_SWIFT_TOOLS_PATH}/../lib/clang/${CLANG_VERSION}
+     DESTINATION "lib/swift_static")
+ endif()
+ 
+diff --git a/swift/utils/build-script-impl b/swift/utils/build-script-impl
+index a5fb6cb780..1f1db7513d 100755
+--- a/swift/utils/build-script-impl
++++ b/swift/utils/build-script-impl
+@@ -1047,7 +1047,7 @@ function get_host_install_destdir() {
+             # This assumes that all hosts are merged to the lipo.
+             local host_install_destdir="${INSTALL_DESTDIR}"
+         else
+-            local host_install_destdir="${INSTALL_DESTDIR}/${host}"
++            local host_install_destdir="${INSTALL_DESTDIR}"
+         fi
+     else
+         local host_install_destdir="${INSTALL_DESTDIR}"
+diff --git a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt b/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
+index 016bf294..5c42986a 100644
+--- a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
++++ b/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
+@@ -166,7 +166,15 @@ if(CMAKE_SYSTEM_NAME STREQUAL Windows)
+   target_link_options(Foundation PRIVATE
+     $<TARGET_OBJECTS:CoreFoundationResources>)
+ elseif(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
++  if(NOT BUILD_SHARED_LIBS)
++    target_compile_options(Foundation PRIVATE "SHELL:-disallow-use-new-driver")
++  endif()
+   target_link_options(Foundation PRIVATE "SHELL:-no-toolchain-stdlib-rpath")
++  if(${CMAKE_SYSTEM_NAME} STREQUAL Android)
++    target_link_libraries(Foundation PRIVATE android-spawn)
++    list(GET CMAKE_FIND_ROOT_PATH 0 SPAWN_DIR)
++    target_link_directories(Foundation PUBLIC ${SPAWN_DIR}/usr/lib)
++  endif()
+ endif()
+ 
+ 
+diff --git a/swift-corelibs-xctest/CMakeLists.txt b/swift-corelibs-xctest/CMakeLists.txt
+index 531e7c0..589930f 100644
+--- a/swift-corelibs-xctest/CMakeLists.txt
++++ b/swift-corelibs-xctest/CMakeLists.txt
+@@ -58,6 +58,7 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
+     Foundation)
+   if(NOT CMAKE_SYSTEM_NAME STREQUAL Windows)
+     target_link_options(XCTest PRIVATE "SHELL:-no-toolchain-stdlib-rpath")
++    set_target_properties(XCTest PROPERTIES INSTALL_RPATH "$ORIGIN")
+   endif()
+ endif()
+ set_target_properties(XCTest PROPERTIES
