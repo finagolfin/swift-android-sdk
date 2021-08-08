@@ -37,7 +37,7 @@ if tagExtract.numberOfMatches(in: SWIFT_TAG, range: tagRange) == 1 {
 if swiftBranch == "-RELEASE" {
   sdkDir = "swift-\(swiftFullVersion)-android-\(ANDROID_ARCH)-24-sdk"
 } else {
-  sdkDir = "swift-\(swiftVersion)-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"
+  sdkDir = "swift-\(swiftVersion == "" ? "trunk" : swiftVersion)-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"
 }
 
 // takes the name of a command-line executable and the arguments to pass to it
@@ -243,4 +243,4 @@ if swiftBranch == "-RELEASE" {
   }
 }
 
-_ = runCommand("git", with: ["apply", "swift-android-\(swiftVersion).patch"])
+_ = runCommand("git", with: ["apply", "swift-android-\(swiftVersion == "" ? "trunk" : swiftVersion).patch"])
