@@ -45,16 +45,14 @@ index f3e452dc..a2db1282 100644
             ]
     }
 diff --git a/Tests/NIOTests/TestUtils.swift b/Tests/NIOTests/TestUtils.swift
-index d5c6b516..f9845029 100644
+index 603b4141..f0937993 100644
 --- a/Tests/NIOTests/TestUtils.swift
 +++ b/Tests/NIOTests/TestUtils.swift
-@@ -127,8 +127,8 @@ var temporaryDirectory: String {
-         // for UNIX Domain Socket paths (which are limited to 103 bytes).
-         return "/tmp"
+@@ -130,6 +130,8 @@ var temporaryDirectory: String {
  #else
--#if os(Linux)
--        return "/tmp"
-+#if os(Android)
+ #if os(Linux)
+         return "/tmp"
++#elseif os(Android)
 +        return "/data/data/com.termux/"
  #else
          if #available(macOS 10.12, iOS 10, tvOS 10, watchOS 3, *) {
