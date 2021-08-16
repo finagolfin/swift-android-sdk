@@ -1,18 +1,3 @@
-diff --git a/Package.swift b/Package.swift
-index b46487a..f77e1b2 100644
---- a/Package.swift
-+++ b/Package.swift
-@@ -27,8 +27,8 @@ let package = Package(
-         .library(name: "NIOSSH", targets: ["NIOSSH"]),
-     ],
-     dependencies: [
--        .package(url: "https://github.com/apple/swift-nio.git", from: "2.30.0"),
--        .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"),
-+        .package(path: "../swift-nio"),
-+        .package(path: "../swift-crypto"),
-     ],
-     targets: [
-         .target(
 diff --git a/Sources/NIOSSHClient/InteractivePasswordPromptDelegate.swift b/Sources/NIOSSHClient/InteractivePasswordPromptDelegate.swift
 index f615cc1..c0b6143 100644
 --- a/Sources/NIOSSHClient/InteractivePasswordPromptDelegate.swift

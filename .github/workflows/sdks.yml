@@ -129,12 +129,12 @@ jobs:
           sed -i "s%/home/butta/swift-5.4-android-${{ matrix.arch }}-${ANDROID_API_LEVEL}-sdk%`pwd`/${SDK_NAME}%" android-${{ matrix.arch }}.json
 
           sed -i "s%/home/butta/src/android-ndk-r21e%${ANDROID_NDK_HOME}%" android-${{ matrix.arch }}.json
-      - name: Get Swift package
+      - name: Get Swift Argument Parser package
         uses: actions/checkout@v2
         with:
           repository: apple/swift-argument-parser
           path: swift-argument-parser
-      - name: Build Swift package
+      - name: Build Swift Argument Parser package
         run: |
           cd swift-argument-parser
           swift build --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
@@ -146,7 +146,7 @@ jobs:
       - name: Build Swift crypto package
         run: |
           cd swift-crypto
-          git apply ../sdk-config/package-patches/swift-crypto-test-vectors.patch
+          sed -i "s%\\\\(testsDirectory)/.*Vectors%/data/local/tmp/pack/crypto-vectors%" Tests/CryptoTests/Utils/RFCVector.swift Tests/CryptoTests/Utils/Wycheproof.swift Tests/_CryptoExtrasTests/Utils/Wycheproof.swift
           swift build --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO package
         uses: actions/checkout@v2
@@ -176,7 +176,7 @@ jobs:
       - name: Build Swift System package
         run: |
           cd ss
-          git apply ../sdk-config/package-patches/swift-system-test.patch
+          sed -i "s%/tmp%/data/local/tmp%" Tests/SystemTests/FileOperationsTest.swift
           swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Collections package
         uses: actions/checkout@v2
@@ -195,6 +195,7 @@ jobs:
       - name: Build Swift NIO SSH package
         run: |
           cd sns
+          sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
           git apply ../sdk-config/package-patches/swift-nio-ssh-package-deps.patch
           swift build --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO SSL package
@@ -205,7 +206,7 @@ jobs:
       - name: Build Swift NIO SSL package
         run: |
           cd snl
-          git apply ../sdk-config/package-patches/swift-nio-ssl-package-deps.patch
+          sed -i "s%url: .*$%path: \"../swift-nio\"),%" Package.swift
           swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
         uses: actions/checkout@v2
@@ -215,8 +216,30 @@ jobs:
       - name: Build Yams package
         run: |
           cd yams
-          git apply ../sdk-config/package-patches/yams-fixture-path.patch
+          sed -i "s% fixturesDirectory + \"/SourceKitten#289% \"/data/local/tmp/pack%" Tests/YamsTests/PerformanceTests.swift
           swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift NIO HTTP/2 package
+        uses: actions/checkout@v2
+        with:
+          repository: apple/swift-nio-http2
+          path: snh
+      - name: Build Swift NIO HTTP/2 package
+        if: ${{ matrix.arch != 'armv7' }}
+        run: |
+          cd snh
+          sed -i "s%url: .*$%path: \"../swift-nio\")%" Package.swift
+          git apply ../sdk-config/package-patches/swift-nio-http2-tests.patch
+          swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift Algorithms package
+        uses: actions/checkout@v2
+        with:
+          repository: apple/swift-algorithms
+          path: sa
+      - name: Build Swift Algorithms package
+        run: |
+          cd sa
+          sed -i "s%url: .*$%path: \"../sn\"),%" Package.swift
+          swift build --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get cached Termux debug app for NIO tests
         if: ${{ matrix.arch == 'x86_64' }}
         id: cache-termux
@@ -239,6 +262,8 @@ jobs:
           cp sns/.build/x86_64-unknown-linux-android/debug/swift-nio-sshPackageTests.xctest pack
           cp snl/.build/x86_64-unknown-linux-android/debug/swift-nio-sslPackageTests.xctest pack
           cp yams/.build/x86_64-unknown-linux-android/debug/YamsPackageTests.xctest pack
+          cp snh/.build/x86_64-unknown-linux-android/debug/swift-nio-http2PackageTests.xctest pack
+          cp sa/.build/x86_64-unknown-linux-android/debug/swift-algorithmsPackageTests.xctest pack
           mkdir pack/crypto-vectors
           cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/_CryptoExtrasVectors/* pack/crypto-vectors
           cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
@@ -264,4 +289,6 @@ jobs:
             adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-nio-sshPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-nio-sslPackageTests.xctest
+            adb shell /data/local/tmp/pack/swift-nio-http2PackageTests.xctest
+            adb shell /data/local/tmp/pack/swift-algorithmsPackageTests.xctest
             adb shell /data/local/tmp/pack/YamsPackageTests.xctest
