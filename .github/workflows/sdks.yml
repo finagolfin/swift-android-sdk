@@ -228,7 +228,6 @@ jobs:
         run: |
           cd snh
           sed -i "s%url: .*$%path: \"../swift-nio\")%" Package.swift
-          git apply ../sdk-config/package-patches/swift-nio-http2-tests.patch
           swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Algorithms package
         uses: actions/checkout@v2
