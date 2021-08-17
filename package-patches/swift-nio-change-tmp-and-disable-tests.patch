@@ -1,7 +1,7 @@
-diff --git a/Tests/NIOTests/BootstrapTest+XCTest.swift b/Tests/NIOTests/BootstrapTest+XCTest.swift
+diff --git a/Tests/NIOPosixTests/BootstrapTest+XCTest.swift b/Tests/NIOPosixTests/BootstrapTest+XCTest.swift
 index 33eddb21..b0062c0c 100644
---- a/Tests/NIOTests/BootstrapTest+XCTest.swift
-+++ b/Tests/NIOTests/BootstrapTest+XCTest.swift
+--- a/Tests/NIOPosixTests/BootstrapTest+XCTest.swift
++++ b/Tests/NIOPosixTests/BootstrapTest+XCTest.swift
 @@ -49,7 +49,7 @@ extension BootstrapTest {
                  ("testNIOPipeBootstrapValidatesWorkingELGsCorrectly", testNIOPipeBootstrapValidatesWorkingELGsCorrectly),
                  ("testNIOPipeBootstrapRejectsNotWorkingELGsCorrectly", testNIOPipeBootstrapRejectsNotWorkingELGsCorrectly),
@@ -11,10 +11,10 @@ index 33eddb21..b0062c0c 100644
             ]
     }
  }
-diff --git a/Tests/NIOTests/DatagramChannelTests+XCTest.swift b/Tests/NIOTests/DatagramChannelTests+XCTest.swift
+diff --git a/Tests/NIOPosixTests/DatagramChannelTests+XCTest.swift b/Tests/NIOPosixTests/DatagramChannelTests+XCTest.swift
 index f3e452dc..a2db1282 100644
---- a/Tests/NIOTests/DatagramChannelTests+XCTest.swift
-+++ b/Tests/NIOTests/DatagramChannelTests+XCTest.swift
+--- a/Tests/NIOPosixTests/DatagramChannelTests+XCTest.swift
++++ b/Tests/NIOPosixTests/DatagramChannelTests+XCTest.swift
 @@ -51,21 +51,21 @@ extension DatagramChannelTests {
                  ("testMmsgWillTruncateWithoutChangeToAllocator", testMmsgWillTruncateWithoutChangeToAllocator),
                  ("testRecvMmsgForMultipleCycles", testRecvMmsgForMultipleCycles),
@@ -44,10 +44,10 @@ index f3e452dc..a2db1282 100644
                  ("testReceiveEcnAndPacketInfoIPV6VectorReadVectorWrite", testReceiveEcnAndPacketInfoIPV6VectorReadVectorWrite),
             ]
     }
-diff --git a/Tests/NIOTests/TestUtils.swift b/Tests/NIOTests/TestUtils.swift
+diff --git a/Tests/NIOPosixTests/TestUtils.swift b/Tests/NIOPosixTests/TestUtils.swift
 index 603b4141..f0937993 100644
---- a/Tests/NIOTests/TestUtils.swift
-+++ b/Tests/NIOTests/TestUtils.swift
+--- a/Tests/NIOPosixTests/TestUtils.swift
++++ b/Tests/NIOPosixTests/TestUtils.swift
 @@ -130,6 +130,8 @@ var temporaryDirectory: String {
  #else
  #if os(Linux)
