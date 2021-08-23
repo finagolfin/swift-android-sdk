@@ -1,3 +1,16 @@
+diff --git a/swift/CMakeLists.txt b/swift/CMakeLists.txt
+index 6d0493d9e00..584890d655e 100644
+--- a/swift/CMakeLists.txt
++++ b/swift/CMakeLists.txt
+@@ -177,6 +177,8 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL Windows AND NOT CMAKE_HOST_SYSTEM_NAME STREQUA
+   set(SWIFT_USE_LINKER_default "lld")
+ elseif(CMAKE_SYSTEM_NAME STREQUAL Darwin)
+   set(SWIFT_USE_LINKER_default "")
++elseif(SWIFT_HOST_VARIANT_SDK STREQUAL ANDROID)
++  set(SWIFT_USE_LINKER_default "lld")
+ else()
+   set(SWIFT_USE_LINKER_default "gold")
+ endif()
 diff --git a/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake b/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
 index 38191b01a64..1f851d3409c 100644
 --- a/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
@@ -28,6 +41,17 @@ diff --git a/swift/stdlib/public/Platform/bionic.modulemap.gyb b/swift/stdlib/pu
 index e44f9082653..9ed6719e17d 100644
 --- a/swift/stdlib/public/Platform/bionic.modulemap.gyb
 +++ b/swift/stdlib/public/Platform/bionic.modulemap.gyb
+@@ -82,6 +82,10 @@ module SwiftGlibc [system] {
+       header "${GLIBC_INCLUDE_PATH}/locale.h"
+       export *
+     }
++    module malloc {
++      header "${GLIBC_INCLUDE_PATH}/malloc.h"
++      export *
++    }
+     module math {
+       link "m"
+       header "${GLIBC_INCLUDE_PATH}/math.h"
 @@ -185,7 +185,7 @@ module SwiftGlibc [system] {
        export *
      }
@@ -83,7 +107,7 @@ diff --git a/swift/utils/swift_build_support/swift_build_support/targets.py b/sw
 index 69d71e4e630..e222a510d58 100644
 --- a/swift/utils/swift_build_support/swift_build_support/targets.py
 +++ b/swift/utils/swift_build_support/swift_build_support/targets.py
-@@ -152,16 +152,21 @@ class Target(object):
+@@ -152,16 +152,22 @@ class Target(object):
      def name(self):
          return "{}-{}".format(self.platform.name, self.arch)
  
@@ -107,6 +131,7 @@ index 69d71e4e630..e222a510d58 100644
 +                flags += '-resource-dir %s/swift-%s/lib/swift ' % (
 +                    args.build_root, self.name)
 +            flags += '-sdk %s/sysroot ' % (android_toolchain_path)
++            flags += '-use-ld=lld '
 +            flags += '-tools-directory %s/bin' % (android_toolchain_path)
  
          return flags
@@ -134,3 +159,19 @@ index 617e27e3..0e4c233b 100644
  set_target_properties(Foundation PROPERTIES
    INSTALL_RPATH "$ORIGIN"
    BUILD_RPATH "$<TARGET_FILE_DIR:swiftDispatch>"
+diff --git a/swift-corelibs-libdispatch/src/shims/atomic.h b/swift-corelibs-libdispatch/src/shims/atomic.h
+index c002e72..bc232f1 100644
+--- a/swift-corelibs-libdispatch/src/shims/atomic.h
++++ b/swift-corelibs-libdispatch/src/shims/atomic.h
+@@ -35,7 +35,11 @@
+ #if defined(__cplusplus)
+ #define _Bool bool
+ #endif
++#if defined(__ANDROID__) && __NDK_MAJOR__ >= 23
++#include <bits/stdatomic.h>
++#else
+ #include <stdatomic.h>
++#endif
+ 
+ #define memory_order_ordered    memory_order_seq_cst
+ #define memory_order_dependency memory_order_acquire
