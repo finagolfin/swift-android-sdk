@@ -14,6 +14,15 @@ jobs:
       devel-version: ${{ steps.check.outputs.devel-tag }}
       trunk-version: ${{ steps.check.outputs.trunk-tag }}
     steps:
+      - name: Get cached NDK
+        id: cache-ndk
+        uses: actions/cache@v2
+        with:
+          path: ~/android-ndk-r23-linux.zip
+          key: ndk-23
+      - name: Get NDK 23 if not cached
+        if: ${{ steps.cache-ndk.outputs.cache-hit != 'true' }}
+        run: wget -q -O ~/android-ndk-r23-linux.zip https://dl.google.com/android/repository/android-ndk-r23-linux.zip
       - name: Check for latest Swift ${{ matrix.version }} toolchain
         id: check
         run: |
@@ -26,7 +35,9 @@ jobs:
             SWIFT_TAG="swift-5.5-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
             echo "::set-output name=devel-tag::$SWIFT_TAG"
           else
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-DEV | cut -d- -f4-6)
+            # LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-DEV | cut -d- -f4-6)
+            # trunk toolchain is broken right now, so pin to Aug. 16
+            LATEST_TOOLCHAIN_VERSION="2021-08-16"
             SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
             echo "::set-output name=trunk-tag::$SWIFT_TAG"
           fi
@@ -82,12 +93,18 @@ jobs:
         with:
           path: ~/${{ steps.version.outputs.tag }}-ubuntu20.04.tar.gz
           key: ${{ steps.version.outputs.tag }}-toolchain
+      - name: Get cached NDK
+        id: cache-ndk
+        uses: actions/cache@v2
+        with:
+          path: ~/android-ndk-r23-linux.zip
+          key: ndk-23
       - name: Get cached SDK
         id: cache-sdk
         uses: actions/cache@v2
         with:
           path: ~/swift-${{ matrix.version }}*-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-sdk
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-23-sdk
       - name: Clone
         uses: actions/checkout@v2
         with:
@@ -106,12 +123,16 @@ jobs:
           SDK=`pwd`/$SDK_NAME
 
           tar xf ~/$SWIFT_TAG-ubuntu20.04.tar.gz
+          unzip -q ~/android-ndk-r23-linux.zip
+          NDK=`pwd`/android-ndk-r23
 
-          if [ ${{ matrix.version }} = 'trunk' ]; then
+          if [ ${{ matrix.version }} = '5.4' ]; then
+            sed -i "s%abort(void) %abort(void);// %" android-ndk-r23/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/stdlib.h
+          elif [ ${{ matrix.version }} = 'trunk' ]; then
             EXTRA_FLAGS="--skip-early-swift-driver"
           fi
 
-          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_HOME --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --android-icu-uc $SDK/usr/lib/libicuuc.so --android-icu-uc-include $SDK/usr/include --android-icu-i18n $SDK/usr/lib/libicui18n.so --android-icu-i18n-include $SDK/usr/include --android-icu-data $SDK/usr/lib/libicudata.so --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' $EXTRA_FLAGS
+          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $NDK --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --android-icu-uc $SDK/usr/lib/libicuuc.so --android-icu-uc-include $SDK/usr/include --android-icu-i18n $SDK/usr/lib/libicui18n.so --android-icu-i18n-include $SDK/usr/include --android-icu-data $SDK/usr/lib/libicudata.so --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' $EXTRA_FLAGS
 
           patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN $SDK/usr/lib/swift/android/lib*.so
 
@@ -121,14 +142,23 @@ jobs:
         run: |
           cd sdk-config
 
-          tar xf ~/${{ steps.version.outputs.tag }}-ubuntu20.04.tar.gz
+          if [ ! -d android-ndk-r23 ]; then
+            unzip -q ~/android-ndk-r23-linux.zip
+            if [ ${{ matrix.version }} = '5.4' ]; then
+              sed -i "s%abort(void) %abort(void);// %" android-ndk-r23/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/stdlib.h
+            fi
+          fi
+
+          if [ ! -d ${{ steps.version.outputs.tag }}-ubuntu20.04 ]; then
+            tar xf ~/${{ steps.version.outputs.tag }}-ubuntu20.04.tar.gz
+          fi
           sed -i "s%/home/butta/swift-5.4.2-RELEASE%`pwd`/${{ steps.version.outputs.tag }}%" android-${{ matrix.arch }}.json
 
           tar xf ~/swift-${{ matrix.version }}*-android-${{ matrix.arch }}*-${ANDROID_API_LEVEL}-sdk.tar.xz
           SDK_NAME=$(ls | grep swift-${{ matrix.version }}.*-sdk)
           sed -i "s%/home/butta/swift-5.4-android-${{ matrix.arch }}-${ANDROID_API_LEVEL}-sdk%`pwd`/${SDK_NAME}%" android-${{ matrix.arch }}.json
 
-          sed -i "s%/home/butta/src/android-ndk-r21e%${ANDROID_NDK_HOME}%" android-${{ matrix.arch }}.json
+          sed -i "s%/home/butta/src/android-ndk-r21e%`pwd`/android-ndk-r23%" android-${{ matrix.arch }}.json
       - name: Get Swift Argument Parser package
         uses: actions/checkout@v2
         with:
@@ -251,6 +281,13 @@ jobs:
         run: |
           mkdir -p pack/lib/swift/android
           cp swift-argument-parser/.build/x86_64-unknown-linux-android/debug/{math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
+
+          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/master/termux-elf-cleaner.cpp
+          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/master/elf.h
+          clang -D__ANDROID_API__=$ANDROID_API_LEVEL -o termux-elf-cleaner termux-elf-cleaner.cpp
+
+          ./termux-elf-cleaner pack/{math,repeat,roll} || true
+
           cp swift-crypto/.build/x86_64-unknown-linux-android/debug/swift-cryptoPackageTests.xctest pack
           if [ ${{ matrix.version }} = '5.4' ]; then
             cp swift-nio/.build/x86_64-unknown-linux-android/debug/swift-nioPackageTests.xctest pack
@@ -268,7 +305,7 @@ jobs:
           cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
           cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/lib*so pack/lib
           cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/swift/android/lib*so pack/lib/swift/android
-          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so pack/lib/swift/android
+          cp sdk-config/android-ndk-r23/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so pack/lib/swift/android
       - name: Run tests on Android x86_64 emulator
         if: ${{ matrix.arch == 'x86_64' }}
         uses: reactivecircus/android-emulator-runner@v2

@@ -3,13 +3,13 @@
 All patches used to build these SDKs are open source and listed below.
 
 To build with an SDK, first download [the latest Android LTS NDK
-21e](https://developer.android.com/ndk/downloads) and [Swift 5.4.2
+23](https://developer.android.com/ndk/downloads) and [Swift 5.4.2
 compiler](https://swift.org/download/#releases) (make sure to install the Swift
 compiler's dependencies listed there). Unpack these archives and the SDK.
 
 I will write up a Swift script to do this SDK configuration, but you will need
 to do it manually for now. [You can see how I do it on the CI for a concrete
-example](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml#L125).
+example](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml#L154).
 
 The SDK will need to be modified with the path to your NDK and Swift compiler
 in the following ways (I'll show aarch64 below, the same will need to be done
@@ -17,7 +17,7 @@ for the armv7 or x86_64 SDKs):
 
 1. Change all paths in `swift-5.4-android-aarch64-24-sdk/usr/lib/swift/android/aarch64/glibc.modulemap`
 from `/home/butta/src/android-ndk-r21e` to the path to your NDK, ie something
-like `/home/yourname/android-ndk-r21e`.
+like `/home/yourname/android-ndk-r23`.
 
 2. There's a single line pointing to a header in the SDK itself, so change it
 from `/home/butta/swift-5.4-android-aarch64-24-sdk` in `glibc.modulemap` to the
@@ -33,7 +33,7 @@ swift-5.4-android-aarch64-24-sdk/usr/lib/swift/clang
 Finally, modify the cross-compilation JSON file in this repo similarly:
 
 1. All paths to the NDK should change from `/home/butta/src/android-ndk-r21e`
-to the path to your NDK, `/home/yourname/android-ndk-r21e`.
+to the path to your NDK, `/home/yourname/android-ndk-r23`.
 
 2. The path to the compiler should change from `/home/butta/swift-5.4.2-RELEASE-ubuntu20.04`
 to the path to your Swift compiler, `/home/yourname/swift-5.4.2-RELEASE-centos8`.
@@ -63,13 +63,13 @@ same build directory. Other packages use `#file` to point at test data in the
 repo: I've had success moving this data with the test runner, after modifying
 the test source so it has the path to this test data in the Android test
 environment. See [the example](https://github.com/buttaface/swift-android-sdk/blob/main/package-patches/swift-crypto-test-vectors.patch)
-of [swift-crypto on the CI](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml#L267).
+of [swift-crypto on the CI](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml#L305).
 
 You can copy these executables and the SDK to [an emulator or a USB
 debugging-enabled device with adb](https://github.com/apple/swift/blob/release/5.4/docs/Android.md#4-deploying-the-build-products-to-the-device),
 or put them on an Android device with [a terminal emulator app like Termux](https://termux.com).
 I test aarch64 with Termux so I'll show how to run the test runner there, but
-the process is similar with adb, [as can be seen on the CI](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml#L280).
+the process is similar with adb, [as can be seen on the CI](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml#L318).
 
 Copy the test executables to the same directory as the SDK:
 ```
@@ -188,14 +188,14 @@ After making sure [needed build tools like python 3, CMake, and ninja](https://g
 are installed, I ran the following `build-script` command:
 ```
 ./swift/utils/build-script -R --no-assertions --skip-build-cmark --skip-build-llvm --android
---android-ndk /home/butta/src/android-ndk-r21e/ --android-arch aarch64 --android-api-level 24
+--android-ndk /home/butta/src/android-ndk-r23/ --android-arch aarch64 --android-api-level 24
 --android-icu-uc /home/butta/swift-5.4-android-aarch64-24-sdk/usr/lib/libicuuc.so
 --android-icu-uc-include /home/butta/swift-5.4-android-aarch64-24-sdk/usr/include/
 --android-icu-i18n /home/butta/swift-5.4-android-aarch64-24-sdk/usr/lib/libicui18n.so
 --android-icu-i18n-include /home/butta/swift-5.4-android-aarch64-24-sdk/usr/include/
 --android-icu-data /home/butta/swift-5.4-android-aarch64-24-sdk/usr/lib/libicudata.so
 --build-swift-tools=0 --native-swift-tools-path=/home/butta/swift-5.4-RELEASE-ubuntu20.04/usr/bin/
---native-clang-tools-path=/home/butta/src/android-ndk-r21e/toolchains/llvm/prebuilt/linux-x86_64/bin
+--native-clang-tools-path=/home/butta/src/android-ndk-r23/toolchains/llvm/prebuilt/linux-x86_64/bin
 --host-cc=/usr/bin/clang-11 --host-cxx=/usr/bin/clang++-11
 --cross-compile-hosts=android-aarch64 --cross-compile-deps-path=/home/butta/swift-5.4-android-aarch64-24-sdk
 --skip-local-build --xctest --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay'

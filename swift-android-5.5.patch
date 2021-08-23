@@ -1,3 +1,16 @@
+diff --git a/swift/CMakeLists.txt b/swift/CMakeLists.txt
+index 6d0493d9e00..584890d655e 100644
+--- a/swift/CMakeLists.txt
++++ b/swift/CMakeLists.txt
+@@ -177,6 +177,8 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL Windows AND NOT CMAKE_HOST_SYSTEM_NAME STREQUA
+   set(SWIFT_USE_LINKER_default "lld")
+ elseif(CMAKE_SYSTEM_NAME STREQUAL Darwin)
+   set(SWIFT_USE_LINKER_default "")
++elseif(SWIFT_HOST_VARIANT_SDK STREQUAL ANDROID)
++  set(SWIFT_USE_LINKER_default "lld")
+ else()
+   set(SWIFT_USE_LINKER_default "gold")
+ endif()
 diff --git a/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake b/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
 index 38191b01a64..1f851d3409c 100644
 --- a/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
@@ -28,6 +41,17 @@ diff --git a/swift/stdlib/public/Platform/bionic.modulemap.gyb b/swift/stdlib/pu
 index e44f9082653..9ed6719e17d 100644
 --- a/swift/stdlib/public/Platform/bionic.modulemap.gyb
 +++ b/swift/stdlib/public/Platform/bionic.modulemap.gyb
+@@ -82,6 +82,10 @@ module SwiftGlibc [system] {
+       header "${GLIBC_INCLUDE_PATH}/locale.h"
+       export *
+     }
++    module malloc {
++      header "${GLIBC_INCLUDE_PATH}/malloc.h"
++      export *
++    }
+     module math {
+       link "m"
+       header "${GLIBC_INCLUDE_PATH}/math.h"
 @@ -185,7 +185,7 @@ module SwiftGlibc [system] {
        export *
      }
@@ -70,14 +94,18 @@ index a5fb6cb780..1f1db7513d 100755
          fi
      else
          local host_install_destdir="${INSTALL_DESTDIR}"
-@@ -1946,6 +1946,7 @@ for host in "${ALL_HOSTS[@]}"; do
-                     -DSWIFT_ENABLE_COMPATIBILITY_OVERRIDES:BOOL=$(true_false "${SWIFT_ENABLE_COMPATIBILITY_OVERRIDES}")
-                     -DSWIFT_STDLIB_SINGLE_THREADED_RUNTIME:BOOL=$(true_false "${SWIFT_STDLIB_SINGLE_THREADED_RUNTIME}")
-                     -DSWIFT_ENABLE_RUNTIME_FUNCTION_COUNTERS:BOOL=$(true_false "${SWIFT_ENABLE_RUNTIME_FUNCTION_COUNTERS}")
-+                    -DSWIFT_ENABLE_EXPERIMENTAL_CONCURRENCY:BOOL=TRUE
-                     -DSWIFT_RUNTIME_MACHO_NO_DYLD:BOOL=$(true_false "${SWIFT_RUNTIME_MACHO_NO_DYLD}")
-                     -DSWIFT_STDLIB_OS_VERSIONING:BOOL=$(true_false "${SWIFT_STDLIB_OS_VERSIONING}")
-                     -DSWIFT_NATIVE_LLVM_TOOLS_PATH:STRING="${native_llvm_tools_path}"
+diff --git a/swift/utils/swift_build_support/swift_build_support/targets.py b/swift/utils/swift_build_support/swift_build_support/targets.py
+index 0751fd869bd..693bd68bdfd 100644
+--- a/swift/utils/swift_build_support/swift_build_support/targets.py
++++ b/swift/utils/swift_build_support/swift_build_support/targets.py
+@@ -165,6 +165,7 @@ class AndroidPlatform(Platform):
+             args.android_ndk, StdlibDeploymentTarget.host_target().name)
+ 
+         flags += '-sdk %s/sysroot ' % (android_toolchain_path)
++        flags += '-use-ld=lld '
+         flags += '-tools-directory %s/bin' % (android_toolchain_path)
+         return flags
+ 
 diff --git a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt b/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
 index 016bf294..5c42986a 100644
 --- a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
@@ -98,6 +126,22 @@ index 016bf294..5c42986a 100644
  endif()
  
  
+diff --git a/swift-corelibs-libdispatch/src/shims/atomic.h b/swift-corelibs-libdispatch/src/shims/atomic.h
+index c002e72..bc232f1 100644
+--- a/swift-corelibs-libdispatch/src/shims/atomic.h
++++ b/swift-corelibs-libdispatch/src/shims/atomic.h
+@@ -35,7 +35,11 @@
+ #if defined(__cplusplus)
+ #define _Bool bool
+ #endif
++#if defined(__ANDROID__) && __NDK_MAJOR__ >= 23
++#include <bits/stdatomic.h>
++#else
+ #include <stdatomic.h>
++#endif
+ 
+ #define memory_order_ordered    memory_order_seq_cst
+ #define memory_order_dependency memory_order_acquire
 diff --git a/swift-corelibs-xctest/CMakeLists.txt b/swift-corelibs-xctest/CMakeLists.txt
 index 531e7c0..589930f 100644
 --- a/swift-corelibs-xctest/CMakeLists.txt
