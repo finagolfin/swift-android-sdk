@@ -124,12 +124,12 @@ if !fmd.fileExists(atPath: termuxArchive) {
   try fmd.createDirectory(atPath: termuxArchive, withIntermediateDirectories: false)
 }
 
-if !fmd.fileExists(atPath: termuxArchive.appendingPathComponent("Packages")) {
-  _ = runCommand("curl", with: ["-o", "termux/Packages",
+if !fmd.fileExists(atPath: termuxArchive.appendingPathComponent("Packages-\(ANDROID_ARCH)")) {
+  _ = runCommand("curl", with: ["-o", "termux/Packages-\(ANDROID_ARCH)",
       "https://packages.termux.org/apt/termux-main/dists/stable/main/binary-\(ANDROID_ARCH == "armv7" ? "arm" : ANDROID_ARCH)/Packages"])
 }
 
-let packages = try String(contentsOfFile: termuxArchive.appendingPathComponent("Packages"), encoding: .utf8)
+let packages = try String(contentsOfFile: termuxArchive.appendingPathComponent("Packages-\(ANDROID_ARCH)"), encoding: .utf8)
 
 for termuxPackage in termuxPackages {
   guard let packagePathRange = packages.range(of: "\\S+\(termuxPackage)_\\S+", options: .regularExpression) else {
@@ -224,7 +224,7 @@ if !fmd.fileExists(atPath: cwd.appendingPathComponent("cmark")) {
 for repo in swiftRepos {
   print("Checking for \(repo) source")
   if !fmd.fileExists(atPath: cwd.appendingPathComponent(repo)) {
-    print("Downloading and extracting \(repo) source tarball")
+    print("Downloading and extracting \(repo) source")
     _ = runCommand("curl", with: ["-L", "-O",
               "https://github.com/apple/\(repo)/archive/refs/tags/\(SWIFT_TAG).tar.gz"])
     _ = runCommand("tar", with: ["xf", "\(SWIFT_TAG).tar.gz"])
@@ -237,9 +237,11 @@ for repo in swiftRepos {
 if swiftBranch == "-RELEASE" {
   print("Getting Termux patches for Swift \(swiftFullVersion)")
   for patch in swiftPatches {
-    _ = runCommand("curl", with: ["-L", "-O",
-          "https://raw.githubusercontent.com/termux/termux-packages/master/packages/swift/\(patch).patch"])
-    _ = runCommand("git", with: ["apply", "\(patch).patch"])
+    if !fmd.fileExists(atPath: cwd.appendingPathComponent("\(patch).patch")) {
+      _ = runCommand("curl", with: ["-L", "-O",
+            "https://raw.githubusercontent.com/termux/termux-packages/master/packages/swift/\(patch).patch"])
+      _ = runCommand("git", with: ["apply", "\(patch).patch"])
+    }
   }
 }
 

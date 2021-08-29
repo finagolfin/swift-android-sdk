@@ -132,7 +132,8 @@ jobs:
 
           ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $NDK --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --android-icu-uc $SDK/usr/lib/libicuuc.so --android-icu-uc-include $SDK/usr/include --android-icu-i18n $SDK/usr/lib/libicui18n.so --android-icu-i18n-include $SDK/usr/include --android-icu-data $SDK/usr/lib/libicudata.so --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' $EXTRA_FLAGS
 
-          patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN $SDK/usr/lib/swift/android/lib*.so
+          patchelf --set-rpath \$ORIGIN $SDK/usr/lib/swift/android/libdispatch.so
+          patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN $SDK/usr/lib/swift/android/lib[FXs]*.so
 
           tar cJf ~/$SDK_NAME.tar.xz $SDK_NAME
           rm -rf $SDK_NAME
@@ -154,9 +155,9 @@ jobs:
 
           tar xf ~/swift-${{ matrix.version }}*-android-${{ matrix.arch }}*-${ANDROID_API_LEVEL}-sdk.tar.xz
           SDK_NAME=$(ls | grep swift-${{ matrix.version }}.*-sdk)
-          sed -i "s%/home/butta/swift-5.4-android-${{ matrix.arch }}-${ANDROID_API_LEVEL}-sdk%`pwd`/${SDK_NAME}%" android-${{ matrix.arch }}.json
+          sed -i "s%/home/butta/swift-5.4.2-android-${{ matrix.arch }}-${ANDROID_API_LEVEL}-sdk%`pwd`/${SDK_NAME}%" android-${{ matrix.arch }}.json
 
-          sed -i "s%/home/butta/src/android-ndk-r21e%`pwd`/android-ndk-r23%" android-${{ matrix.arch }}.json
+          sed -i "s%/home/butta/android-ndk-r23%`pwd`/android-ndk-r23%" android-${{ matrix.arch }}.json
       - name: Get Swift Argument Parser package
         uses: actions/checkout@v2
         with:
