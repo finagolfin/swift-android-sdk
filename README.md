@@ -71,8 +71,8 @@ one depends on the example executables `math`, `repeat`, and `roll` in the
 same build directory. Other packages use `#file` to point at test data in the
 repo: I've had success moving this data with the test runner, after modifying
 the test source so it has the path to this test data in the Android test
-environment. See [the example](https://github.com/buttaface/swift-android-sdk/blob/main/package-patches/swift-crypto-test-vectors.patch)
-of [swift-crypto on the CI](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml#L303).
+environment. See the example of [swift-crypto on the
+CI](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml#L303).
 
 You can copy these executables and the SDK to [an emulator or a USB
 debugging-enabled device with adb](https://github.com/apple/swift/blob/release/5.4/docs/Android.md#4-deploying-the-build-products-to-the-device),
@@ -114,11 +114,13 @@ repo and run
 `SWIFT_TAG=swift-5.4.2-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
 to get some prebuilt Android libraries and the Swift source to build the SDK. If
 you pass in a different tag like `swift-5.5-DEVELOPMENT-SNAPSHOT-2021-08-28-a`
-for the latest Swift 5.5 snapshot and pass in the corresponding official prebuilt
-Swift toolchain below, you can build a Swift 5.5 SDK too, as seen on the CI.
+for the latest Swift 5.5 snapshot and pass in the path to the corresponding
+official prebuilt Swift toolchain to `build-script` below, you can build a Swift
+5.5 SDK too, as seen on the CI.
 
 After making sure [needed build tools like python 3, CMake, and ninja](https://github.com/apple/swift/blob/release/5.4/docs/HowToGuides/GettingStarted.md#ubuntu-linux)
-are installed, run the following `build-script` command with your local paths instead:
+are installed, run the following `build-script` command with your local paths
+substituted instead:
 ```
 ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android
 --android-ndk /home/butta/android-ndk-r23/ --android-arch aarch64 --android-api-level 24
