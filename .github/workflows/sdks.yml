@@ -305,19 +305,42 @@ jobs:
           cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/lib*so pack/lib
           cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/swift/android/lib*so pack/lib/swift/android
           cp sdk-config/android-ndk-r23/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so pack/lib/swift/android
-      - name: Run tests on Android x86_64 emulator
+          cp ~/termux-debug.apk pack
+      - name: Upload test directory
         if: ${{ matrix.arch == 'x86_64' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: tests-${{ matrix.version }}
+          path: pack/
+          retention-days: 3
+  run-tests-on-android-x86_64-emulator:
+    runs-on: macos-latest
+    needs: build-sdk-and-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        version: [5.4, 5.5, trunk]
+    steps:
+      - name: Download test directory
+        uses: actions/download-artifact@v2
+        with:
+          name: tests-${{ matrix.version }}
+          path: pack
+      - name: Run tests on Android x86_64 emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 24
           arch: x86_64
           script: |
-            adb install ~/termux-debug.apk
+            adb install pack/termux-debug.apk
+            chmod 755 pack/{math,repeat,roll,*.xctest}
             adb push pack /data/local/tmp
 
             adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-cryptoPackageTests.xctest
-            if [ ${{ matrix.version }} = '5.4' ]; then adb shell "run-as com.termux cp -r /data/local/tmp/pack /data/data/com.termux/"; fi
+            if [ ${{ matrix.version }} = '5.4' ]; then adb shell "run-as com.termux mkdir /data/data/com.termux/pack"; fi
+            if [ ${{ matrix.version }} = '5.4' ]; then adb shell "run-as com.termux cp /data/local/tmp/pack/swift-nioPackageTests.xctest /data/data/com.termux/pack"; fi
+            if [ ${{ matrix.version }} = '5.4' ]; then adb shell "run-as com.termux cp -r /data/local/tmp/pack/lib /data/data/com.termux/pack"; fi
             if [ ${{ matrix.version }} = '5.4' ]; then adb shell "run-as com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest"; fi
             adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-systemPackageTests.xctest
