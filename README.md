@@ -78,7 +78,7 @@ You can copy these executables and the SDK to [an emulator or a USB
 debugging-enabled device with adb](https://github.com/apple/swift/blob/release/5.4/docs/Android.md#4-deploying-the-build-products-to-the-device),
 or put them on an Android device with [a terminal emulator app like Termux](https://termux.com).
 I test aarch64 with Termux so I'll show how to run the test runner there, but
-the process is similar with adb, [as can be seen on the CI](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml#L316).
+the process is similar with adb, [as can be seen on the CI](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml#L337).
 
 Copy the test executables to the same directory as the SDK:
 ```
@@ -184,7 +184,6 @@ readelf -d libicuuc.so.68.2
 mv libicuuc.so.68.2 libicuuc.so
 patchelf --set-soname libicuuc.so libicuuc.so
 patchelf --replace-needed libicudata.so.68 libicudata.so libicuuc.so
-cd ../../../
 ```
 The libcurl and libxml2 packages are [only needed for the FoundationNetworking
 and FoundationXML libraries respectively](https://github.com/apple/swift-corelibs-foundation/blob/release/5.4/Docs/ReleaseNotes_Swift5.md),
