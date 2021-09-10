@@ -151,7 +151,7 @@ jobs:
           if [ ! -d ${{ steps.version.outputs.tag }}-ubuntu20.04 ]; then
             tar xf ~/${{ steps.version.outputs.tag }}-ubuntu20.04.tar.gz
           fi
-          sed -i "s%/home/butta/swift-5.4.2-RELEASE%`pwd`/${{ steps.version.outputs.tag }}%" android-${{ matrix.arch }}.json
+          sed -i "s%/home/butta/swift-5.4.3-RELEASE%`pwd`/${{ steps.version.outputs.tag }}%" android-${{ matrix.arch }}.json
 
           tar xf ~/swift-${{ matrix.version }}*-android-${{ matrix.arch }}*-${ANDROID_API_LEVEL}-sdk.tar.xz
           SDK_NAME=$(ls | grep swift-${{ matrix.version }}.*-sdk)
