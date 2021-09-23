@@ -1,7 +1,7 @@
 {
     "version": 1,
     "target": "aarch64-unknown-linux-android",
-    "toolchain-bin-dir": "/home/butta/swift-5.4.3-RELEASE-ubuntu20.04/usr/bin",
+    "toolchain-bin-dir": "/home/butta/swift-5.5-RELEASE-ubuntu20.04/usr/bin",
     "sdk": "/home/butta/android-ndk-r23/toolchains/llvm/prebuilt/linux-x86_64/sysroot",
     "extra-cc-flags": [
         "-fPIC"

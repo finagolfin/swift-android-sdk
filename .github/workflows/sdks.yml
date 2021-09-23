@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        version: [5.4, 5.5, trunk]
+        version: [5.5, trunk]
     outputs:
       release-version: ${{ steps.check.outputs.release-tag }}
       devel-version: ${{ steps.check.outputs.devel-tag }}
@@ -26,13 +26,13 @@ jobs:
       - name: Check for latest Swift ${{ matrix.version }} toolchain
         id: check
         run: |
-          if [ ${{ matrix.version }} = '5.4' ]; then
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://swift.org/download | grep -m1 swift-5.4 | cut -d- -f2)
+          if [ ${{ matrix.version }} = '5.5' ]; then
+            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://swift.org/download | grep -m1 swift-5.5 | cut -d- -f2)
             SWIFT_TAG="swift-${LATEST_TOOLCHAIN_VERSION}-RELEASE"
             echo "::set-output name=release-tag::$SWIFT_TAG"
-          elif [ ${{ matrix.version }} = '5.5' ]; then
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-5.5-DEV | cut -d- -f5-7)
-            SWIFT_TAG="swift-5.5-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
+          elif [ ${{ matrix.version }} = '5.6' ]; then
+            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-5.6-DEV | cut -d- -f5-7)
+            SWIFT_TAG="swift-5.6-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
             echo "::set-output name=devel-tag::$SWIFT_TAG"
           else
             LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-DEV | cut -d- -f4-6)
@@ -49,10 +49,10 @@ jobs:
       - name: Get latest toolchain if not cached
         if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' }}
         run: |
-          if [ ${{ matrix.version }} = '5.4' ]; then
+          if [ ${{ matrix.version }} = '5.5' ]; then
             SWIFT_BRANCH="swift-$(echo ${{ steps.check.outputs.release-tag }} | cut -d- -f2)-release"
-          elif [ ${{ matrix.version }} = '5.5' ]; then
-            SWIFT_BRANCH="swift-5.5-branch"
+          elif [ ${{ matrix.version }} = '5.6' ]; then
+            SWIFT_BRANCH="swift-5.6-branch"
           else
             SWIFT_BRANCH="development"
           fi
@@ -66,7 +66,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [5.4, 5.5, trunk]
+        version: [5.5, trunk]
         arch: [aarch64, x86_64, armv7]
     env:
       ANDROID_API_LEVEL: 24
@@ -74,10 +74,10 @@ jobs:
       - name: Extract the latest version string
         id: version
         run: |
-          if [ ${{ matrix.version }} = '5.4' ]; then
+          if [ ${{ matrix.version }} = '5.5' ]; then
             TAG="${{ needs.get-latest-toolchain.outputs.release-version }}"
             echo "::set-output name=latest::$(echo $TAG | cut -d- -f2)"
-          elif [ ${{ matrix.version }} = '5.5' ]; then
+          elif [ ${{ matrix.version }} = '5.6' ]; then
             TAG="${{ needs.get-latest-toolchain.outputs.devel-version }}"
             echo "::set-output name=latest::$(echo $TAG | cut -d- -f5-7)"
           else
@@ -124,9 +124,7 @@ jobs:
           unzip -q ~/android-ndk-r23-linux.zip
           NDK=`pwd`/android-ndk-r23
 
-          if [ ${{ matrix.version }} = '5.4' ]; then
-            sed -i "s%abort(void) %abort(void);// %" android-ndk-r23/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/stdlib.h
-          elif [ ${{ matrix.version }} = 'trunk' ]; then
+          if [ ${{ matrix.version }} = 'trunk' ]; then
             EXTRA_FLAGS="--skip-early-swift-driver"
             git apply foundation-trunk-fix.patch
           fi
@@ -144,15 +142,12 @@ jobs:
 
           if [ ! -d android-ndk-r23 ]; then
             unzip -q ~/android-ndk-r23-linux.zip
-            if [ ${{ matrix.version }} = '5.4' ]; then
-              sed -i "s%abort(void) %abort(void);// %" android-ndk-r23/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/stdlib.h
-            fi
           fi
 
           if [ ! -d ${{ steps.version.outputs.tag }}-ubuntu20.04 ]; then
             tar xf ~/${{ steps.version.outputs.tag }}-ubuntu20.04.tar.gz
           fi
-          sed -i "s%/home/butta/swift-5.4.3-RELEASE%`pwd`/${{ steps.version.outputs.tag }}%" android-${{ matrix.arch }}.json
+          sed -i "s%/home/butta/swift-5.5-RELEASE%`pwd`/${{ steps.version.outputs.tag }}%" android-${{ matrix.arch }}.json
 
           tar xf ~/swift-${{ matrix.version }}*-android-${{ matrix.arch }}*-${ANDROID_API_LEVEL}-sdk.tar.xz
           SDK_NAME=$(ls | grep swift-${{ matrix.version }}.*-sdk)
@@ -184,7 +179,6 @@ jobs:
           repository: apple/swift-nio
           path: swift-nio
       - name: Build Swift NIO package
-        if: ${{ matrix.version == '5.4' }}
         run: |
           cd swift-nio
           git apply ../sdk-config/package-patches/swift-nio-change-tmp-and-disable-tests.patch
@@ -289,9 +283,7 @@ jobs:
           ./termux-elf-cleaner pack/{math,repeat,roll} || true
 
           cp swift-crypto/.build/x86_64-unknown-linux-android/debug/swift-cryptoPackageTests.xctest pack
-          if [ ${{ matrix.version }} = '5.4' ]; then
-            cp swift-nio/.build/x86_64-unknown-linux-android/debug/swift-nioPackageTests.xctest pack
-          fi
+          cp swift-nio/.build/x86_64-unknown-linux-android/debug/swift-nioPackageTests.xctest pack
           cp sn/.build/x86_64-unknown-linux-android/debug/swift-numericsPackageTests.xctest pack
           cp ss/.build/x86_64-unknown-linux-android/debug/swift-systemPackageTests.xctest pack
           cp sco/.build/x86_64-unknown-linux-android/debug/swift-collectionsPackageTests.xctest pack
@@ -320,7 +312,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [5.4, 5.5, trunk]
+        version: [5.5, trunk]
     steps:
       - name: Download test directory
         uses: actions/download-artifact@v2
@@ -339,10 +331,10 @@ jobs:
 
             adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-cryptoPackageTests.xctest
-            if [ ${{ matrix.version }} = '5.4' ]; then adb shell "run-as com.termux mkdir /data/data/com.termux/pack"; fi
-            if [ ${{ matrix.version }} = '5.4' ]; then adb shell "run-as com.termux cp /data/local/tmp/pack/swift-nioPackageTests.xctest /data/data/com.termux/pack"; fi
-            if [ ${{ matrix.version }} = '5.4' ]; then adb shell "run-as com.termux cp -r /data/local/tmp/pack/lib /data/data/com.termux/pack"; fi
-            if [ ${{ matrix.version }} = '5.4' ]; then adb shell "run-as com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest"; fi
+            adb shell "run-as com.termux mkdir /data/data/com.termux/pack"
+            adb shell "run-as com.termux cp /data/local/tmp/pack/swift-nioPackageTests.xctest /data/data/com.termux/pack"
+            adb shell "run-as com.termux cp -r /data/local/tmp/pack/lib /data/data/com.termux/pack"
+            adb shell "run-as com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest"
             adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-systemPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest
