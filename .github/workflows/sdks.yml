@@ -151,7 +151,7 @@ jobs:
 
           tar xf ~/swift-${{ matrix.version }}*-android-${{ matrix.arch }}*-${ANDROID_API_LEVEL}-sdk.tar.xz
           SDK_NAME=$(ls | grep swift-${{ matrix.version }}.*-sdk)
-          sed -i "s%/home/butta/swift-5.4.2-android-${{ matrix.arch }}-${ANDROID_API_LEVEL}-sdk%`pwd`/${SDK_NAME}%" android-${{ matrix.arch }}.json
+          sed -i "s%/home/butta/swift-5.5-android-${{ matrix.arch }}-${ANDROID_API_LEVEL}-sdk%`pwd`/${SDK_NAME}%" android-${{ matrix.arch }}.json
 
           sed -i "s%/home/butta/android-ndk-r23%`pwd`/android-ndk-r23%" android-${{ matrix.arch }}.json
       - name: Get Swift Argument Parser package

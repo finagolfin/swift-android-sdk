@@ -7,7 +7,7 @@
         "-fPIC"
     ],
     "extra-swiftc-flags": [
-        "-resource-dir", "/home/butta/swift-5.4.2-android-aarch64-24-sdk/usr/lib/swift",
+        "-resource-dir", "/home/butta/swift-5.5-android-aarch64-24-sdk/usr/lib/swift",
         "-tools-directory", "/home/butta/android-ndk-r23/toolchains/llvm/prebuilt/linux-x86_64/bin",
         "-Xclang-linker", "--target=aarch64-linux-android24", "-use-ld=lld",
     ],
