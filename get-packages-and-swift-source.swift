@@ -234,15 +234,4 @@ for repo in swiftRepos {
   }
 }
 
-if swiftBranch == "-RELEASE" {
-  print("Getting Termux patches for Swift \(swiftFullVersion)")
-  for patch in swiftPatches {
-    if !fmd.fileExists(atPath: cwd.appendingPathComponent("\(patch).patch")) {
-      _ = runCommand("curl", with: ["-L", "-O",
-            "https://raw.githubusercontent.com/termux/termux-packages/master/packages/swift/\(patch).patch"])
-      _ = runCommand("git", with: ["apply", "\(patch).patch"])
-    }
-  }
-}
-
 _ = runCommand("git", with: ["apply", "swift-android-\(swiftVersion == "" ? "trunk" : swiftVersion).patch"])
