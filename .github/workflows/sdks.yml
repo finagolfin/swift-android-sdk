@@ -148,15 +148,16 @@ jobs:
             tar xf ~/${{ steps.version.outputs.tag }}-ubuntu20.04.tar.gz
           fi
           sed -i "s%/home/butta/swift-5.5-RELEASE%`pwd`/${{ steps.version.outputs.tag }}%" android-${{ matrix.arch }}.json
-          if [ ${{ matrix.version }} = 'trunk' ]; then
-            sed -i -e "s%toolchain-bin-dir%binDir%" -e "s%extra-cc-flags%extraCCFlags%" -e "s%extra-swiftc-flags%extraSwiftCFlags%" -e "s%extra-cpp-flags%extraCPPFlags%" android-${{ matrix.arch }}.json
-          fi
 
           tar xf ~/swift-${{ matrix.version }}*-android-${{ matrix.arch }}*-${ANDROID_API_LEVEL}-sdk.tar.xz
           SDK_NAME=$(ls | grep swift-${{ matrix.version }}.*-sdk)
           sed -i "s%/home/butta/swift-5.5-android-${{ matrix.arch }}-${ANDROID_API_LEVEL}-sdk%`pwd`/${SDK_NAME}%" android-${{ matrix.arch }}.json
 
           sed -i "s%/home/butta/android-ndk-r23%`pwd`/android-ndk-r23%" android-${{ matrix.arch }}.json
+          cp android-${{ matrix.arch }}.json android-${{ matrix.arch }}-orig.json
+          if [ ${{ matrix.version }} = 'trunk' ]; then
+            sed -i -e "s%toolchain-bin-dir%binDir%" -e "s%extra-cc-flags%extraCCFlags%" -e "s%extra-swiftc-flags%extraSwiftCFlags%" -e "s%extra-cpp-flags%extraCPPFlags%" android-${{ matrix.arch }}.json
+          fi
       - name: Get Swift Argument Parser package
         uses: actions/checkout@v2
         with:
@@ -234,7 +235,8 @@ jobs:
         run: |
           cd snl
           sed -i "s%url: .*$%path: \"../swift-nio\"),%" Package.swift
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          #../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/
+          swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}-orig.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
         uses: actions/checkout@v2
         with:
@@ -265,7 +267,7 @@ jobs:
         run: |
           cd sa
           sed -i "s%url: .*$%path: \"../sn\"),%" Package.swift
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          #../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get cached Termux debug app for NIO tests
         if: ${{ matrix.arch == 'x86_64' }}
         id: cache-termux
@@ -294,7 +296,7 @@ jobs:
           cp snl/.build/x86_64-unknown-linux-android/debug/swift-nio-sslPackageTests.xctest pack
           cp yams/.build/x86_64-unknown-linux-android/debug/YamsPackageTests.xctest pack
           cp snh/.build/x86_64-unknown-linux-android/debug/swift-nio-http2PackageTests.xctest pack
-          cp sa/.build/x86_64-unknown-linux-android/debug/swift-algorithmsPackageTests.xctest pack
+          #cp sa/.build/x86_64-unknown-linux-android/debug/swift-algorithmsPackageTests.xctest pack
           mkdir pack/crypto-vectors
           cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/_CryptoExtrasVectors/* pack/crypto-vectors
           cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
@@ -344,5 +346,5 @@ jobs:
             adb shell /data/local/tmp/pack/swift-nio-sshPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-nio-sslPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-nio-http2PackageTests.xctest
-            adb shell /data/local/tmp/pack/swift-algorithmsPackageTests.xctest
+            #adb shell /data/local/tmp/pack/swift-algorithmsPackageTests.xctest
             adb shell /data/local/tmp/pack/YamsPackageTests.xctest
