@@ -2,6 +2,15 @@ diff --git a/swift/CMakeLists.txt b/swift/CMakeLists.txt
 index 6d0493d9e00..584890d655e 100644
 --- a/swift/CMakeLists.txt
 +++ b/swift/CMakeLists.txt
+@@ -129,7 +129,7 @@ option(SWIFT_INCLUDE_TESTS "Create targets for building/running tests." TRUE)
+ 
+ option(SWIFT_INCLUDE_TEST_BINARIES
+   "Create targets for building/running test binaries even if SWIFT_INCLUDE_TESTS is disabled"
+-  TRUE)
++  FALSE)
+ 
+ option(SWIFT_INCLUDE_DOCS
+     "Create targets for building docs."
 @@ -177,6 +177,8 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL Windows AND NOT CMAKE_HOST_SYSTEM_NAME STREQUA
    set(SWIFT_USE_LINKER_default "lld")
  elseif(CMAKE_SYSTEM_NAME STREQUAL Darwin)
@@ -15,7 +24,7 @@ diff --git a/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake b/swift/stdlib/cmak
 index 38191b01a64..1f851d3409c 100644
 --- a/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
 +++ b/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
-@@ -397,6 +397,9 @@ function(_add_target_variant_link_flags)
+@@ -413,8 +413,13 @@ function(_add_target_variant_link_flags)
      list(APPEND result "-Wl,-Bsymbolic")
    elseif("${LFLAGS_SDK}" STREQUAL "ANDROID")
      list(APPEND link_libraries "dl" "log")
@@ -24,23 +33,11 @@ index 38191b01a64..1f851d3409c 100644
 +    endif()
      # We need to add the math library, which is linked implicitly by libc++
      list(APPEND result "-lm")
++    list(APPEND result "-rtlib=compiler-rt")
++    list(APPEND result "-resource-dir=${SWIFT_SDK_${LFLAGS_SDK}_ARCH_${LFLAGS_ARCH}_PATH}/../lib64/clang/12.0.5")
  
-diff --git a/swift/stdlib/public/Concurrency/CMakeLists.txt b/swift/stdlib/public/Concurrency/CMakeLists.txt
-index c35cac8d85..3b9a379a24 100644
---- a/swift/stdlib/public/Concurrency/CMakeLists.txt
-+++ b/swift/stdlib/public/Concurrency/CMakeLists.txt
-@@ -47,8 +47,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
-   list(APPEND SWIFT_RUNTIME_CONCURRENCY_SWIFT_FLAGS
-     "-Xfrontend"
-     "-swift-async-frame-pointer=${swift_concurrency_async_fp_mode}")
--else()
--  list(APPEND SWIFT_RUNTIME_CONCURRENCY_C_FLAGS "-fswift-async-fp=never")
-+# Disable this for now, as upstream clang won't have this flag till clang 14.
-+# else()
-+#  list(APPEND SWIFT_RUNTIME_CONCURRENCY_C_FLAGS "-fswift-async-fp=never")
- endif()
- 
- add_swift_target_library(swift_Concurrency ${SWIFT_STDLIB_LIBRARY_BUILD_TYPES} IS_STDLIB
+     # link against the custom C++ library
+     swift_android_cxx_libraries_for_arch(${LFLAGS_ARCH} cxx_link_libraries)
 diff --git a/swift/stdlib/public/Platform/CMakeLists.txt b/swift/stdlib/public/Platform/CMakeLists.txt
 index c7e7bac1092..710c5658972 100644
 --- a/swift/stdlib/public/Platform/CMakeLists.txt
@@ -154,15 +151,3 @@ index c002e72..bc232f1 100644
  
  #define memory_order_ordered    memory_order_seq_cst
  #define memory_order_dependency memory_order_acquire
-diff --git a/swift-corelibs-xctest/CMakeLists.txt b/swift-corelibs-xctest/CMakeLists.txt
-index 531e7c0..589930f 100644
---- a/swift-corelibs-xctest/CMakeLists.txt
-+++ b/swift-corelibs-xctest/CMakeLists.txt
-@@ -58,6 +58,7 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
-     Foundation)
-   if(NOT CMAKE_SYSTEM_NAME STREQUAL Windows)
-     target_link_options(XCTest PRIVATE "SHELL:-no-toolchain-stdlib-rpath")
-+    set_target_properties(XCTest PROPERTIES INSTALL_RPATH "$ORIGIN")
-   endif()
- endif()
- set_target_properties(XCTest PROPERTIES
