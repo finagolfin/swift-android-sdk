@@ -15,7 +15,7 @@ diff --git a/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake b/swift/stdlib/cmak
 index 38191b01a64..1f851d3409c 100644
 --- a/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
 +++ b/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
-@@ -397,6 +397,9 @@ function(_add_target_variant_link_flags)
+@@ -386,8 +386,13 @@ function(_add_target_variant_link_flags)
      list(APPEND result "-Wl,-Bsymbolic")
    elseif("${LFLAGS_SDK}" STREQUAL "ANDROID")
      list(APPEND link_libraries "dl" "log")
@@ -24,7 +24,11 @@ index 38191b01a64..1f851d3409c 100644
 +    endif()
      # We need to add the math library, which is linked implicitly by libc++
      list(APPEND result "-lm")
++    list(APPEND result "-rtlib=compiler-rt")
++    list(APPEND result "-resource-dir=${SWIFT_SDK_${LFLAGS_SDK}_ARCH_${LFLAGS_ARCH}_PATH}/../lib64/clang/12.0.5")
  
+     # link against the custom C++ library
+     swift_android_cxx_libraries_for_arch(${LFLAGS_ARCH} cxx_link_libraries)
 diff --git a/swift/stdlib/public/Platform/CMakeLists.txt b/swift/stdlib/public/Platform/CMakeLists.txt
 index c7e7bac1092..710c5658972 100644
 --- a/swift/stdlib/public/Platform/CMakeLists.txt
@@ -142,15 +146,3 @@ index c002e72..bc232f1 100644
  
  #define memory_order_ordered    memory_order_seq_cst
  #define memory_order_dependency memory_order_acquire
-diff --git a/swift-corelibs-xctest/CMakeLists.txt b/swift-corelibs-xctest/CMakeLists.txt
-index 531e7c0..589930f 100644
---- a/swift-corelibs-xctest/CMakeLists.txt
-+++ b/swift-corelibs-xctest/CMakeLists.txt
-@@ -58,6 +58,7 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
-     Foundation)
-   if(NOT CMAKE_SYSTEM_NAME STREQUAL Windows)
-     target_link_options(XCTest PRIVATE "SHELL:-no-toolchain-stdlib-rpath")
-+    set_target_properties(XCTest PROPERTIES INSTALL_RPATH "$ORIGIN")
-   endif()
- endif()
- set_target_properties(XCTest PROPERTIES
