@@ -183,6 +183,7 @@ jobs:
           repository: apple/swift-nio
           path: swift-nio
       - name: Build Swift NIO package
+        if: ${{ matrix.version == '5.5' }}
         run: |
           cd swift-nio
           git apply ../sdk-config/package-patches/swift-nio-change-tmp-and-disable-tests.patch
@@ -291,7 +292,9 @@ jobs:
           ./termux-elf-cleaner pack/{math,repeat,roll} || true
 
           cp swift-crypto/.build/x86_64-unknown-linux-android/debug/swift-cryptoPackageTests.xctest pack
-          cp swift-nio/.build/x86_64-unknown-linux-android/debug/swift-nioPackageTests.xctest pack
+          if [ ${{ matrix.version }} = '5.5' ]; then
+            cp swift-nio/.build/x86_64-unknown-linux-android/debug/swift-nioPackageTests.xctest pack
+          fi
           cp sn/.build/x86_64-unknown-linux-android/debug/swift-numericsPackageTests.xctest pack
           cp ss/.build/x86_64-unknown-linux-android/debug/swift-systemPackageTests.xctest pack
           cp sco/.build/x86_64-unknown-linux-android/debug/swift-collectionsPackageTests.xctest pack
@@ -339,10 +342,10 @@ jobs:
 
             adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-cryptoPackageTests.xctest
-            adb shell "run-as com.termux mkdir /data/data/com.termux/pack"
-            adb shell "run-as com.termux cp /data/local/tmp/pack/swift-nioPackageTests.xctest /data/data/com.termux/pack"
-            adb shell "run-as com.termux cp -r /data/local/tmp/pack/lib /data/data/com.termux/pack"
-            adb shell "run-as com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest"
+            if [ ${{ matrix.version }} = '5.5' ]; then adb shell "run-as com.termux mkdir /data/data/com.termux/pack"; fi
+            if [ ${{ matrix.version }} = '5.5' ]; then adb shell "run-as com.termux cp /data/local/tmp/pack/swift-nioPackageTests.xctest /data/data/com.termux/pack"; fi
+            if [ ${{ matrix.version }} = '5.5' ]; then adb shell "run-as com.termux cp -r /data/local/tmp/pack/lib /data/data/com.termux/pack"; fi
+            if [ ${{ matrix.version }} = '5.5' ]; then adb shell "run-as com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest"; fi
             adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-systemPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest
