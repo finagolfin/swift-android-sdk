@@ -215,6 +215,7 @@ jobs:
         run: |
           cd snl
           sed -i "s%url: .*$%path: \"../swift-nio\"),%" Package.swift
+          git apply ../sdk-config/package-patches/swift-nio-ssl-armv7.patch
           #../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/
           swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}-orig.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
