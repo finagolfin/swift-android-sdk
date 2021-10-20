@@ -24,7 +24,7 @@ diff --git a/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake b/swift/stdlib/cmak
 index 38191b01a64..1f851d3409c 100644
 --- a/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
 +++ b/swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
-@@ -413,8 +413,13 @@ function(_add_target_variant_link_flags)
+@@ -413,8 +413,12 @@ function(_add_target_variant_link_flags)
      list(APPEND result "-Wl,-Bsymbolic")
    elseif("${LFLAGS_SDK}" STREQUAL "ANDROID")
      list(APPEND link_libraries "dl" "log")
@@ -33,7 +33,6 @@ index 38191b01a64..1f851d3409c 100644
 +    endif()
      # We need to add the math library, which is linked implicitly by libc++
      list(APPEND result "-lm")
-+    list(APPEND result "-rtlib=compiler-rt")
 +    list(APPEND result "-resource-dir=${SWIFT_SDK_${LFLAGS_SDK}_ARCH_${LFLAGS_ARCH}_PATH}/../lib64/clang/12.0.5")
  
      # link against the custom C++ library

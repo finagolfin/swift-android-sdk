@@ -133,10 +133,6 @@ jobs:
           sed -i "s%/home/butta/swift-5.5-android-${{ matrix.arch }}-${ANDROID_API_LEVEL}-sdk%`pwd`/${SDK_NAME}%" android-${{ matrix.arch }}.json
 
           sed -i "s%/home/butta/android-ndk-r23%${ANDROID_NDK_LATEST_HOME}%" android-${{ matrix.arch }}.json
-          cp android-${{ matrix.arch }}.json android-${{ matrix.arch }}-orig.json
-          if [ ${{ matrix.version }} = 'trunk' ]; then
-            sed -i -e "s%toolchain-bin-dir%binDir%" -e "s%extra-cc-flags%extraCCFlags%" -e "s%extra-swiftc-flags%extraSwiftCFlags%" -e "s%extra-cpp-flags%extraCPPFlags%" android-${{ matrix.arch }}.json
-          fi
       - name: Get Swift Argument Parser package
         uses: actions/checkout@v2
         with:
@@ -162,7 +158,6 @@ jobs:
           repository: apple/swift-nio
           path: swift-nio
       - name: Build Swift NIO package
-        if: ${{ matrix.version != 'trunk' }}
         run: |
           cd swift-nio
           git apply ../sdk-config/package-patches/swift-nio-change-tmp-and-disable-tests.patch
@@ -215,8 +210,7 @@ jobs:
         run: |
           cd snl
           sed -i "s%url: .*$%path: \"../swift-nio\"),%" Package.swift
-          #../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/
-          swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}-orig.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
         uses: actions/checkout@v2
         with:
@@ -271,9 +265,7 @@ jobs:
           ./termux-elf-cleaner pack/{math,repeat,roll} || true
 
           cp swift-crypto/.build/x86_64-unknown-linux-android/debug/swift-cryptoPackageTests.xctest pack
-          if [ ${{ matrix.version }} != 'trunk' ]; then
-            cp swift-nio/.build/x86_64-unknown-linux-android/debug/swift-nioPackageTests.xctest pack
-          fi
+          cp swift-nio/.build/x86_64-unknown-linux-android/debug/swift-nioPackageTests.xctest pack
           cp sn/.build/x86_64-unknown-linux-android/debug/swift-numericsPackageTests.xctest pack
           cp ss/.build/x86_64-unknown-linux-android/debug/swift-systemPackageTests.xctest pack
           cp sco/.build/x86_64-unknown-linux-android/debug/swift-collectionsPackageTests.xctest pack
@@ -321,10 +313,10 @@ jobs:
 
             adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-cryptoPackageTests.xctest
-            if [ ${{ matrix.version }} != 'trunk' ]; then adb shell "run-as com.termux mkdir /data/data/com.termux/pack"; fi
-            if [ ${{ matrix.version }} != 'trunk' ]; then adb shell "run-as com.termux cp /data/local/tmp/pack/swift-nioPackageTests.xctest /data/data/com.termux/pack"; fi
-            if [ ${{ matrix.version }} != 'trunk' ]; then adb shell "run-as com.termux cp -r /data/local/tmp/pack/lib /data/data/com.termux/pack"; fi
-            if [ ${{ matrix.version }} != 'trunk' ]; then adb shell "run-as com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest"; fi
+            adb shell "run-as com.termux mkdir /data/data/com.termux/pack"
+            adb shell "run-as com.termux cp /data/local/tmp/pack/swift-nioPackageTests.xctest /data/data/com.termux/pack"
+            adb shell "run-as com.termux cp -r /data/local/tmp/pack/lib /data/data/com.termux/pack"
+            adb shell "run-as com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest"
             adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-systemPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest
