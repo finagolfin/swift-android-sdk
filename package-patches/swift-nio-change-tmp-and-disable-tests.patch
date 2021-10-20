@@ -11,39 +11,6 @@ index 33eddb21..b0062c0c 100644
             ]
     }
  }
-diff --git a/Tests/NIOPosixTests/DatagramChannelTests+XCTest.swift b/Tests/NIOPosixTests/DatagramChannelTests+XCTest.swift
-index f3e452dc..a2db1282 100644
---- a/Tests/NIOPosixTests/DatagramChannelTests+XCTest.swift
-+++ b/Tests/NIOPosixTests/DatagramChannelTests+XCTest.swift
-@@ -51,21 +51,21 @@ extension DatagramChannelTests {
-                 ("testMmsgWillTruncateWithoutChangeToAllocator", testMmsgWillTruncateWithoutChangeToAllocator),
-                 ("testRecvMmsgForMultipleCycles", testRecvMmsgForMultipleCycles),
-                 ("testSetGetEcnNotificationOption", testSetGetEcnNotificationOption),
--                ("testEcnSendReceiveIPV4", testEcnSendReceiveIPV4),
-+//                ("testEcnSendReceiveIPV4", testEcnSendReceiveIPV4),
-                 ("testEcnSendReceiveIPV6", testEcnSendReceiveIPV6),
--                ("testEcnSendReceiveIPV4VectorRead", testEcnSendReceiveIPV4VectorRead),
-+//                ("testEcnSendReceiveIPV4VectorRead", testEcnSendReceiveIPV4VectorRead),
-                 ("testEcnSendReceiveIPV6VectorRead", testEcnSendReceiveIPV6VectorRead),
--                ("testEcnSendReceiveIPV4VectorReadVectorWrite", testEcnSendReceiveIPV4VectorReadVectorWrite),
-+//                ("testEcnSendReceiveIPV4VectorReadVectorWrite", testEcnSendReceiveIPV4VectorReadVectorWrite),
-                 ("testEcnSendReceiveIPV6VectorReadVectorWrite", testEcnSendReceiveIPV6VectorReadVectorWrite),
-                 ("testWritabilityChangeDuringReentrantFlushNow", testWritabilityChangeDuringReentrantFlushNow),
-                 ("testSetGetPktInfoOption", testSetGetPktInfoOption),
--                ("testSimpleReceivePacketInfoIPV4", testSimpleReceivePacketInfoIPV4),
-+//                ("testSimpleReceivePacketInfoIPV4", testSimpleReceivePacketInfoIPV4),
-                 ("testSimpleReceivePacketInfoIPV6", testSimpleReceivePacketInfoIPV6),
--                ("testReceiveEcnAndPacketInfoIPV4", testReceiveEcnAndPacketInfoIPV4),
-+//                ("testReceiveEcnAndPacketInfoIPV4", testReceiveEcnAndPacketInfoIPV4),
-                 ("testReceiveEcnAndPacketInfoIPV6", testReceiveEcnAndPacketInfoIPV6),
--                ("testReceiveEcnAndPacketInfoIPV4VectorRead", testReceiveEcnAndPacketInfoIPV4VectorRead),
-+//                ("testReceiveEcnAndPacketInfoIPV4VectorRead", testReceiveEcnAndPacketInfoIPV4VectorRead),
-                 ("testReceiveEcnAndPacketInfoIPV6VectorRead", testReceiveEcnAndPacketInfoIPV6VectorRead),
--                ("testReceiveEcnAndPacketInfoIPV4VectorReadVectorWrite", testReceiveEcnAndPacketInfoIPV4VectorReadVectorWrite),
-+//                ("testReceiveEcnAndPacketInfoIPV4VectorReadVectorWrite", testReceiveEcnAndPacketInfoIPV4VectorReadVectorWrite),
-                 ("testReceiveEcnAndPacketInfoIPV6VectorReadVectorWrite", testReceiveEcnAndPacketInfoIPV6VectorReadVectorWrite),
-            ]
-    }
 diff --git a/Tests/NIOPosixTests/TestUtils.swift b/Tests/NIOPosixTests/TestUtils.swift
 index 603b4141..f0937993 100644
 --- a/Tests/NIOPosixTests/TestUtils.swift
