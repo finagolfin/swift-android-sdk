@@ -14,6 +14,15 @@ jobs:
       devel-version: ${{ steps.check.outputs.devel-tag }}
       trunk-version: ${{ steps.check.outputs.trunk-tag }}
     steps:
+      - name: Get cached NDK
+        id: cache-ndk
+        uses: actions/cache@v2
+        with:
+          path: ~/android-ndk-r23b-linux.zip
+          key: ndk-23b
+      - name: Get NDK 23b if not cached
+        if: ${{ steps.cache-ndk.outputs.cache-hit != 'true' }}
+        run: wget -q -O ~/android-ndk-r23b-linux.zip https://dl.google.com/android/repository/android-ndk-r23b-linux.zip
       - name: Check for latest Swift ${{ matrix.version }} toolchain
         id: check
         run: |
@@ -22,11 +31,11 @@ jobs:
             SWIFT_TAG="swift-${LATEST_TOOLCHAIN_VERSION}-RELEASE"
             echo "::set-output name=release-tag::$SWIFT_TAG"
           elif [ ${{ matrix.version }} = 'devel' ]; then
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-5.5-DEV | cut -d- -f5-7)
+            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-5.5-DEV | cut -d- -f5-7)
             SWIFT_TAG="swift-5.5-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
             echo "::set-output name=devel-tag::$SWIFT_TAG"
           else
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-DEV | cut -d- -f4-6)
+            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-DEV | cut -d- -f4-6)
             SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
             echo "::set-output name=trunk-tag::$SWIFT_TAG"
           fi
@@ -82,12 +91,18 @@ jobs:
         with:
           path: ~/${{ steps.version.outputs.tag }}-ubuntu20.04.tar.gz
           key: ${{ steps.version.outputs.tag }}-toolchain
+      - name: Get cached NDK
+        id: cache-ndk
+        uses: actions/cache@v2
+        with:
+          path: ~/android-ndk-r23b-linux.zip
+          key: ndk-23b
       - name: Get cached SDK
         id: cache-sdk
         uses: actions/cache@v2
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-ndk-sdk
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-23b-sdk
       - name: Clone
         uses: actions/checkout@v2
         with:
@@ -106,13 +121,15 @@ jobs:
           SDK=`pwd`/$SDK_NAME
 
           tar xf ~/$SWIFT_TAG-ubuntu20.04.tar.gz
+          unzip -q ~/android-ndk-r23b-linux.zip
+          NDK=`pwd`/android-ndk-r23b
 
           if [ ${{ matrix.version }} = 'trunk' ]; then
             EXTRA_FLAGS="--skip-early-swift-driver"
             git apply foundation-trunk-fix.patch
           fi
 
-          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_LATEST_HOME --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --android-icu-uc $SDK/usr/lib/libicuuc.so --android-icu-uc-include $SDK/usr/include --android-icu-i18n $SDK/usr/lib/libicui18n.so --android-icu-i18n-include $SDK/usr/include --android-icu-data $SDK/usr/lib/libicudata.so --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' $EXTRA_FLAGS
+          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $NDK --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --android-icu-uc $SDK/usr/lib/libicuuc.so --android-icu-uc-include $SDK/usr/include --android-icu-i18n $SDK/usr/lib/libicui18n.so --android-icu-i18n-include $SDK/usr/include --android-icu-data $SDK/usr/lib/libicudata.so --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' $EXTRA_FLAGS
 
           patchelf --set-rpath \$ORIGIN $SDK/usr/lib/swift/android/libdispatch.so
           patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN $SDK/usr/lib/swift/android/lib[FXs]*.so
@@ -123,6 +140,10 @@ jobs:
         run: |
           cd sdk-config
 
+          if [ ! -d android-ndk-r23b ]; then
+            unzip -q ~/android-ndk-r23b-linux.zip
+          fi
+
           if [ ! -d ${{ steps.version.outputs.tag }}-ubuntu20.04 ]; then
             tar xf ~/${{ steps.version.outputs.tag }}-ubuntu20.04.tar.gz
           fi
@@ -132,7 +153,7 @@ jobs:
           SDK_NAME=$(ls | grep swift-${{ matrix.version }}.*-sdk)
           sed -i "s%/home/butta/swift-5.5-android-${{ matrix.arch }}-${ANDROID_API_LEVEL}-sdk%`pwd`/${SDK_NAME}%" android-${{ matrix.arch }}.json
 
-          sed -i "s%/home/butta/android-ndk-r23%${ANDROID_NDK_LATEST_HOME}%" android-${{ matrix.arch }}.json
+          sed -i "s%/home/butta/android-ndk-r23b%`pwd`/android-ndk-r23b%" android-${{ matrix.arch }}.json
       - name: Get Swift Argument Parser package
         uses: actions/checkout@v2
         with:
@@ -279,7 +300,7 @@ jobs:
           cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
           cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/lib*so pack/lib
           cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/swift/android/lib*so pack/lib/swift/android
-          cp $ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so pack/lib/swift/android
+          cp sdk-config/android-ndk-r23b/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so pack/lib/swift/android
           cp ~/termux-debug.apk pack
       - name: Upload test directory
         if: ${{ matrix.arch == 'x86_64' }}

@@ -33,7 +33,7 @@ index 38191b01a64..1f851d3409c 100644
 +    endif()
      # We need to add the math library, which is linked implicitly by libc++
      list(APPEND result "-lm")
-+    list(APPEND result "-resource-dir=${SWIFT_SDK_${LFLAGS_SDK}_ARCH_${LFLAGS_ARCH}_PATH}/../lib64/clang/12.0.5")
++    list(APPEND result "-resource-dir=${SWIFT_SDK_${LFLAGS_SDK}_ARCH_${LFLAGS_ARCH}_PATH}/../lib64/clang/12.0.8")
  
      # link against the custom C++ library
      swift_android_cxx_libraries_for_arch(${LFLAGS_ARCH} cxx_link_libraries)
