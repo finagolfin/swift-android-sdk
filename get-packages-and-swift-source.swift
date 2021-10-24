@@ -170,7 +170,6 @@ for termuxPackage in termuxPackages {
 let sdkPath = cwd.appendingPathComponent(sdkDir)
 if !fmd.fileExists(atPath: sdkPath) {
   try fmd.removeItem(atPath: cwd.appendingPathComponent("data.tar.xz"))
-  try fmd.removeItem(atPath: cwd.appendingPathComponent("control.tar.gz"))
   try fmd.removeItem(atPath: cwd.appendingPathComponent("control.tar.xz"))
   try fmd.removeItem(atPath: cwd.appendingPathComponent("debian-binary"))
 
