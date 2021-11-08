@@ -101,18 +101,6 @@ index a5fb6cb780..1f1db7513d 100755
          fi
      else
          local host_install_destdir="${INSTALL_DESTDIR}"
-diff --git a/swift/utils/swift_build_support/swift_build_support/targets.py b/swift/utils/swift_build_support/swift_build_support/targets.py
-index 0751fd869bd..693bd68bdfd 100644
---- a/swift/utils/swift_build_support/swift_build_support/targets.py
-+++ b/swift/utils/swift_build_support/swift_build_support/targets.py
-@@ -165,6 +165,7 @@ class AndroidPlatform(Platform):
-             args.android_ndk, StdlibDeploymentTarget.host_target().name)
- 
-         flags += '-sdk %s/sysroot ' % (android_toolchain_path)
-+        flags += '-use-ld=lld '
-         flags += '-tools-directory %s/bin' % (android_toolchain_path)
-         return flags
- 
 diff --git a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt b/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
 index 016bf294..5c42986a 100644
 --- a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
