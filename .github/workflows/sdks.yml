@@ -131,7 +131,7 @@ jobs:
           SDK_NAME=$(ls | grep swift-${{ matrix.version }}.*-sdk)
           sed -i "s%/home/butta/swift-5.5-android-${{ matrix.arch }}-${ANDROID_API_LEVEL}-sdk%`pwd`/${SDK_NAME}%" android-${{ matrix.arch }}.json
 
-          sed -i "s%/home/butta/android-ndk-r23%${ANDROID_NDK_LATEST_HOME}%" android-${{ matrix.arch }}.json
+          sed -i "s%/home/butta/android-ndk-r23b%${ANDROID_NDK_LATEST_HOME}%" android-${{ matrix.arch }}.json
       - name: Get Swift Argument Parser package
         uses: actions/checkout@v2
         with:
