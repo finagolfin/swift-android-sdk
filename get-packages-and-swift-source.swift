@@ -6,10 +6,6 @@ let termuxPackages = ["libicu", "libicu-static", "libandroid-spawn", "libcurl", 
 let swiftRepos = ["llvm-project", "swift", "swift-corelibs-libdispatch",
                   "swift-corelibs-foundation", "swift-corelibs-xctest"]
 
-let swiftPatches = ["swift-host", "swift-native-tools", "swift-utils-build-script-impl-cross",
-                    "swift-corelibs-foundation-Sources-Foundation-CMakeLists.txt",
-                    "swift-corelibs-libdispatch-arm", "swift-corelibs-xctest-CMakeLists.txt"]
-
 guard let SWIFT_TAG = ProcessInfo.processInfo.environment["SWIFT_TAG"] else {
   fatalError("You must specify a SWIFT_TAG environment variable.")
 }
@@ -18,23 +14,22 @@ guard let ANDROID_ARCH = ProcessInfo.processInfo.environment["ANDROID_ARCH"] els
   fatalError("You must specify an ANDROID_ARCH environment variable.")
 }
 
-var sdkDir = "", icuVersion = "", icuMajorVersion = "", swiftSource = "", swiftVersion = "",
-    swiftFullVersion = "", swiftBranch = "", swiftSnapshotDate = ""
+var sdkDir = "", icuVersion = "", icuMajorVersion = "", swiftVersion = "",
+    swiftBranch = "", swiftSnapshotDate = ""
 
 let tagRange = NSRange(SWIFT_TAG.startIndex..., in: SWIFT_TAG)
-let tagExtract = try NSRegularExpression(pattern: "swift-(([0-9]+\\.[0-9])\\.?[0-9]*)?([A-Z-]+)([0-9-]+[0-9])?")
+let tagExtract = try NSRegularExpression(pattern: "swift-([0-9]+\\.[0-9])?\\.?[0-9]*-?([A-Z-]+)([0-9-]+[0-9])?")
 
 if tagExtract.numberOfMatches(in: SWIFT_TAG, range: tagRange) == 1 {
   let match = tagExtract.firstMatch(in: SWIFT_TAG, range: tagRange)
-  swiftFullVersion = SWIFT_TAG.substring(with: match!.range(at: 1))
-  swiftVersion = SWIFT_TAG.substring(with: match!.range(at: 2))
-  swiftBranch = SWIFT_TAG.substring(with: match!.range(at: 3))
-  swiftSnapshotDate = SWIFT_TAG.substring(with: match!.range(at: 4))
+  swiftVersion = SWIFT_TAG.substring(with: match!.range(at: 1))
+  swiftBranch = SWIFT_TAG.substring(with: match!.range(at: 2))
+  swiftSnapshotDate = SWIFT_TAG.substring(with: match!.range(at: 3))
 } else {
   fatalError("Something went wrong with extracting data from the SWIFT_TAG environment variable: \(SWIFT_TAG)")
 }
 
-if swiftBranch == "-RELEASE" {
+if swiftBranch == "RELEASE" {
   sdkDir = "swift-release-android-\(ANDROID_ARCH)-24-sdk"
 } else {
   sdkDir = "swift-\(swiftVersion == "" ? "trunk" : "devel")-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"
@@ -110,7 +105,7 @@ print(runCommand("cmake", with: ["--version"]))
 print("ninja \(runCommand("ninja", with: ["--version"]))")
 print(runCommand("python", with: ["--version"]))
 print(runCommand("patchelf", with: ["--version"]))
-print(runCommand("ar", with: ["--version"]))
+print(runCommand("llvm-ar", with: ["--version"]))
 print(runCommand("tar", with: ["--version"]))
 print(runCommand("xz", with: ["--version"]))
 print(runCommand("curl", with: ["--version"]))
@@ -162,7 +157,7 @@ for termuxPackage in termuxPackages {
 
   if !fmd.fileExists(atPath: cwd.appendingPathComponent(sdkDir)) {
     print("Unpacking \(packageName)")
-    _ = runCommand("ar", with: ["x", "\(termuxArchive.appendingPathComponent(String(packageName)))"])
+    _ = runCommand("llvm-ar", with: ["x", "\(termuxArchive.appendingPathComponent(String(packageName)))"])
     _ = runCommand("tar", with: ["xf", "data.tar.xz"])
   }
 }
@@ -234,4 +229,4 @@ for repo in swiftRepos {
   }
 }
 
-_ = runCommand("git", with: ["apply", "swift-android-\(swiftBranch == "-RELEASE" ? swiftVersion : (swiftVersion == "" ? "trunk" : "devel")).patch"])
+_ = runCommand("git", with: ["apply", "swift-android-\(swiftBranch == "RELEASE" ? swiftVersion : (swiftVersion == "" ? "trunk" : "devel")).patch"])
