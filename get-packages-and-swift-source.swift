@@ -105,7 +105,7 @@ print(runCommand("cmake", with: ["--version"]))
 print("ninja \(runCommand("ninja", with: ["--version"]))")
 print(runCommand("python", with: ["--version"]))
 print(runCommand("patchelf", with: ["--version"]))
-print(runCommand("llvm-ar", with: ["--version"]))
+print(runCommand("ar", with: ["--version"]))
 print(runCommand("tar", with: ["--version"]))
 print(runCommand("xz", with: ["--version"]))
 print(runCommand("curl", with: ["--version"]))
@@ -157,7 +157,7 @@ for termuxPackage in termuxPackages {
 
   if !fmd.fileExists(atPath: cwd.appendingPathComponent(sdkDir)) {
     print("Unpacking \(packageName)")
-    _ = runCommand("llvm-ar", with: ["x", "\(termuxArchive.appendingPathComponent(String(packageName)))"])
+    _ = runCommand("ar", with: ["x", "\(termuxArchive.appendingPathComponent(String(packageName)))"])
     _ = runCommand("tar", with: ["xf", "data.tar.xz"])
   }
 }
