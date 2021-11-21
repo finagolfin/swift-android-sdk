@@ -240,10 +240,7 @@ jobs:
         run: |
           cd sa
           sed -i "s%url: .*$%path: \"../sn\"),%" Package.swift
-          if [ ${{ matrix.version }} = 'trunk' ]; then
-            EXTRA_FLAGS="-Xswiftc -Xfrontend -Xswiftc -requirement-machine=off"
-          fi
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build $EXTRA_FLAGS --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get cached Termux debug app for NIO tests
         if: ${{ matrix.arch == 'x86_64' }}
         id: cache-termux
