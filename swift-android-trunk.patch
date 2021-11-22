@@ -80,6 +80,19 @@ index a5fb6cb780..1f1db7513d 100755
          fi
      else
          local host_install_destdir="${INSTALL_DESTDIR}"
+diff --git a/swift/utils/swift_build_support/swift_build_support/products/product.py b/swift/utils/swift_build_support/swift_build_support/products/product.py
+index 405f4795461..3af29a27937 100644
+--- a/swift/utils/swift_build_support/swift_build_support/products/product.py
++++ b/swift/utils/swift_build_support/swift_build_support/products/product.py
+@@ -229,7 +229,7 @@ class Product(object):
+                 # This assumes that all hosts are merged to the lipo.
+                 return self.args.install_destdir
+             else:
+-                return '%s/%s' % (self.args.install_destdir, host_target)
++                return self.args.install_destdir
+         else:
+             return self.args.install_destdir
+ 
 diff --git a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt b/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
 index 016bf294..5c42986a 100644
 --- a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
@@ -96,3 +109,63 @@ index 016bf294..5c42986a 100644
  endif()
  
  
+diff --git a/llbuild/CMakeLists.txt b/llbuild/CMakeLists.txt
+index 766e38e7..ad4d369f 100644
+--- a/llbuild/CMakeLists.txt
++++ b/llbuild/CMakeLists.txt
+@@ -158,6 +158,7 @@ elseif(MSVC)
+ else ()
+   add_compile_options(
+     # Enable additional Clang warnings.
++    "$<$<COMPILE_LANGUAGE:CXX>:-D_FORTIFY_SOURCE=0>"
+     "$<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>"
+     "$<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>"
+     "$<$<COMPILE_LANGUAGE:CXX>:-Wbool-conversion>"
+diff --git a/llbuild/lib/llvm/Support/CMakeLists.txt b/llbuild/lib/llvm/Support/CMakeLists.txt
+index 9d5a714b..3f8f8c1d 100644
+--- a/llbuild/lib/llvm/Support/CMakeLists.txt
++++ b/llbuild/lib/llvm/Support/CMakeLists.txt
+@@ -66,4 +66,15 @@ endif()
+ 
+ if(${CMAKE_SYSTEM_NAME} MATCHES "Android|Darwin|Linux")
+   target_link_libraries(llvmSupport PRIVATE curses)
++if(${CMAKE_SYSTEM_NAME} MATCHES "Android")
++  target_link_libraries(llvmSupport PRIVATE android-spawn)
++  list(GET CMAKE_FIND_ROOT_PATH 0 SPAWN_DIR)
++  target_include_directories(llvmSupport
++    PUBLIC
++    ${SPAWN_DIR}/usr/include
++  )
++  target_link_directories(llvmSupport PUBLIC
++    ${SPAWN_DIR}/usr/lib
++  )
++endif()
+ endif()
+diff --git a/llbuild/unittests/CMakeLists.txt b/llbuild/unittests/CMakeLists.txt
+index 92a1ee38..52273afb 100644
+--- a/llbuild/unittests/CMakeLists.txt
++++ b/llbuild/unittests/CMakeLists.txt
+@@ -6,9 +6,9 @@ function(add_llbuild_unittest test_dirname)
+ endfunction()
+ 
+ add_subdirectory(Basic)
+-add_subdirectory(CAS)
++#add_subdirectory(CAS)
+ add_subdirectory(CAPI)
+ add_subdirectory(Core)
+ add_subdirectory(Evo)
+ add_subdirectory(BuildSystem)
+-add_subdirectory(Ninja)
++#add_subdirectory(Ninja)
+diff --git a/swiftpm/Utilities/bootstrap b/swiftpm/Utilities/bootstrap
+index 085056de..1ded1a90 100755
+--- a/swiftpm/Utilities/bootstrap
++++ b/swiftpm/Utilities/bootstrap
+@@ -764,6 +764,7 @@ def get_swiftpm_flags(args):
+     if 'ANDROID_DATA' in os.environ or (args.cross_compile_hosts and re.match(
+         'android-', args.cross_compile_hosts)):
+         build_flags.extend(["-Xswiftc", "-Xcc", "-Xswiftc", "-U_GNU_SOURCE"])
++        build_flags.extend(["-Xlinker", "-landroid-spawn"])
+ 
+     if platform.system() == "OpenBSD":
+         build_flags.extend(["-Xcc", "-I/usr/local/include"])

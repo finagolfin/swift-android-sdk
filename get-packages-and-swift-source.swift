@@ -1,10 +1,19 @@
 import Foundation
 
 // The Termux packages to download and unpack
-let termuxPackages = ["libicu", "libicu-static", "libandroid-spawn", "libcurl", "libxml2"]
+var termuxPackages = ["libicu", "libicu-static", "libandroid-spawn", "libcurl", "libxml2"]
 
 let swiftRepos = ["llvm-project", "swift", "swift-corelibs-libdispatch",
                   "swift-corelibs-foundation", "swift-corelibs-xctest"]
+
+let extraSwiftRepos = ["swift-llbuild", "swift-package-manager", "swift-driver",
+                       "swift-tools-support-core", "swift-argument-parser", "swift-crypto",
+                       "Yams"]
+let renameRepos = ["swift-llbuild" : "llbuild", "swift-package-manager" : "swiftpm", "Yams" : "yams"]
+let repoTags = ["swift-argument-parser" : "1.0.1", "swift-crypto" : "1.1.5", "Yams" : "4.0.2"]
+if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
+  termuxPackages += ["ncurses", "libsqlite"]
+}
 
 guard let SWIFT_TAG = ProcessInfo.processInfo.environment["SWIFT_TAG"] else {
   fatalError("You must specify a SWIFT_TAG environment variable.")
@@ -226,6 +235,18 @@ for repo in swiftRepos {
     try fmd.moveItem(atPath: cwd.appendingPathComponent("\(repo)-\(SWIFT_TAG)"),
                      toPath: cwd.appendingPathComponent(repo))
     try fmd.removeItem(atPath: cwd.appendingPathComponent("\(SWIFT_TAG).tar.gz"))
+  }
+}
+
+if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
+  for repo in extraSwiftRepos {
+    let tag = repoTags[repo] ?? SWIFT_TAG
+    _ = runCommand("curl", with: ["-L", "-O",
+              "https://github.com/\(repo == "Yams" ? "jpsim" : "apple")/\(repo)/archive/refs/tags/\(tag).tar.gz"])
+    _ = runCommand("tar", with: ["xf", "\(tag).tar.gz"])
+    try fmd.moveItem(atPath: cwd.appendingPathComponent("\(repo)-\(tag)"),
+                     toPath: cwd.appendingPathComponent(renameRepos[repo] ?? repo))
+    try fmd.removeItem(atPath: cwd.appendingPathComponent("\(tag).tar.gz"))
   }
 }
 
