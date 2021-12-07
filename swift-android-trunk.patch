@@ -1,16 +1,3 @@
-diff --git a/swift/CMakeLists.txt b/swift/CMakeLists.txt
-index 6d0493d9e00..584890d655e 100644
---- a/swift/CMakeLists.txt
-+++ b/swift/CMakeLists.txt
-@@ -129,7 +129,7 @@ option(SWIFT_INCLUDE_TESTS "Create targets for building/running tests." TRUE)
- 
- option(SWIFT_INCLUDE_TEST_BINARIES
-   "Create targets for building/running test binaries even if SWIFT_INCLUDE_TESTS is disabled"
--  TRUE)
-+  FALSE)
- 
- option(SWIFT_INCLUDE_DOCS
-     "Create targets for building docs."
 diff --git a/swift/stdlib/public/Platform/CMakeLists.txt b/swift/stdlib/public/Platform/CMakeLists.txt
 index c7e7bac1092..710c5658972 100644
 --- a/swift/stdlib/public/Platform/CMakeLists.txt
