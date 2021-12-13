@@ -1,39 +1,25 @@
-diff --git a/swift/stdlib/public/Platform/CMakeLists.txt b/swift/stdlib/public/Platform/CMakeLists.txt
-index c7e7bac1092..710c5658972 100644
---- a/swift/stdlib/public/Platform/CMakeLists.txt
-+++ b/swift/stdlib/public/Platform/CMakeLists.txt
-@@ -99,6 +99,7 @@ foreach(sdk ${SWIFT_SDKS})
-         OUTPUT "${glibc_modulemap_out}"
-         FLAGS
-             "-DCMAKE_SDK=${sdk}"
-+            "-DSDK_INCLUDE_PATH=${SWIFT_${sdk}_${arch}_ICU_UC_INCLUDE}"
-             "-DGLIBC_INCLUDE_PATH=${SWIFT_SDK_${sdk}_ARCH_${arch}_LIBC_INCLUDE_DIRECTORY}"
-             "-DGLIBC_ARCH_INCLUDE_PATH=${SWIFT_SDK_${sdk}_ARCH_${arch}_LIBC_ARCHITECTURE_INCLUDE_DIRECTORY}")
+diff --git a/sourcekit-lsp/Utilities/build-script-helper.py b/sourcekit-lsp/Utilities/build-script-helper.py
+index a64795c..bc334a8 100755
+--- a/sourcekit-lsp/Utilities/build-script-helper.py
++++ b/sourcekit-lsp/Utilities/build-script-helper.py
+@@ -66,7 +66,7 @@ def get_swiftpm_options(args):
+     ]
  
-diff --git a/swift/stdlib/public/Platform/bionic.modulemap.gyb b/swift/stdlib/public/Platform/bionic.modulemap.gyb
-index e44f9082653..9ed6719e17d 100644
---- a/swift/stdlib/public/Platform/bionic.modulemap.gyb
-+++ b/swift/stdlib/public/Platform/bionic.modulemap.gyb
-@@ -82,6 +82,10 @@ module SwiftGlibc [system] {
-       header "${GLIBC_INCLUDE_PATH}/locale.h"
-       export *
-     }
-+    module malloc {
-+      header "${GLIBC_INCLUDE_PATH}/malloc.h"
-+      export *
-+    }
-     module math {
-       link "m"
-       header "${GLIBC_INCLUDE_PATH}/math.h"
-@@ -185,7 +185,7 @@ module SwiftGlibc [system] {
-       export *
-     }
-     module spawn {
--      header "${GLIBC_INCLUDE_PATH}/spawn.h"
-+      header "${SDK_INCLUDE_PATH}/spawn.h"
-       export *
-     }
-     module syslog {
+   if args.cross_compile_host:
+-    swiftpm_args += ['--destination', args.cross_compile_config]
++    swiftpm_args += ['--destination', args.cross_compile_config, '-Xlinker', '-landroid-spawn']
+ 
+   return swiftpm_args
+ 
+@@ -114,7 +114,7 @@ def handle_invocation(swift_exec, args):
+     env['TSAN_OPTIONS'] = 'halt_on_error=true'
+ 
+   print('Cleaning ' + args.build_path)
+-  shutil.rmtree(args.build_path, ignore_errors=True)
++#  shutil.rmtree(args.build_path, ignore_errors=True)
+ 
+   env['SWIFT_EXEC'] = '%sc' % (swift_exec)
+ 
 diff --git a/swift/stdlib/public/SwiftShims/CMakeLists.txt b/swift/stdlib/public/SwiftShims/CMakeLists.txt
 index 99c098a5ea..0095eea069 100644
 --- a/swift/stdlib/public/SwiftShims/CMakeLists.txt
@@ -84,13 +70,14 @@ diff --git a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt b/swift
 index 016bf294..5c42986a 100644
 --- a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
 +++ b/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
-@@ -167,6 +167,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL Windows)
+@@ -167,6 +167,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL Windows)
      $<TARGET_OBJECTS:CoreFoundationResources>)
  elseif(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
    target_link_options(Foundation PRIVATE "SHELL:-no-toolchain-stdlib-rpath")
 +  if(${CMAKE_SYSTEM_NAME} STREQUAL Android)
 +    target_link_libraries(Foundation PRIVATE android-spawn)
 +    list(GET CMAKE_FIND_ROOT_PATH 0 SPAWN_DIR)
++    target_include_directories(Foundation PUBLIC ${SPAWN_DIR}/usr/include)
 +    target_link_directories(Foundation PUBLIC ${SPAWN_DIR}/usr/lib)
 +  endif()
  endif()
