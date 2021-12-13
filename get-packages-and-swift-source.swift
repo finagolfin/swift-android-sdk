@@ -8,7 +8,7 @@ let swiftRepos = ["llvm-project", "swift", "swift-corelibs-libdispatch",
 
 let extraSwiftRepos = ["swift-llbuild", "swift-package-manager", "swift-driver",
                        "swift-tools-support-core", "swift-argument-parser", "swift-crypto",
-                       "Yams"]
+                       "Yams", "indexstore-db", "sourcekit-lsp"]
 let renameRepos = ["swift-llbuild" : "llbuild", "swift-package-manager" : "swiftpm", "Yams" : "yams"]
 let repoTags = ["swift-argument-parser" : "1.0.1", "swift-crypto" : "1.1.5", "Yams" : "4.0.2"]
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {

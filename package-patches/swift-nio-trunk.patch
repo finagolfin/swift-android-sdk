@@ -1,0 +1,34 @@
+diff --git a/Sources/NIOCore/BSDSocketAPI.swift b/Sources/NIOCore/BSDSocketAPI.swift
+index 777a3c25..8e7f12f0 100644
+--- a/Sources/NIOCore/BSDSocketAPI.swift
++++ b/Sources/NIOCore/BSDSocketAPI.swift
+@@ -69,9 +69,9 @@ private let sysInet_pton: @convention(c) (CInt, UnsafePointer<CChar>?, UnsafeMut
+ 
+ // Work around SO_TIMESTAMP/SO_RCVTIMEO being awkwardly defined in glibc.
+ #if os(Android)
+-let IFF_BROADCAST: CUnsignedInt = numericCast(CNIOLinux.IFF_BROADCAST.rawValue)
+-let IFF_POINTOPOINT: CUnsignedInt = numericCast(CNIOLinux.IFF_POINTOPOINT.rawValue)
+-let IFF_MULTICAST: CUnsignedInt = numericCast(CNIOLinux.IFF_MULTICAST.rawValue)
++let IFF_BROADCAST: CUnsignedInt = numericCast(IFF_BROADCAST)
++let IFF_POINTOPOINT: CUnsignedInt = numericCast(IFF_POINTOPOINT)
++let IFF_MULTICAST: CUnsignedInt = numericCast(IFF_MULTICAST)
+ #if arch(arm)
+ let SO_RCVTIMEO = SO_RCVTIMEO_OLD
+ let SO_TIMESTAMP = SO_TIMESTAMP_OLD
+diff --git a/Sources/NIOPosix/System.swift b/Sources/NIOPosix/System.swift
+index 64d2cda7..7effa47c 100644
+--- a/Sources/NIOPosix/System.swift
++++ b/Sources/NIOPosix/System.swift
+@@ -36,9 +36,9 @@ let badOS = { fatalError("unsupported OS") }()
+ 
+ #if os(Android)
+ let INADDR_ANY = UInt32(0) // #define INADDR_ANY ((unsigned long int) 0x00000000)
+-let IFF_BROADCAST: CUnsignedInt = numericCast(CNIOLinux.IFF_BROADCAST.rawValue)
+-let IFF_POINTOPOINT: CUnsignedInt = numericCast(CNIOLinux.IFF_POINTOPOINT.rawValue)
+-let IFF_MULTICAST: CUnsignedInt = numericCast(CNIOLinux.IFF_MULTICAST.rawValue)
++let IFF_BROADCAST: CUnsignedInt = numericCast(IFF_BROADCAST)
++let IFF_POINTOPOINT: CUnsignedInt = numericCast(IFF_POINTOPOINT)
++let IFF_MULTICAST: CUnsignedInt = numericCast(IFF_MULTICAST)
+ internal typealias in_port_t = UInt16
+ extension ipv6_mreq { // http://lkml.iu.edu/hypermail/linux/kernel/0106.1/0080.html
+     init (ipv6mr_multiaddr: in6_addr, ipv6mr_interface: UInt32) {
