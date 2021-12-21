@@ -87,7 +87,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-sdk
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-single-sdk
       - name: Clone
         uses: actions/checkout@v2
         with:
