@@ -81,19 +81,6 @@ index 99c098a5ea..0095eea069 100644
      DESTINATION "lib/swift_static")
  endif()
  
-diff --git a/swift/utils/build-script-impl b/swift/utils/build-script-impl
-index a5fb6cb780..1f1db7513d 100755
---- a/swift/utils/build-script-impl
-+++ b/swift/utils/build-script-impl
-@@ -1047,7 +1047,7 @@ function get_host_install_destdir() {
-             # This assumes that all hosts are merged to the lipo.
-             local host_install_destdir="${INSTALL_DESTDIR}"
-         else
--            local host_install_destdir="${INSTALL_DESTDIR}/${host}"
-+            local host_install_destdir="${INSTALL_DESTDIR}"
-         fi
-     else
-         local host_install_destdir="${INSTALL_DESTDIR}"
 diff --git a/swift/utils/swift_build_support/swift_build_support/targets.py b/swift/utils/swift_build_support/swift_build_support/targets.py
 index 0751fd869bd..693bd68bdfd 100644
 --- a/swift/utils/swift_build_support/swift_build_support/targets.py
