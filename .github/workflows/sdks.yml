@@ -119,8 +119,10 @@ jobs:
               EXTRA_FLAGS+=" --sourcekit-lsp"
             fi
             wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/35707.diff
+            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40625.diff
             wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40659.diff
             patch -p1 < 35707.diff
+            patch -p1 < 40625.diff
             patch -p1 < 40659.diff
           else
             EXTRA_FLAGS+=" --android-icu-uc $SDK/usr/lib/libicuuc.so --android-icu-uc-include $SDK/usr/include --android-icu-i18n $SDK/usr/lib/libicui18n.so --android-icu-i18n-include $SDK/usr/include --android-icu-data $SDK/usr/lib/libicudata.so"
