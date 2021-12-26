@@ -1,6 +1,11 @@
 # Swift cross-compilation SDKs for Android
 
-All patches used to build these SDKs are open source and listed below.
+All patches used to build these SDKs are open source and listed below. I
+maintain [a daily CI](https://github.com/buttaface/swift-android-sdk/actions?query=event%3Aschedule)
+on [github Actions that cross-compiles the SDK from the three main source branches
+of the Swift toolchain for AArch64, armv7, and x86_64, builds several Swift packages
+against those SDKs, and then runs their tests in the Android x86_64
+emulator](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml).
 
 To build with a Swift 5.5 SDK, first download [the latest Android LTS NDK
 23b](https://developer.android.com/ndk/downloads) and [Swift 5.5.1
@@ -9,7 +14,7 @@ compiler's dependencies listed there). Unpack these archives and the SDK.
 
 I will write up a Swift script to do this SDK configuration, but you will need
 to do it manually for now. [You can see how I do it on the CI for a concrete
-example](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml#L128).
+example](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml#L153).
 
 The SDK will need to be modified with the path to your NDK and Swift compiler
 in the following ways (I'll show aarch64 below, the same will need to be done
@@ -64,13 +69,13 @@ same build directory. Other packages use `#file` to point at test data in the
 repo: I've had success moving this data with the test runner, after modifying
 the test source so it has the path to this test data in the Android test
 environment. See the example of [swift-crypto on the
-CI](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml#L278).
+CI](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml#L305).
 
 You can copy these executables and the SDK to [an emulator or a USB
 debugging-enabled device with adb](https://github.com/apple/swift/blob/release/5.5/docs/Android.md#4-deploying-the-build-products-to-the-device),
 or put them on an Android device with [a terminal emulator app like Termux](https://termux.com).
 I test aarch64 with Termux so I'll show how to run the test runner there, but
-the process is similar with adb, [as can be seen on the CI](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml#L312).
+the process is similar with adb, [as can be seen on the CI](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml#L339).
 
 Copy the test executables to the same directory as the SDK:
 ```
