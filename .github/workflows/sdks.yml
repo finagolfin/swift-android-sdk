@@ -111,7 +111,9 @@ jobs:
           tar xf ~/$SWIFT_TAG-ubuntu20.04.tar.gz
           cd swift
           wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40633.diff
+          wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40707.diff
           patch -p1 < 40633.diff || true
+          patch -p1 < 40707.diff
 
           if [ ${{ matrix.version }} = 'trunk' ]; then
             EXTRA_FLAGS="-b -p --install-llbuild --skip-early-swift-driver"

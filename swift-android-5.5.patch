@@ -61,26 +61,6 @@ index e44f9082653..9ed6719e17d 100644
        export *
      }
      module syslog {
-diff --git a/swift/stdlib/public/SwiftShims/CMakeLists.txt b/swift/stdlib/public/SwiftShims/CMakeLists.txt
-index 99c098a5ea..0095eea069 100644
---- a/swift/stdlib/public/SwiftShims/CMakeLists.txt
-+++ b/swift/stdlib/public/SwiftShims/CMakeLists.txt
-@@ -208,13 +208,13 @@ endif()
- 
- swift_install_symlink_component(clang-resource-dir-symlink
-   LINK_NAME clang
--  TARGET ../clang/${CLANG_VERSION}
-+  TARGET ${SWIFT_NATIVE_SWIFT_TOOLS_PATH}/../lib/clang/${CLANG_VERSION}
-   DESTINATION "lib/swift")
- 
- if(SWIFT_BUILD_STATIC_STDLIB)
-   swift_install_symlink_component(clang-resource-dir-symlink
-     LINK_NAME clang
--    TARGET ../clang/${CLANG_VERSION}
-+    TARGET ${SWIFT_NATIVE_SWIFT_TOOLS_PATH}/../lib/clang/${CLANG_VERSION}
-     DESTINATION "lib/swift_static")
- endif()
- 
 diff --git a/swift/utils/swift_build_support/swift_build_support/targets.py b/swift/utils/swift_build_support/swift_build_support/targets.py
 index 0751fd869bd..693bd68bdfd 100644
 --- a/swift/utils/swift_build_support/swift_build_support/targets.py

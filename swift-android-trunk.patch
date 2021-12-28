@@ -20,26 +20,6 @@ index a64795c..bc334a8 100755
  
    env['SWIFT_EXEC'] = '%sc' % (swift_exec)
  
-diff --git a/swift/stdlib/public/SwiftShims/CMakeLists.txt b/swift/stdlib/public/SwiftShims/CMakeLists.txt
-index 99c098a5ea..0095eea069 100644
---- a/swift/stdlib/public/SwiftShims/CMakeLists.txt
-+++ b/swift/stdlib/public/SwiftShims/CMakeLists.txt
-@@ -208,13 +208,13 @@ endif()
- 
- swift_install_symlink_component(clang-resource-dir-symlink
-   LINK_NAME clang
--  TARGET ../clang/${CLANG_VERSION}
-+  TARGET ${SWIFT_NATIVE_SWIFT_TOOLS_PATH}/../lib/clang/${CLANG_VERSION}
-   DESTINATION "lib/swift")
- 
- if(SWIFT_BUILD_STATIC_STDLIB)
-   swift_install_symlink_component(clang-resource-dir-symlink
-     LINK_NAME clang
--    TARGET ../clang/${CLANG_VERSION}
-+    TARGET ${SWIFT_NATIVE_SWIFT_TOOLS_PATH}/../lib/clang/${CLANG_VERSION}
-     DESTINATION "lib/swift_static")
- endif()
- 
 diff --git a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt b/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
 index 016bf294..5c42986a 100644
 --- a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
