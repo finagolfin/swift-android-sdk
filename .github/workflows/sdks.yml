@@ -87,7 +87,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-flag-sdk
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-link-sdk
       - name: Clone
         uses: actions/checkout@v2
         with:
@@ -109,6 +109,7 @@ jobs:
           SDK=`pwd`/$SDK_NAME
 
           tar xf ~/$SWIFT_TAG-ubuntu20.04.tar.gz
+          git apply swift-android-${{ matrix.version }}.patch
           cd swift
           wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40633.diff
           wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40707.diff

@@ -119,7 +119,6 @@ print(runCommand("tar", with: ["--version"]))
 print(runCommand("xz", with: ["--version"]))
 print(runCommand("curl", with: ["--version"]))
 print(runCommand("gzip", with: ["--version"]))
-print(runCommand("git", with: ["--version"]))
 
 let fmd = FileManager.default
 let cwd = fmd.currentDirectoryPath
@@ -249,5 +248,3 @@ if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
     try fmd.removeItem(atPath: cwd.appendingPathComponent("\(tag).tar.gz"))
   }
 }
-
-_ = runCommand("git", with: ["apply", "swift-android-\(swiftBranch == "RELEASE" ? swiftVersion : (swiftVersion == "" ? "trunk" : "devel")).patch"])
