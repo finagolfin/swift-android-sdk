@@ -153,8 +153,8 @@ jobs:
           if [ ${{ matrix.version }} = 'trunk' ]; then
             echo "::set-output name=sdk-name::$SDK_NAME/usr/swiftpm-android"
           else
-            sed -i "s%/home/butta/swift-5.5.1-RELEASE%`pwd`/${{ steps.version.outputs.tag }}%" android-${{ matrix.arch }}.json
-            sed -i "s%/home/butta/swift-5.5-android-${{ matrix.arch }}-${ANDROID_API_LEVEL}-sdk%`pwd`/${SDK_NAME}%" android-${{ matrix.arch }}.json
+            sed -i "s%/home/butta/swift-5.5.2-RELEASE%`pwd`/${{ steps.version.outputs.tag }}%" android-${{ matrix.arch }}.json
+            sed -i "s%/home/butta/swift-5.5.2-android-${{ matrix.arch }}-${ANDROID_API_LEVEL}-sdk%`pwd`/${SDK_NAME}%" android-${{ matrix.arch }}.json
             sed -i "s%/home/butta/android-ndk-r23b%${ANDROID_NDK_LATEST_HOME}%" android-${{ matrix.arch }}.json
             echo "::set-output name=sdk-name::android"
           fi
