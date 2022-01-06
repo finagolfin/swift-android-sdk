@@ -186,9 +186,6 @@ jobs:
         run: |
           cd swift-nio
           git apply ../sdk-config/package-patches/swift-nio-change-tmp-and-disable-tests.patch
-          if [ ${{ matrix.version }} = 'trunk' ]; then
-            git apply ../sdk-config/package-patches/swift-nio-trunk.patch
-          fi
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --destination ../sdk-config/${{ steps.sdk-unpack.outputs.sdk-name }}-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Numerics package
         uses: actions/checkout@v2
