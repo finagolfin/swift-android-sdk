@@ -22,8 +22,8 @@ jobs:
             SWIFT_TAG="swift-${LATEST_TOOLCHAIN_VERSION}-RELEASE"
             echo "::set-output name=release-tag::$SWIFT_TAG"
           elif [ ${{ matrix.version }} = 'devel' ]; then
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-5.5-DEV | cut -d- -f5-7)
-            SWIFT_TAG="swift-5.5-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
+            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-5.6-DEV | cut -d- -f5-7)
+            SWIFT_TAG="swift-5.6-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
             echo "::set-output name=devel-tag::$SWIFT_TAG"
           else
             LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-DEV | cut -d- -f4-6)
@@ -43,13 +43,13 @@ jobs:
           if [ ${{ matrix.version }} = 'release' ]; then
             SWIFT_BRANCH="swift-$(echo ${{ steps.check.outputs.release-tag }} | cut -d- -f2)-release"
           elif [ ${{ matrix.version }} = 'devel' ]; then
-            SWIFT_BRANCH="swift-5.5-branch"
+            SWIFT_BRANCH="swift-5.6-branch"
           else
             SWIFT_BRANCH="development"
           fi
           cd
           SWIFT_TAG="${{ steps.check.outputs.latest-tag }}"
-          wget -q https://swift.org/builds/$SWIFT_BRANCH/ubuntu2004/$SWIFT_TAG/$SWIFT_TAG-ubuntu20.04.tar.gz
+          wget -q https://download.swift.org/$SWIFT_BRANCH/ubuntu2004/$SWIFT_TAG/$SWIFT_TAG-ubuntu20.04.tar.gz
           echo "got latest toolchain: ${SWIFT_TAG}"
   build-sdk-and-tests:
     runs-on: ubuntu-latest
@@ -87,7 +87,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-link-sdk
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-devel-sdk
       - name: Clone
         uses: actions/checkout@v2
         with:
@@ -100,7 +100,7 @@ jobs:
         run: |
           cd sdk-config
           sudo apt install ninja-build
-          if [ ${{ matrix.version }} = 'trunk' ]; then
+          if [ ${{ matrix.version }} != 'release' ]; then
             export BUILD_SWIFT_PM=1
           fi
           swift get-packages-and-swift-source.swift
@@ -109,23 +109,29 @@ jobs:
           SDK=`pwd`/$SDK_NAME
 
           tar xf ~/$SWIFT_TAG-ubuntu20.04.tar.gz
-          git apply swift-android-${{ matrix.version }}.patch
-          cd swift
+
+          if [ ${{ matrix.version }} = 'release' ]; then
+            git apply swift-android-release.patch
+            EXTRA_FLAGS+=" --android-icu-uc $SDK/usr/lib/libicuuc.so --android-icu-uc-include $SDK/usr/include --android-icu-i18n $SDK/usr/lib/libicui18n.so --android-icu-i18n-include $SDK/usr/include --android-icu-data $SDK/usr/lib/libicudata.so"
+            cd swift
+          else
+            git apply swift-android-devel.patch swift-android-ci.patch
+            EXTRA_FLAGS="-b -p --install-llbuild --skip-early-swift-driver --sourcekit-lsp"
+            cd swift
+            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/35707.diff
+            patch -p1 < 35707.diff
+            if [ ${{ matrix.version }} = 'devel' ]; then
+              wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/36917.diff
+              wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40625.diff
+              patch -p1 < 36917.diff
+              patch -p1 < 40625.diff
+            fi
+          fi
+
           wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40633.diff
           wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40707.diff
           patch -p1 < 40633.diff || true
           patch -p1 < 40707.diff
-
-          if [ ${{ matrix.version }} = 'trunk' ]; then
-            EXTRA_FLAGS="-b -p --install-llbuild --skip-early-swift-driver"
-            if [ ${{ matrix.arch }} != 'armv7' ]; then
-              EXTRA_FLAGS+=" --sourcekit-lsp"
-            fi
-            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/35707.diff
-            patch -p1 < 35707.diff
-          else
-            EXTRA_FLAGS+=" --android-icu-uc $SDK/usr/lib/libicuuc.so --android-icu-uc-include $SDK/usr/include --android-icu-i18n $SDK/usr/lib/libicui18n.so --android-icu-i18n-include $SDK/usr/include --android-icu-data $SDK/usr/lib/libicudata.so"
-          fi
           cd ..
 
           ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_LATEST_HOME --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --disable-append-cross-compile-hostname-to-destdir $EXTRA_FLAGS

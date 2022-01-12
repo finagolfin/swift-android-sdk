@@ -20,23 +20,6 @@ index a64795c..bc334a8 100755
  
    env['SWIFT_EXEC'] = '%sc' % (swift_exec)
  
-diff --git a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt b/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
-index 016bf294..5c42986a 100644
---- a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
-+++ b/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
-@@ -167,6 +167,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL Windows)
-     $<TARGET_OBJECTS:CoreFoundationResources>)
- elseif(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
-   target_link_options(Foundation PRIVATE "SHELL:-no-toolchain-stdlib-rpath")
-+  if(${CMAKE_SYSTEM_NAME} STREQUAL Android)
-+    target_link_libraries(Foundation PRIVATE android-spawn)
-+    list(GET CMAKE_FIND_ROOT_PATH 0 SPAWN_DIR)
-+    target_include_directories(Foundation PUBLIC ${SPAWN_DIR}/usr/include)
-+    target_link_directories(Foundation PUBLIC ${SPAWN_DIR}/usr/lib)
-+  endif()
- endif()
- 
- 
 diff --git a/llbuild/CMakeLists.txt b/llbuild/CMakeLists.txt
 index 766e38e7..ad4d369f 100644
 --- a/llbuild/CMakeLists.txt
