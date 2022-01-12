@@ -121,6 +121,9 @@ jobs:
             wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/35707.diff
             patch -p1 < 35707.diff
             if [ ${{ matrix.version }} = 'devel' ]; then
+              if [ ${{ matrix.arch }} = 'armv7' ]; then
+                EXTRA_FLAGS+=" --skip-build-sourcekit-lsp"
+              fi
               wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/36917.diff
               wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40625.diff
               patch -p1 < 36917.diff
