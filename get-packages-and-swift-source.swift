@@ -8,9 +8,11 @@ let swiftRepos = ["llvm-project", "swift", "swift-corelibs-libdispatch",
 
 let extraSwiftRepos = ["swift-llbuild", "swift-package-manager", "swift-driver",
                        "swift-tools-support-core", "swift-argument-parser", "swift-crypto",
-                       "Yams", "indexstore-db", "sourcekit-lsp", "swift-system"]
+                       "Yams", "indexstore-db", "sourcekit-lsp", "swift-system",
+                       "swift-collections"]
 let renameRepos = ["swift-llbuild" : "llbuild", "swift-package-manager" : "swiftpm", "Yams" : "yams"]
-let repoTags = ["swift-argument-parser" : "1.0.1", "swift-crypto" : "1.1.5", "Yams" : "4.0.2", "swift-system" : "1.1.1"]
+let repoTags = ["swift-argument-parser" : "1.0.1", "swift-crypto" : "1.1.5", "Yams" : "4.0.2",
+                "swift-system" : "1.1.1", "swift-collections" : "1.0.1"]
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
   termuxPackages += ["ncurses", "libsqlite"]
 }
