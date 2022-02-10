@@ -8,7 +8,7 @@ against those SDKs, and then runs their tests in the Android x86_64
 emulator](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml).
 
 To build with a Swift 5.5.2 SDK, first download [the latest Android LTS NDK
-23b](https://developer.android.com/ndk/downloads) and [Swift 5.5.2
+23b](https://developer.android.com/ndk/downloads) and [Swift 5.5.3
 compiler](https://swift.org/download/#releases) (make sure to install the Swift
 compiler's dependencies listed there). Unpack these archives and the SDK.
 
@@ -32,7 +32,7 @@ path where you unpacked this SDK, such as `/home/yourname/swift-5.5.2-android-aa
 to point to the clang headers next to your swift compiler, eg
 
 ```
-ln -sf /home/yourname/swift-5.5.2-RELEASE-ubuntu20.04/usr/lib/clang/10.0.0
+ln -sf /home/yourname/swift-5.5.3-RELEASE-ubuntu20.04/usr/lib/clang/10.0.0
 swift-5.5.2-android-aarch64-24-sdk/usr/lib/swift/clang
 ```
 
@@ -41,8 +41,8 @@ Finally, modify the cross-compilation JSON file in this repo similarly:
 1. All paths to the NDK should change from `/home/butta/android-ndk-r23b`
 to the path to your NDK, `/home/yourname/android-ndk-r23b`.
 
-2. The path to the compiler should change from `/home/butta/swift-5.5.2-RELEASE-ubuntu20.04`
-to the path to your Swift compiler, `/home/yourname/swift-5.5.2-RELEASE-centos8`.
+2. The path to the compiler should change from `/home/butta/swift-5.5.3-RELEASE-ubuntu20.04`
+to the path to your Swift compiler, `/home/yourname/swift-5.5.3-RELEASE-centos8`.
 
 3. The path to the Android SDK should change from `/home/butta/swift-5.5.2-android-aarch64-24-sdk`
 to the path where you unpacked the Android SDK, `/home/yourname/swift-5.5.2-android-aarch64-24-sdk`.
@@ -53,7 +53,7 @@ I'll demonstrate with the swift-argument-parser package:
 ```
 git clone --depth 1 https://github.com/apple/swift-argument-parser.git
 cd swift-argument-parser/
-/home/yourname/swift-5.5.2-RELEASE-ubuntu20.04/usr/bin/swift build --build-tests
+/home/yourname/swift-5.5.3-RELEASE-ubuntu20.04/usr/bin/swift build --build-tests
 --enable-test-discovery --destination ~/swift-android-sdk/android-aarch64.json
 -Xlinker -rpath -Xlinker \$ORIGIN/swift-5.5.2-android-aarch64-24-sdk/usr/lib/swift/android
 ```
@@ -106,9 +106,9 @@ mode.
 
 # Building the Android SDKs
 
-Download the Swift 5.5.2 compiler and Android NDK 23b as above. Check out this
+Download the Swift 5.5.3 compiler and Android NDK 23b as above. Check out this
 repo and run
-`SWIFT_TAG=swift-5.5.2-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
+`SWIFT_TAG=swift-5.5.3-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
 to get some prebuilt Android libraries and the Swift source to build the SDK. If
 you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2021-12-23-a`
 for the latest Swift trunk snapshot and pass in the path to the corresponding
@@ -134,18 +134,18 @@ substituted instead:
 ```
 ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android
 --android-ndk /home/butta/android-ndk-r23b/ --android-arch aarch64 --android-api-level 24
---android-icu-uc /home/butta/swift-5.5.2-android-aarch64-24-sdk/usr/lib/libicuuc.so
---android-icu-uc-include /home/butta/swift-5.5.2-android-aarch64-24-sdk/usr/include/
---android-icu-i18n /home/butta/swift-5.5.2-android-aarch64-24-sdk/usr/lib/libicui18n.so
---android-icu-i18n-include /home/butta/swift-5.5.2-android-aarch64-24-sdk/usr/include/
---android-icu-data /home/butta/swift-5.5.2-android-aarch64-24-sdk/usr/lib/libicudata.so
---build-swift-tools=0 --native-swift-tools-path=/home/butta/swift-5.5.2-RELEASE-ubuntu20.04/usr/bin/
---native-clang-tools-path=/home/butta/swift-5.5.2-RELEASE-ubuntu20.04/usr/bin/
+--android-icu-uc /home/butta/swift-5.5.3-android-aarch64-24-sdk/usr/lib/libicuuc.so
+--android-icu-uc-include /home/butta/swift-5.5.3-android-aarch64-24-sdk/usr/include/
+--android-icu-i18n /home/butta/swift-5.5.3-android-aarch64-24-sdk/usr/lib/libicui18n.so
+--android-icu-i18n-include /home/butta/swift-5.5.3-android-aarch64-24-sdk/usr/include/
+--android-icu-data /home/butta/swift-5.5.3-android-aarch64-24-sdk/usr/lib/libicudata.so
+--build-swift-tools=0 --native-swift-tools-path=/home/butta/swift-5.5.3-RELEASE-ubuntu20.04/usr/bin/
+--native-clang-tools-path=/home/butta/swift-5.5.3-RELEASE-ubuntu20.04/usr/bin/
 --host-cc=/usr/bin/clang-11 --host-cxx=/usr/bin/clang++-11
---cross-compile-hosts=android-aarch64 --cross-compile-deps-path=/home/butta/swift-5.5.2-android-aarch64-24-sdk
+--cross-compile-hosts=android-aarch64 --cross-compile-deps-path=/home/butta/swift-5.5.3-android-aarch64-24-sdk
 --skip-local-build --xctest --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay'
 --install-swift --install-libdispatch --install-foundation --install-xctest
---install-destdir=/home/butta/swift-5.5.2-android-aarch64-24-sdk
+--install-destdir=/home/butta/swift-5.5.3-android-aarch64-24-sdk
 --disable-append-cross-compile-hostname-to-destdir -j9
 ```
 Make sure you have an up-to-date CMake and not something old like 3.16. The
@@ -158,8 +158,8 @@ Finally, copy `libc++_shared.so` from the NDK and modify the cross-compiled
 `libdispatch.so` and Swift corelibs to include `$ORIGIN` and other relative
 directories in their rpaths:
 ```
-cp /home/yourname/android-ndk-r23b/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so swift-5.5.2-android-aarch64-24-sdk/usr/lib
-patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN swift-5.5.2-android-aarch64-24-sdk/usr/lib/swift/android/lib*.so
+cp /home/yourname/android-ndk-r23b/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so swift-5.5.3-android-aarch64-24-sdk/usr/lib
+patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN swift-5.5.3-android-aarch64-24-sdk/usr/lib/swift/android/lib*.so
 ```
 
 Here is a description of what the above Swift script is doing:
@@ -172,18 +172,18 @@ libcurl, and libxml2 packages from the [Termux package
 repository](https://packages.termux.org/apt/termux-main/pool/main/).
 
 Each one is unpacked with `ar x libicu_70.1_aarch64.deb; tar xf data.tar.xz` and
-the resulting files moved to a newly-created Swift 5.5.2 SDK directory:
+the resulting files moved to a newly-created Swift 5.5.3 SDK directory:
 ```
-mkdir swift-5.5.2-android-aarch64-24-sdk
-mv data/data/com.termux/files/usr swift-5.5.2-android-aarch64-24-sdk
+mkdir swift-5.5.3-android-aarch64-24-sdk
+mv data/data/com.termux/files/usr swift-5.5.3-android-aarch64-24-sdk
 ```
 It removes two config scripts in `usr/bin`, runs `patchelf` to remove the
 Termux rpath from all Termux shared libraries, and modifies the ICU libraries
 to get rid of the versioning and symlinks (three libicu libraries are removed
 since they're unused by Swift):
 ```
-rm swift-5.5.2-android-aarch64-24-sdk/usr/bin/*-config
-cd swift-5.5.2-android-aarch64-24-sdk/usr/lib
+rm swift-5.5.3-android-aarch64-24-sdk/usr/bin/*-config
+cd swift-5.5.3-android-aarch64-24-sdk/usr/lib
 
 rm libicu{io,test,tu}*
 patchelf --set-rpath \$ORIGIN libandroid-spawn.so libcurl.so libicu*so.70.1 libxml2.so
@@ -213,7 +213,7 @@ instead, so this Swift SDK for Android could be built without using
 any prebuilt Termux packages, if you're willing to put in the effort to
 cross-compile them yourself, for example, against a different Android API.
 
-Finally, it gets [the 5.5.2 source](https://github.com/apple/swift/releases/tag/swift-5.5.2-RELEASE)
+Finally, it gets [the 5.5.3 source](https://github.com/apple/swift/releases/tag/swift-5.5.3-RELEASE)
 tarballs for five Swift repos and renames them to `llvm-project/`, `swift/`,
 `swift-corelibs-libdispatch`, `swift-corelibs-foundation`, and
 `swift-corelibs-xctest`, as required by the Swift `build-script`, and creates
