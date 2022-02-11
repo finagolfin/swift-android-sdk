@@ -146,7 +146,7 @@ substituted instead:
 --skip-local-build --xctest --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay'
 --install-swift --install-libdispatch --install-foundation --install-xctest
 --install-destdir=/home/butta/swift-5.5.3-android-aarch64-24-sdk
---disable-append-cross-compile-hostname-to-destdir -j9
+--cross-compile-append-host-target-to-destdir=False -j9
 ```
 Make sure you have an up-to-date CMake and not something old like 3.16. The
 `--host-cc` and `--host-cxx` flags are not needed if you have a `clang` and
