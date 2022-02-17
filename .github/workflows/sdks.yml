@@ -122,13 +122,13 @@ jobs:
             git apply swift-android-devel.patch swift-android-ci.patch
             EXTRA_FLAGS="-b -p --install-llbuild --skip-early-swift-driver --sourcekit-lsp"
             cd swift
-            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/35707.diff
-            patch -p1 < 35707.diff
             if [ ${{ matrix.version }} = 'devel' ]; then
               if [ ${{ matrix.arch }} = 'armv7' ]; then
                 EXTRA_FLAGS+=" --sourcekit-lsp=False"
               fi
+              wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/35707.diff
               wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/36917.diff
+              patch -p1 < 35707.diff
               patch -p1 < 36917.diff
               patch -p1 < ../40633.diff || true
               patch -p1 < ../40707.diff
