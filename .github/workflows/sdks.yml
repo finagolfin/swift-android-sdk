@@ -36,7 +36,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/${{ steps.check.outputs.latest-tag }}-ubuntu20.04.tar.gz
-          key: ${{ steps.check.outputs.latest-tag }}-toolchain
+          key: ${{ steps.check.outputs.latest-tag }}-recache-toolchain
       - name: Get latest toolchain if not cached
         if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' }}
         run: |
@@ -81,7 +81,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/${{ steps.version.outputs.tag }}-ubuntu20.04.tar.gz
-          key: ${{ steps.version.outputs.tag }}-toolchain
+          key: ${{ steps.version.outputs.tag }}-recache-toolchain
       - name: Get cached SDK
         id: cache-sdk
         uses: actions/cache@v2
@@ -236,7 +236,6 @@ jobs:
         run: |
           cd snl
           sed -i "s%url: .*$%path: \"../swift-nio\"),%" Package.swift
-          git apply ../sdk-config/package-patches/swift-nio-ssl-extend-test-timeout.patch
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --destination ../sdk-config/${{ steps.sdk-unpack.outputs.sdk-name }}-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
         uses: actions/checkout@v2
