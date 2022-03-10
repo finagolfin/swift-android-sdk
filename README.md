@@ -117,7 +117,7 @@ trunk SDK too, as seen on the CI.
 
 Next, apply some patches to the Swift source, `swift-android-release.patch` from
 this repo, which has build configuration tweaks specific to building this
-Android SDK, and two patches from it that have been submitted upstream:
+Android SDK, and two patches that have been merged into trunk upstream:
 ```
 git apply swift-android-release.patch
 wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40633.diff

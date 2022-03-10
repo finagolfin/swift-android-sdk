@@ -132,11 +132,6 @@ jobs:
               patch -p1 < 36917.diff
               patch -p1 < ../40633.diff || true
               patch -p1 < ../40707.diff
-            else
-              wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/41553.diff
-              wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/41586.diff
-              patch -p1 < 41553.diff
-              patch -p1 < 41586.diff
             fi
           fi
           cd ..
