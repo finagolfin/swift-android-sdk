@@ -36,7 +36,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/${{ steps.check.outputs.latest-tag }}-ubuntu20.04.tar.gz
-          key: ${{ steps.check.outputs.latest-tag }}-toolchain
+          key: ${{ steps.check.outputs.latest-tag }}-cache-toolchain
       - name: Get latest toolchain if not cached
         if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' }}
         run: |
@@ -81,7 +81,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/${{ steps.version.outputs.tag }}-ubuntu20.04.tar.gz
-          key: ${{ steps.version.outputs.tag }}-toolchain
+          key: ${{ steps.version.outputs.tag }}-cache-toolchain
       - name: Get cached SDK
         id: cache-sdk
         uses: actions/cache@v2
