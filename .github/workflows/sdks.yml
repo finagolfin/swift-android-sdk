@@ -107,19 +107,17 @@ jobs:
           SDK=`pwd`/$SDK_NAME
 
           tar xf ~/$SWIFT_TAG-ubuntu20.04.tar.gz
-          git apply swift-android-devel.patch swift-android-ci.patch
+          git apply swift-android.patch swift-android-ci.patch
 
           if [ ${{ matrix.version }} != 'trunk' ]; then
             cd swift
-            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/35707.diff
-            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/36917.diff
-            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40633.diff
-            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40707.diff
+            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40525.diff
+            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40976.diff
+            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/41510.diff
 
-            patch -p1 < 35707.diff
-            patch -p1 < 36917.diff
-            patch -p1 < 40633.diff || true
-            patch -p1 < 40707.diff
+            patch -p1 < 40525.diff
+            patch -p1 < 40976.diff
+            patch -p1 < 41510.diff
             cd ..
           fi
 
@@ -141,11 +139,11 @@ jobs:
 
           tar xf ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-${ANDROID_API_LEVEL}-sdk.tar.xz
           SDK_NAME=$(ls | grep swift-${{ matrix.version }}.*-sdk)
-          if [ ${{ matrix.version }} = 'trunk' ]; then
+          if [ ${{ matrix.version }} != 'release' ]; then
             echo "::set-output name=sdk-name::$SDK_NAME/usr/swiftpm-android"
           else
-            sed -i "s%/home/butta/swift-5.5.3-RELEASE%`pwd`/${{ steps.version.outputs.tag }}%" android-${{ matrix.arch }}.json
-            sed -i "s%/home/butta/swift-5.5.2-android-${{ matrix.arch }}-${ANDROID_API_LEVEL}-sdk%`pwd`/${SDK_NAME}%" android-${{ matrix.arch }}.json
+            sed -i "s%/home/butta/swift-5.6-RELEASE%`pwd`/${{ steps.version.outputs.tag }}%" android-${{ matrix.arch }}.json
+            sed -i "s%/home/butta/swift-5.6-android-${{ matrix.arch }}-${ANDROID_API_LEVEL}-sdk%`pwd`/${SDK_NAME}%" android-${{ matrix.arch }}.json
             sed -i "s%/home/butta/android-ndk-r23b%${ANDROID_NDK_LATEST_HOME}%" android-${{ matrix.arch }}.json
             echo "::set-output name=sdk-name::android"
           fi
