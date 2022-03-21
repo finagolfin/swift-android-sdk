@@ -99,6 +99,15 @@ Revert that with `export LD_PRELOAD=/data/data/com.termux/files/usr/lib/libtermu
 when you're done running armv7 tests and want to go back to the normal aarch64
 mode.
 
+## Known issue
+
+Since Android 11, many AArch64 devices have [started enabling memory tagging](https://community.arm.com/arm-community-blogs/b/architectures-and-processors-blog/posts/enhanced-security-through-mte),
+which collides with Swift's own tags in strings and other allocations. [I have
+submitted a pull upstream to move the Swift tags](https://github.com/apple/swift/pull/40779)
+but since it requires patching the Swift compiler, simply patching this SDK
+won't be enough. Once that pull is in, this AArch64 SDK will be updated with
+that fix too.
+
 # Building the Android SDKs
 
 Download the Swift 5.6 compiler and Android NDK 23b as above. Check out this
