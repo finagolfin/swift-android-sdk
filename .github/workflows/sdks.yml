@@ -72,7 +72,7 @@ jobs:
             TAG="${{ needs.get-latest-toolchain.outputs.devel-version }}"
             echo "::set-output name=latest::$(echo $TAG | cut -d- -f5-7)"
           else
-           if [ ${{ matrix.arch == 'armv7' }} ]; then
+           if [ ${{ matrix.arch }} = 'armv7' ]; then
             TAG="swift-DEVELOPMENT-SNAPSHOT-2022-03-31-a"
            else
             TAG="${{ needs.get-latest-toolchain.outputs.trunk-version }}"
