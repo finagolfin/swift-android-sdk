@@ -17,7 +17,7 @@ if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
   termuxPackages += ["ncurses", "libsqlite"]
 }
 
-guard var SWIFT_TAG = ProcessInfo.processInfo.environment["SWIFT_TAG"] else {
+guard let SWIFT_TAG = ProcessInfo.processInfo.environment["SWIFT_TAG"] else {
   fatalError("You must specify a SWIFT_TAG environment variable.")
 }
 
@@ -228,10 +228,6 @@ if !fmd.fileExists(atPath: cwd.appendingPathComponent("cmark")) {
 
 for repo in swiftRepos {
   print("Checking for \(repo) source")
-  let tagSave = SWIFT_TAG
-  if swiftVersion == "5.6" && swiftBranch != "RELEASE" && (repo == "swift-corelibs-libdispatch" || repo == "swift-corelibs-foundation") {
-    SWIFT_TAG = "swift-5.6-DEVELOPMENT-SNAPSHOT-2022-03-02-a"
-  }
   if !fmd.fileExists(atPath: cwd.appendingPathComponent(repo)) {
     print("Downloading and extracting \(repo) source")
     _ = runCommand("curl", with: ["-L", "-O",
@@ -240,9 +236,6 @@ for repo in swiftRepos {
     try fmd.moveItem(atPath: cwd.appendingPathComponent("\(repo)-\(SWIFT_TAG)"),
                      toPath: cwd.appendingPathComponent(repo))
     try fmd.removeItem(atPath: cwd.appendingPathComponent("\(SWIFT_TAG).tar.gz"))
-  }
-  if swiftVersion == "5.6" && swiftBranch != "RELEASE" && (repo == "swift-corelibs-libdispatch" || repo == "swift-corelibs-foundation") {
-    SWIFT_TAG = tagSave
   }
 }
 

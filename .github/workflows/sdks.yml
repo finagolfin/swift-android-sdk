@@ -22,8 +22,8 @@ jobs:
             SWIFT_TAG="swift-${LATEST_TOOLCHAIN_VERSION}-RELEASE"
             echo "::set-output name=release-tag::$SWIFT_TAG"
           elif [ ${{ matrix.version }} = 'devel' ]; then
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-5.6-DEV | cut -d- -f5-7)
-            SWIFT_TAG="swift-5.6-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
+            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-5.7-DEV | cut -d- -f5-7)
+            SWIFT_TAG="swift-5.7-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
             echo "::set-output name=devel-tag::$SWIFT_TAG"
           else
             LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-DEV | cut -d- -f4-6)
@@ -43,7 +43,7 @@ jobs:
           if [ ${{ matrix.version }} = 'release' ]; then
             SWIFT_BRANCH="swift-$(echo ${{ steps.check.outputs.release-tag }} | cut -d- -f2)-release"
           elif [ ${{ matrix.version }} = 'devel' ]; then
-            SWIFT_BRANCH="swift-5.6-branch"
+            SWIFT_BRANCH="swift-5.7-branch"
           else
             SWIFT_BRANCH="development"
           fi
@@ -72,11 +72,7 @@ jobs:
             TAG="${{ needs.get-latest-toolchain.outputs.devel-version }}"
             echo "::set-output name=latest::$(echo $TAG | cut -d- -f5-7)"
           else
-           if [ ${{ matrix.arch }} = 'armv7' ]; then
-            TAG="swift-DEVELOPMENT-SNAPSHOT-2022-03-31-a"
-           else
             TAG="${{ needs.get-latest-toolchain.outputs.trunk-version }}"
-           fi
             echo "::set-output name=latest::$(echo $TAG | cut -d- -f4-6)"
           fi
           echo "::set-output name=tag::$TAG"
@@ -104,21 +100,16 @@ jobs:
         run: |
           cd sdk-config
           sudo apt install ninja-build
-          if [ ${{ matrix.version }} != 'devel' ]; then
           export BUILD_SWIFT_PM=1
-          fi
           swift get-packages-and-swift-source.swift
 
           SDK_NAME=$(ls | grep swift-${{ matrix.version }}-android-${{ matrix.arch }})
           SDK=`pwd`/$SDK_NAME
 
           tar xf ~/$SWIFT_TAG-ubuntu20.04.tar.gz
-          git apply swift-android.patch
-          if [ ${{ matrix.version }} != 'devel' ]; then
-          git apply swift-android-ci.patch
-          fi
+          git apply swift-android.patch swift-android-ci.patch
 
-          if [ ${{ matrix.version }} != 'trunk' ]; then
+          if [ ${{ matrix.version }} == 'release' ]; then
             cd swift
             wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40525.diff
             wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40976.diff
@@ -128,12 +119,15 @@ jobs:
             patch -p1 < 40976.diff || true
             patch -p1 < 41510.diff
             cd ..
+          else
+            cd swift
+            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/42130.diff
+
+            patch -p1 -R < 42130.diff
+            cd ..
           fi
 
-          if [ ${{ matrix.version }} != 'devel' ]; then
-          MORE_FLAGS="-b -p --install-llbuild --skip-early-swift-driver --sourcekit-lsp"
-          fi
-          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_LATEST_HOME --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False $MORE_FLAGS
+          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_LATEST_HOME --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --skip-early-swift-driver --sourcekit-lsp
 
           patchelf --set-rpath \$ORIGIN $SDK/usr/lib/swift/android/libdispatch.so
           patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN $SDK/usr/lib/swift/android/lib[FXs]*.so
@@ -151,14 +145,7 @@ jobs:
 
           tar xf ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-${ANDROID_API_LEVEL}-sdk.tar.xz
           SDK_NAME=$(ls | grep swift-${{ matrix.version }}.*-sdk)
-          if [ ${{ matrix.version }} == 'trunk' ]; then
-            echo "::set-output name=sdk-name::$SDK_NAME/usr/swiftpm-android"
-          else
-            sed -i "s%/home/butta/swift-5.6.1-RELEASE%`pwd`/${{ steps.version.outputs.tag }}%" android-${{ matrix.arch }}.json
-            sed -i "s%/home/butta/swift-5.6-android-${{ matrix.arch }}-${ANDROID_API_LEVEL}-sdk%`pwd`/${SDK_NAME}%" android-${{ matrix.arch }}.json
-            sed -i "s%/home/butta/android-ndk-r23b%${ANDROID_NDK_LATEST_HOME}%" android-${{ matrix.arch }}.json
-            echo "::set-output name=sdk-name::android"
-          fi
+          echo "::set-output name=sdk-name::$SDK_NAME/usr/swiftpm-android"
       - name: Get Swift Argument Parser package
         uses: actions/checkout@v2
         with:
