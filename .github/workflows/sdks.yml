@@ -119,11 +119,23 @@ jobs:
             patch -p1 < 40976.diff || true
             patch -p1 < 41510.diff
             cd ..
-          else
+          elif [ ${{ matrix.version }} == 'trunk' ]; then
             cd swift
             wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/42130.diff
 
             patch -p1 -R < 42130.diff
+            cd ..
+          else
+            cd swift
+            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/42350.diff
+            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/42358.diff
+            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/42365.diff
+            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/42376.diff
+
+            patch -p1 < 42350.diff
+            patch -p1 < 42358.diff
+            patch -p1 < 42365.diff
+            patch -p1 < 42376.diff
             cd ..
           fi
 
