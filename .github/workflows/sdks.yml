@@ -129,7 +129,7 @@ jobs:
             patch -p1 < 42350.diff
             patch -p1 < 42358.diff
             patch -p1 < 42365.diff
-            patch -p1 < 42376.diff
+            patch -p1 < 42376.diff || true
             cd ..
           fi
 
