@@ -119,18 +119,6 @@ jobs:
             patch -p1 < 40976.diff || true
             patch -p1 < 41510.diff
             cd ..
-          elif [ ${{ matrix.version }} == 'devel' ]; then
-            cd swift
-            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/42350.diff
-            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/42358.diff
-            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/42365.diff
-            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/42376.diff
-
-            patch -p1 < 42350.diff
-            patch -p1 < 42358.diff
-            patch -p1 < 42365.diff
-            patch -p1 < 42376.diff || true
-            cd ..
           fi
 
           ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_LATEST_HOME --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --skip-early-swift-driver --sourcekit-lsp
