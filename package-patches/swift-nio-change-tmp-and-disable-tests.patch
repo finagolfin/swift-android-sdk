@@ -1,3 +1,16 @@
+diff --git a/Tests/NIOCoreTests/XCTest+Extensions.swift b/Tests/NIOCoreTests/XCTest+Extensions.swift
+index 94862d29..b93fd8f6 100644
+--- a/Tests/NIOCoreTests/XCTest+Extensions.swift
++++ b/Tests/NIOCoreTests/XCTest+Extensions.swift
+@@ -66,6 +66,8 @@ fileprivate var temporaryDirectory: String {
+ #else
+ #if os(Linux)
+         return "/tmp"
++#elseif os(Android)
++        return "/data/data/com.termux/"
+ #else
+         if #available(macOS 10.12, iOS 10, tvOS 10, watchOS 3, *) {
+             return FileManager.default.temporaryDirectory.path
 diff --git a/Tests/NIOPosixTests/BootstrapTest+XCTest.swift b/Tests/NIOPosixTests/BootstrapTest+XCTest.swift
 index 33eddb21..b0062c0c 100644
 --- a/Tests/NIOPosixTests/BootstrapTest+XCTest.swift
