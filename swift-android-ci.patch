@@ -11,15 +11,6 @@ index a64795c..bc334a8 100755
  
    return swiftpm_args
  
-@@ -114,7 +114,7 @@ def handle_invocation(swift_exec, args):
-     env['TSAN_OPTIONS'] = 'halt_on_error=true'
- 
-   print('Cleaning ' + args.build_path)
--  shutil.rmtree(args.build_path, ignore_errors=True)
-+#  shutil.rmtree(args.build_path, ignore_errors=True)
- 
-   env['SWIFT_EXEC'] = '%sc' % (swift_exec)
- 
 diff --git a/llbuild/CMakeLists.txt b/llbuild/CMakeLists.txt
 index 766e38e7..ad4d369f 100644
 --- a/llbuild/CMakeLists.txt
