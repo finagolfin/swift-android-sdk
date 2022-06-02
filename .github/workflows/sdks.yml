@@ -87,7 +87,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-trunk-sdk
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-up-sdk
       - name: Clone
         uses: actions/checkout@v2
         with:
@@ -107,7 +107,7 @@ jobs:
           SDK=`pwd`/$SDK_NAME
 
           tar xf ~/$SWIFT_TAG-ubuntu20.04.tar.gz
-          git apply swift-android.patch swift-android-ci.patch
+          git apply swift-android.patch swift-android-ci.patch package-patches/ndk-clang-version.patch
 
           if [ ${{ matrix.version }} == 'release' ]; then
             patch -p1 < swift-android-clean-lsp.patch
@@ -209,7 +209,7 @@ jobs:
         run: |
           cd sns
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
-          git apply ../sdk-config/package-patches/swift-nio-ssh-package-deps.patch
+          git apply ../sdk-config/package-patches/swift-nio-ssh.patch
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/${{ steps.sdk-unpack.outputs.sdk-name }}-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO SSL package
         uses: actions/checkout@v2
