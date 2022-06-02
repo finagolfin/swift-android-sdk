@@ -55,8 +55,8 @@ index f3e452dc..a2db1282 100644
 -                ("testReceiveEcnAndPacketInfoIPV4VectorReadVectorWrite", testReceiveEcnAndPacketInfoIPV4VectorReadVectorWrite),
 +//                ("testReceiveEcnAndPacketInfoIPV4VectorReadVectorWrite", testReceiveEcnAndPacketInfoIPV4VectorReadVectorWrite),
                  ("testReceiveEcnAndPacketInfoIPV6VectorReadVectorWrite", testReceiveEcnAndPacketInfoIPV6VectorReadVectorWrite),
-            ]
-    }
+                 ("testSendingAddressedEnvelopeOnUnconnectedSocketSucceeds", testSendingAddressedEnvelopeOnUnconnectedSocketSucceeds),
+                 ("testSendingByteBufferOnUnconnectedSocketFails", testSendingByteBufferOnUnconnectedSocketFails),
 diff --git a/Tests/NIOPosixTests/TestUtils.swift b/Tests/NIOPosixTests/TestUtils.swift
 index 603b4141..f0937993 100644
 --- a/Tests/NIOPosixTests/TestUtils.swift
