@@ -107,7 +107,7 @@ jobs:
           SDK=`pwd`/$SDK_NAME
 
           tar xf ~/$SWIFT_TAG-ubuntu20.04.tar.gz
-          git apply swift-android.patch package-patches/ndk-clang-version.patch
+          git apply swift-android.patch
 
           if [ ${{ matrix.version }} == 'release' ]; then
             patch -p1 < swift-android-ci.patch
