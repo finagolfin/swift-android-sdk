@@ -268,13 +268,13 @@ jobs:
         run: |
           mkdir -p pack/lib/swift/android
           TARGET="x86_64-unknown-linux-android$ANDROID_API_LEVEL"
-          cp swift-argument-parser/.build/$TARGET/debug/{math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
+          cp swift-argument-parser/.build/$TARGET/debug/{generate-manual,math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
 
           wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/master/termux-elf-cleaner.cpp
           wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/master/elf.h
           clang -D__ANDROID_API__=$ANDROID_API_LEVEL -o termux-elf-cleaner termux-elf-cleaner.cpp
 
-          ./termux-elf-cleaner pack/{math,repeat,roll} || true
+          ./termux-elf-cleaner pack/{generate-manual,math,repeat,roll} || true
 
           cp swift-crypto/.build/$TARGET/debug/swift-cryptoPackageTests.xctest pack
           cp swift-nio/.build/$TARGET/debug/swift-nioPackageTests.xctest pack
@@ -321,7 +321,7 @@ jobs:
           arch: x86_64
           script: |
             adb install pack/termux-debug.apk
-            chmod 755 pack/{math,repeat,roll,*.xctest}
+            chmod 755 pack/{generate-manual,math,repeat,roll,*.xctest}
             adb push pack /data/local/tmp
 
             adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest
