@@ -131,7 +131,7 @@ if !fmd.fileExists(atPath: termuxArchive) {
 
 if !fmd.fileExists(atPath: termuxArchive.appendingPathComponent("Packages-\(ANDROID_ARCH)")) {
   _ = runCommand("curl", with: ["-o", "termux/Packages-\(ANDROID_ARCH)",
-      "https://packages.termux.org/apt/termux-main/dists/stable/main/binary-\(ANDROID_ARCH == "armv7" ? "arm" : ANDROID_ARCH)/Packages"])
+      "https://packages-cf.termux.dev/apt/termux-main/dists/stable/main/binary-\(ANDROID_ARCH == "armv7" ? "arm" : ANDROID_ARCH)/Packages"])
 }
 
 let packages = try String(contentsOfFile: termuxArchive.appendingPathComponent("Packages-\(ANDROID_ARCH)"), encoding: .utf8)
@@ -151,7 +151,7 @@ for termuxPackage in termuxPackages {
   if !fmd.fileExists(atPath: termuxArchive.appendingPathComponent(String(packageName))) {
     print("Downloading \(packageName)")
     _ = runCommand("curl", with: ["-o", "termux/\(packageName)",
-        "https://packages.termux.org/apt/termux-main/\(packagePath)"])
+        "https://packages-cf.termux.dev/apt/termux-main/\(packagePath)"])
   }
 
   if termuxPackage == "libicu" {
