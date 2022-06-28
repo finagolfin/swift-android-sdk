@@ -103,7 +103,7 @@ mode.
 
 Since Android 11, many AArch64 devices have [started enabling memory tagging](https://community.arm.com/arm-community-blogs/b/architectures-and-processors-blog/posts/enhanced-security-through-mte),
 which collides with Swift's own tags in strings and other allocations. [I have
-submitted a pull upstream to move the Swift tags](https://github.com/apple/swift/pull/40779)
+submitted a pull upstream to move the Swift tags](https://github.com/apple/swift/pull/42178)
 but since it requires patching the Swift compiler, simply patching this SDK
 won't be enough. Once that pull is in, this AArch64 SDK will be updated with
 that fix too.
