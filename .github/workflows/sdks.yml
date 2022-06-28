@@ -126,10 +126,6 @@ jobs:
             patch -p1 < swift-android-clean-lsp.patch
           else
             patch -p1 < swift-android-ci-trunk.patch
-            cd swift
-            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/59586.diff
-            patch -p1 < 59586.diff
-            cd ..
           fi
 
           ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_HOME --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --skip-early-swift-driver --sourcekit-lsp
