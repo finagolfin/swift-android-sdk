@@ -8,7 +8,7 @@ against those SDKs, and then runs their tests in the Android x86_64
 emulator](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml).
 
 To build with a Swift 5.6 SDK, first download [the latest Android LTS NDK
-23b](https://developer.android.com/ndk/downloads) and [Swift 5.6.1
+23c](https://developer.android.com/ndk/downloads) and [Swift 5.6.2
 compiler](https://swift.org/download/#releases) (make sure to install the Swift
 compiler's dependencies listed there). Unpack these archives and the SDK.
 
@@ -24,18 +24,18 @@ Change the symbolic link at `swift-5.6-android-aarch64-24-sdk/usr/lib/swift/clan
 to point to the clang headers that come with your swift compiler, eg
 
 ```
-ln -sf /home/yourname/swift-5.6.1-RELEASE-ubuntu20.04/usr/lib/clang/13.0.0
+ln -sf /home/yourname/swift-5.6.2-RELEASE-ubuntu20.04/usr/lib/clang/13.0.0
 swift-5.6-android-aarch64-24-sdk/usr/lib/swift/clang
 ```
 
 Next, modify the cross-compilation JSON file `android-aarch64.json` in this repo
 similarly:
 
-1. All paths to the NDK should change from `/home/butta/android-ndk-r23b`
-to the path to your NDK, `/home/yourname/android-ndk-r23b`.
+1. All paths to the NDK should change from `/home/butta/android-ndk-r23c`
+to the path to your NDK, `/home/yourname/android-ndk-r23c`.
 
-2. The path to the compiler should change from `/home/butta/swift-5.6.1-RELEASE-ubuntu20.04`
-to the path to your Swift compiler, `/home/yourname/swift-5.6.1-RELEASE-centos8`.
+2. The path to the compiler should change from `/home/butta/swift-5.6.2-RELEASE-ubuntu20.04`
+to the path to your Swift compiler, `/home/yourname/swift-5.6.2-RELEASE-centos8`.
 
 3. The path to the Android SDK should change from `/home/butta/swift-5.6-android-aarch64-24-sdk`
 to the path where you unpacked the Android SDK, `/home/yourname/swift-5.6-android-aarch64-24-sdk`.
@@ -48,7 +48,7 @@ git clone --depth 1 https://github.com/apple/swift-argument-parser.git
 
 cd swift-argument-parser/
 
-/home/yourname/swift-5.6.1-RELEASE-ubuntu20.04/usr/bin/swift build --build-tests
+/home/yourname/swift-5.6.2-RELEASE-ubuntu20.04/usr/bin/swift build --build-tests
 --enable-test-discovery --destination ~/swift-android-sdk/android-aarch64.json
 -Xlinker -rpath -Xlinker \$ORIGIN/swift-5.6-android-aarch64-24-sdk/usr/lib/swift/android
 ```
@@ -110,9 +110,9 @@ that fix too.
 
 # Building the Android SDKs
 
-Download the Swift 5.6.1 compiler and Android NDK 23b as above. Check out this
+Download the Swift 5.6.2 compiler and Android NDK 23c as above. Check out this
 repo and run
-`SWIFT_TAG=swift-5.6.1-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
+`SWIFT_TAG=swift-5.6.2-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
 to get some prebuilt Android libraries and the Swift source to build the SDK. If
 you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2022-03-13-a`
 for the latest Swift trunk snapshot and pass in the path to the corresponding
@@ -120,10 +120,10 @@ official prebuilt Swift toolchain to `build-script` below, you can build a Swift
 trunk SDK too, as seen on the CI.
 
 Next, apply some patches to the Swift source, `swift-android.patch` from
-this repo, which has build configuration tweaks specific to building this
-Android SDK, and two patches that have been merged into trunk upstream:
+this repo, which adds a dependency for the Foundation core library in this
+Android SDK, and three patches that have been merged into trunk upstream:
 ```
-git apply swift-android.patch
+git apply swift-android.patch swift-android-ndk-version.patch
 cd swift
 wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40976.diff
 wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/41510.diff
@@ -137,9 +137,9 @@ are installed, run the following `build-script` command with your local paths
 substituted instead:
 ```
 ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android
---android-ndk /home/butta/android-ndk-r23b/ --android-arch aarch64 --android-api-level 24
---build-swift-tools=0 --native-swift-tools-path=/home/butta/swift-5.6.1-RELEASE-ubuntu20.04/usr/bin/
---native-clang-tools-path=/home/butta/swift-5.6.1-RELEASE-ubuntu20.04/usr/bin/
+--android-ndk /home/butta/android-ndk-r23c/ --android-arch aarch64 --android-api-level 24
+--build-swift-tools=0 --native-swift-tools-path=/home/butta/swift-5.6.2-RELEASE-ubuntu20.04/usr/bin/
+--native-clang-tools-path=/home/butta/swift-5.6.2-RELEASE-ubuntu20.04/usr/bin/
 --host-cc=/usr/bin/clang-13 --host-cxx=/usr/bin/clang++-13
 --cross-compile-hosts=android-aarch64 --cross-compile-deps-path=/home/butta/swift-release-android-aarch64-24-sdk
 --skip-local-build --xctest --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay'
@@ -157,7 +157,7 @@ Finally, copy `libc++_shared.so` from the NDK and modify the cross-compiled
 `libdispatch.so` and Swift corelibs to include `$ORIGIN` and other relative
 directories in their rpaths:
 ```
-cp /home/yourname/android-ndk-r23b/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so swift-release-android-aarch64-24-sdk/usr/lib
+cp /home/yourname/android-ndk-r23c/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so swift-release-android-aarch64-24-sdk/usr/lib
 patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN swift-release-android-aarch64-24-sdk/usr/lib/swift/android/lib*.so
 ```
 
@@ -212,7 +212,7 @@ instead, so this Swift SDK for Android could be built without using
 any prebuilt Termux packages, if you're willing to put in the effort to
 cross-compile them yourself, for example, against a different Android API.
 
-Finally, it gets [the 5.6.1 source](https://github.com/apple/swift/releases/tag/swift-5.6.1-RELEASE)
+Finally, it gets [the 5.6.2 source](https://github.com/apple/swift/releases/tag/swift-5.6.2-RELEASE)
 tarballs for five Swift repos and renames them to `llvm-project/`, `swift/`,
 `swift-corelibs-libdispatch`, `swift-corelibs-foundation`, and
 `swift-corelibs-xctest`, as required by the Swift `build-script`, and creates
