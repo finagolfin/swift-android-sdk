@@ -57,6 +57,28 @@ index f3e452dc..a2db1282 100644
                  ("testReceiveEcnAndPacketInfoIPV6VectorReadVectorWrite", testReceiveEcnAndPacketInfoIPV6VectorReadVectorWrite),
                  ("testSendingAddressedEnvelopeOnUnconnectedSocketSucceeds", testSendingAddressedEnvelopeOnUnconnectedSocketSucceeds),
                  ("testSendingByteBufferOnUnconnectedSocketFails", testSendingByteBufferOnUnconnectedSocketFails),
+diff --git a/Tests/NIOPosixTests/EventLoopTest.swift b/Tests/NIOPosixTests/EventLoopTest.swift
+index 6da9b2ff..cd5bf3dd 100644
+--- a/Tests/NIOPosixTests/EventLoopTest.swift
++++ b/Tests/NIOPosixTests/EventLoopTest.swift
+@@ -455,7 +455,7 @@ public final class EventLoopTest : XCTestCase {
+         // to cleanly shut down all the channels before it actually closes. We add a custom channel that we can use
+         // to wedge the event loop in the "shutting down" state, ensuring that we have plenty of time to attempt the
+         // registration.
+-        class WedgeOpenHandler: ChannelDuplexHandler {
++     /*   class WedgeOpenHandler: ChannelDuplexHandler {
+             typealias InboundIn = Any
+             typealias OutboundIn = Any
+             typealias OutboundOut = Any
+@@ -558,7 +558,7 @@ public final class EventLoopTest : XCTestCase {
+             promises.forEach { $0.succeed(()) }
+         }
+         XCTAssertNoThrow(g.wait())
+-    }
++   */ }
+ 
+     public func testEventLoopThreads() throws {
+         var counter = 0
 diff --git a/Tests/NIOPosixTests/TestUtils.swift b/Tests/NIOPosixTests/TestUtils.swift
 index 603b4141..f0937993 100644
 --- a/Tests/NIOPosixTests/TestUtils.swift
