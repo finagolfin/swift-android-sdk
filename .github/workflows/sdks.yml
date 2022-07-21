@@ -275,9 +275,9 @@ jobs:
           TARGET="x86_64-unknown-linux-android$ANDROID_API_LEVEL"
           cp swift-argument-parser/.build/$TARGET/debug/{generate-manual,math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
 
-          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/master/elf-cleaner.cpp
-          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/master/elf.h
-          clang -D__ANDROID_API__=$ANDROID_API_LEVEL -o elf-cleaner elf-cleaner.cpp
+          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v1.10/termux-elf-cleaner.cpp
+          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v1.10/elf.h
+          clang -D__ANDROID_API__=$ANDROID_API_LEVEL -o elf-cleaner termux-elf-cleaner.cpp
 
           ./elf-cleaner pack/{generate-manual,math,repeat,roll} || true
 
