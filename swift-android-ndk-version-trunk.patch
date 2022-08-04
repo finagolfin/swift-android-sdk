@@ -6,7 +6,7 @@ index 05775193cf8..a1c499e8e42 100644
  
  set(SWIFT_ANDROID_NDK_PATH "" CACHE STRING
    "Path to the directory that contains the Android NDK tools that are executable on the build machine")
--set(SWIFT_ANDROID_NDK_CLANG_VERSION "12.0.8" CACHE STRING
+-set(SWIFT_ANDROID_NDK_CLANG_VERSION "12.0.9" CACHE STRING
 +set(SWIFT_ANDROID_NDK_CLANG_VERSION "14.0.6" CACHE STRING
    "The Clang version to use when building for Android.")
  set(SWIFT_ANDROID_DEPLOY_DEVICE_PATH "" CACHE STRING
