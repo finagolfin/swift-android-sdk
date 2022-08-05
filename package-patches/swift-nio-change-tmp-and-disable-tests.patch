@@ -1,4 +1,52 @@
 # The ECN tests only fail for older Android APIs.
+diff --git a/Tests/NIOCoreTests/AsyncSequences/NIOBackPressuredAsyncSequenceTests.swift b/Tests/NIOCoreTests/AsyncSequences/NIOBackPressuredAsyncSequenceTests.swift
+index 1ebd21e4..74dea1e6 100644
+--- a/Tests/NIOCoreTests/AsyncSequences/NIOBackPressuredAsyncSequenceTests.swift
++++ b/Tests/NIOCoreTests/AsyncSequences/NIOBackPressuredAsyncSequenceTests.swift
+@@ -139,6 +139,7 @@ final class NIOAsyncSequenceProducerTests: XCTestCase {
+     }
+ 
+     func testYield_whenStreaming_andSuspended_andStopDemanding() async throws {
++#if compiler(<5.8)
+         self.backPressureStrategy.didYieldHandler = { _ in false }
+ 
+         // We are registering our demand and sleeping a bit to make
+@@ -153,9 +154,11 @@ final class NIOAsyncSequenceProducerTests: XCTestCase {
+         XCTAssertEqual(result, .stopProducing)
+         XCTAssertEqualWithoutAutoclosure(await element, 1)
+         XCTAssertEqual(self.backPressureStrategy.didYieldCallCount, 1)
++#endif
+     }
+ 
+     func testYield_whenStreaming_andSuspended_andDemandMore() async throws {
++#if compiler(<5.8)
+         self.backPressureStrategy.didYieldHandler = { _ in true }
+ 
+         // We are registering our demand and sleeping a bit to make
+@@ -170,6 +173,7 @@ final class NIOAsyncSequenceProducerTests: XCTestCase {
+         XCTAssertEqual(result, .produceMore)
+         XCTAssertEqualWithoutAutoclosure(await element, 1)
+         XCTAssertEqual(self.backPressureStrategy.didYieldCallCount, 1)
++#endif
+     }
+ 
+     func testYieldEmptySequence_whenStreaming_andSuspended_andStopDemanding() async throws {
+@@ -250,6 +254,7 @@ final class NIOAsyncSequenceProducerTests: XCTestCase {
+     }
+ 
+     func testFinish_whenStreaming_andSuspended() async throws {
++#if compiler(<5.8)
+         // We are registering our demand and sleeping a bit to make
+         // sure the other child task runs when the demand is registered
+         let sequence = try XCTUnwrap(self.sequence)
+@@ -260,6 +265,7 @@ final class NIOAsyncSequenceProducerTests: XCTestCase {
+ 
+         XCTAssertEqualWithoutAutoclosure(await element, nil)
+         XCTAssertEqual(self.delegate.didTerminateCallCount, 1)
++#endif
+     }
+ 
+     func testFinish_whenStreaming_andNotSuspended_andBufferEmpty() async throws {
 diff --git a/Tests/NIOCoreTests/XCTest+Extensions.swift b/Tests/NIOCoreTests/XCTest+Extensions.swift
 index 94862d29..b93fd8f6 100644
 --- a/Tests/NIOCoreTests/XCTest+Extensions.swift
