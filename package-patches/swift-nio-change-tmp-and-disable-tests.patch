@@ -1,8 +1,8 @@
 # The ECN tests only fail for older Android APIs.
-diff --git a/Tests/NIOCoreTests/AsyncSequences/NIOBackPressuredAsyncSequenceTests.swift b/Tests/NIOCoreTests/AsyncSequences/NIOBackPressuredAsyncSequenceTests.swift
+diff --git a/Tests/NIOCoreTests/AsyncSequences/NIOAsyncSequenceTests.swift b/Tests/NIOCoreTests/AsyncSequences/NIOAsyncSequenceTests.swift
 index 1ebd21e4..74dea1e6 100644
---- a/Tests/NIOCoreTests/AsyncSequences/NIOBackPressuredAsyncSequenceTests.swift
-+++ b/Tests/NIOCoreTests/AsyncSequences/NIOBackPressuredAsyncSequenceTests.swift
+--- a/Tests/NIOCoreTests/AsyncSequences/NIOAsyncSequenceTests.swift
++++ b/Tests/NIOCoreTests/AsyncSequences/NIOAsyncSequenceTests.swift
 @@ -139,6 +139,7 @@ final class NIOAsyncSequenceProducerTests: XCTestCase {
      }
  
