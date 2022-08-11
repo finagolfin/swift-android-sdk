@@ -1,4 +1,27 @@
 # The ECN tests only fail for older Android APIs.
+diff --git a/Tests/LinuxMain.swift b/Tests/LinuxMain.swift
+index eacd4b02..a6a92e48 100644
+--- a/Tests/LinuxMain.swift
++++ b/Tests/LinuxMain.swift
+@@ -40,10 +40,9 @@ import XCTest
+ // without the compiler noticing that we're calling a deprecated function.
+ // This hack exists so we can deprecate individual tests which test deprecated functionality without
+ // getting a compiler warning...
+-protocol LinuxMainRunner { func run() }
+-class LinuxMainRunnerImpl: LinuxMainRunner {
++@main class LinuxMainRunnerImpl {
+    @available(*, deprecated, message: "not actually deprecated. Just deprecated to allow deprecated tests (which test deprecated functionality) without warnings")
+-   func run() {
++   static func main() {
+        XCTMain([
+              testCase(AcceptBackoffHandlerTest.allTests),
+              testCase(AdaptiveRecvByteBufferAllocatorTest.allTests),
+@@ -144,5 +143,4 @@ class LinuxMainRunnerImpl: LinuxMainRunner {
+         ])
+     }
+ }
+-(LinuxMainRunnerImpl() as LinuxMainRunner).run()
+ #endif
 diff --git a/Tests/NIOCoreTests/AsyncSequences/NIOAsyncSequenceTests.swift b/Tests/NIOCoreTests/AsyncSequences/NIOAsyncSequenceTests.swift
 index 1ebd21e4..74dea1e6 100644
 --- a/Tests/NIOCoreTests/AsyncSequences/NIOAsyncSequenceTests.swift
