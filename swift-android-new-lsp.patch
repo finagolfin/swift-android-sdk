@@ -11,16 +11,3 @@ index 30cdb14..d68622a 100755
      else:
        error("cannot cross-compile for %s" % args.cross_compile_host)
  
-diff --git a/swift/stdlib/public/runtime/SwiftRT-ELF.cpp b/swift/stdlib/public/runtime/SwiftRT-ELF.cpp
-index 0c2253d50f93..3f34603a3c20 100644
---- a/swift/stdlib/public/runtime/SwiftRT-ELF.cpp
-+++ b/swift/stdlib/public/runtime/SwiftRT-ELF.cpp
-@@ -23,7 +23,7 @@ extern "C" const char __dso_handle[];
- // the linker table section was never constructed.
- 
- #define DECLARE_SWIFT_SECTION(name)                                                          \
--  __asm__("\t.section " #name ",\"a\"\n");                                                   \
-+  __asm__("\t.section " #name ",\"aR\"\n");                                                   \
-   __attribute__((__visibility__("hidden"),__aligned__(1))) extern const char __start_##name; \
-   __attribute__((__visibility__("hidden"),__aligned__(1))) extern const char __stop_##name;
- 
