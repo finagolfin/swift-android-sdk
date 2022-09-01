@@ -27,8 +27,7 @@ jobs:
             echo "::set-output name=devel-tag::$SWIFT_TAG"
           else
             LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-DEV | cut -d- -f4-6)
-            SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-2022-06-26-a"
-            #${LATEST_TOOLCHAIN_VERSION}-a"
+            SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
             echo "::set-output name=trunk-tag::$SWIFT_TAG"
           fi
           echo "::set-output name=latest-tag::$SWIFT_TAG"
