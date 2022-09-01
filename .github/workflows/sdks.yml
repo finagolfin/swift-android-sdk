@@ -123,9 +123,9 @@ jobs:
             cd ..
           elif [ ${{ matrix.version }} == 'devel' ]; then
             patch -p1 < swift-android-ndk-version.patch
-            patch -p1 < swift-android-new-lsp.patch
+            patch -p1 < swift-android-5.7-lsp.patch
           else
-            patch -p1 < swift-android-new-lsp.patch
+            patch -p1 < swift-android-trunk-lsp.patch
             patch -p1 < swift-android-ndk-version-trunk.patch
           fi
 
