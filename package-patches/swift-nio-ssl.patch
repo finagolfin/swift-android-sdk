@@ -21,16 +21,3 @@ index d2d2f05..f259827 100644
  }
 -(LinuxMainRunnerImpl() as LinuxMainRunner).run()
  #endif
-diff --git a/Tests/NIOSSLTests/NIOSSLIntegrationTest+XCTest.swift b/Tests/NIOSSLTests/NIOSSLIntegrationTest+XCTest.swift
-index 51dd4a6..25e15d6 100644
---- a/Tests/NIOSSLTests/NIOSSLIntegrationTest+XCTest.swift
-+++ b/Tests/NIOSSLTests/NIOSSLIntegrationTest+XCTest.swift
-@@ -69,7 +69,7 @@ extension NIOSSLIntegrationTest {
-                 ("testWriteFromFailureOfWrite", testWriteFromFailureOfWrite),
-                 ("testChannelInactiveDuringHandshakeSucceeded", testChannelInactiveDuringHandshakeSucceeded),
-                 ("testTrustedFirst", testTrustedFirst),
--                ("testGiantWrite", testGiantWrite),
-+                //("testGiantWrite", testGiantWrite),
-            ]
-    }
- }
