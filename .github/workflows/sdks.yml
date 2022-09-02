@@ -87,7 +87,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-bump-sdk
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-catch-sdk
       - name: Clone
         uses: actions/checkout@v2
         with:
@@ -110,7 +110,6 @@ jobs:
           git apply swift-android.patch swift-android-ci.patch
 
           if [ ${{ matrix.version }} == 'release' ]; then
-            patch -p1 < swift-android-ndk-version.patch
             patch -p1 < swift-android-release-lsp.patch
             cd swift
             wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40525.diff
@@ -122,11 +121,9 @@ jobs:
             patch -p1 < 41510.diff
             cd ..
           elif [ ${{ matrix.version }} == 'devel' ]; then
-            patch -p1 < swift-android-ndk-version.patch
             patch -p1 < swift-android-5.7-lsp.patch
           else
             patch -p1 < swift-android-trunk-lsp.patch
-            patch -p1 < swift-android-ndk-version-trunk.patch
           fi
 
           ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --xctest --skip-early-swift-driver --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --sourcekit-lsp
