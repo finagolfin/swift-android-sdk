@@ -7,8 +7,8 @@ of the Swift toolchain for AArch64, armv7, and x86_64, builds several Swift pack
 against those SDKs, and then runs their tests in the Android x86_64
 emulator](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml).
 
-To build with a Swift 5.6 SDK, first download [the latest Android LTS NDK
-23c](https://developer.android.com/ndk/downloads) and [Swift 5.6.2
+To build with a Swift 5.6.3 SDK, first download [the latest Android LTS NDK
+25b](https://developer.android.com/ndk/downloads) and [Swift 5.6.3
 compiler](https://swift.org/download/#releases) (make sure to install the Swift
 compiler's dependencies listed there). Unpack these archives and the SDK.
 
@@ -20,25 +20,25 @@ The SDK will need to be modified with the path to some clang headers bundled
 with the Swift compiler (I'll show aarch64 below, the same will need to be done
 for the armv7 or x86_64 SDKs).
 
-Change the symbolic link at `swift-5.6-android-aarch64-24-sdk/usr/lib/swift/clang`
+Change the symbolic link at `swift-5.6.3-android-aarch64-24-sdk/usr/lib/swift/clang`
 to point to the clang headers that come with your swift compiler, eg
 
 ```
-ln -sf /home/yourname/swift-5.6.2-RELEASE-ubuntu20.04/usr/lib/clang/13.0.0
-swift-5.6-android-aarch64-24-sdk/usr/lib/swift/clang
+ln -sf /home/yourname/swift-5.6.3-RELEASE-ubuntu20.04/usr/lib/clang/13.0.0
+swift-5.6.3-android-aarch64-24-sdk/usr/lib/swift/clang
 ```
 
 Next, modify the cross-compilation JSON file `android-aarch64.json` in this repo
 similarly:
 
-1. All paths to the NDK should change from `/home/butta/android-ndk-r23c`
-to the path to your NDK, `/home/yourname/android-ndk-r23c`.
+1. All paths to the NDK should change from `/home/butta/android-ndk-r25b`
+to the path to your NDK, `/home/yourname/android-ndk-r25b`.
 
-2. The path to the compiler should change from `/home/butta/swift-5.6.2-RELEASE-ubuntu20.04`
-to the path to your Swift compiler, `/home/yourname/swift-5.6.2-RELEASE-centos8`.
+2. The path to the compiler should change from `/home/butta/swift-5.6.3-RELEASE-ubuntu20.04`
+to the path to your Swift compiler, `/home/yourname/swift-5.6.3-RELEASE-centos8`.
 
-3. The path to the Android SDK should change from `/home/butta/swift-5.6-android-aarch64-24-sdk`
-to the path where you unpacked the Android SDK, `/home/yourname/swift-5.6-android-aarch64-24-sdk`.
+3. The path to the Android SDK should change from `/home/butta/swift-5.6.3-android-aarch64-24-sdk`
+to the path where you unpacked the Android SDK, `/home/yourname/swift-5.6.3-android-aarch64-24-sdk`.
 
 Now you're ready to cross-compile a Swift package with the cross-compilation
 configuration JSON file, `android-aarch64.json`, and run its tests on Android.
@@ -48,9 +48,9 @@ git clone --depth 1 https://github.com/apple/swift-argument-parser.git
 
 cd swift-argument-parser/
 
-/home/yourname/swift-5.6.2-RELEASE-ubuntu20.04/usr/bin/swift build --build-tests
+/home/yourname/swift-5.6.3-RELEASE-ubuntu20.04/usr/bin/swift build --build-tests
 --enable-test-discovery --destination ~/swift-android-sdk/android-aarch64.json
--Xlinker -rpath -Xlinker \$ORIGIN/swift-5.6-android-aarch64-24-sdk/usr/lib/swift/android
+-Xlinker -rpath -Xlinker \$ORIGIN/swift-5.6.3-android-aarch64-24-sdk/usr/lib/swift/android
 ```
 This will cross-compile the package for Android aarch64 and produce a test
 runner executable with the `.xctest` extension, in this case at
@@ -83,10 +83,10 @@ uname -m # check if you're running on the right architecture, should say `aarch6
 cd       # move to the Termux app's home directory
 pkg install openssh
 
-scp yourname@192.168.1.1:{swift-5.6-android-aarch64-24-sdk.tar.xz,
+scp yourname@192.168.1.1:{swift-5.6.3-android-aarch64-24-sdk.tar.xz,
 swift-argument-parserPackageTests.xctest,math,repeat,roll} .
 
-tar xf swift-5.6-android-aarch64-24-sdk.tar.xz
+tar xf swift-5.6.3-android-aarch64-24-sdk.tar.xz
 
 ./swift-argument-parserPackageTests.xctest
 ```
@@ -99,31 +99,23 @@ Revert that with `export LD_PRELOAD=/data/data/com.termux/files/usr/lib/libtermu
 when you're done running armv7 tests and want to go back to the normal aarch64
 mode.
 
-## Known issue
-
-Since Android 11, many AArch64 devices have [started enabling memory tagging](https://community.arm.com/arm-community-blogs/b/architectures-and-processors-blog/posts/enhanced-security-through-mte),
-which collides with Swift's own tags in strings and other allocations. [I have
-submitted a pull upstream to move the Swift tags](https://github.com/apple/swift/pull/42178)
-but since it requires patching the Swift compiler, simply patching this SDK
-won't be enough. Once that pull is in, this AArch64 SDK will be updated with
-that fix too.
-
 # Building the Android SDKs
 
-Download the Swift 5.6.2 compiler and Android NDK 23c as above. Check out this
+Download the Swift 5.6.3 compiler and Android NDK 25b as above. Check out this
 repo and run
-`SWIFT_TAG=swift-5.6.2-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
+`SWIFT_TAG=swift-5.6.3-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
 to get some prebuilt Android libraries and the Swift source to build the SDK. If
-you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2022-03-13-a`
+you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2022-08-30-a`
 for the latest Swift trunk snapshot and pass in the path to the corresponding
 official prebuilt Swift toolchain to `build-script` below, you can build a Swift
 trunk SDK too, as seen on the CI.
 
 Next, apply some patches to the Swift source, `swift-android.patch` from
 this repo, which adds a dependency for the Foundation core library in this
-Android SDK, and three patches that have been merged into trunk upstream:
+Android SDK and extracts the clang resource directory from the NDK, and two
+patches that have been merged into trunk upstream:
 ```
-git apply swift-android.patch swift-android-ndk-version.patch
+git apply swift-android.patch
 cd swift
 wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40976.diff
 wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/41510.diff
@@ -137,15 +129,15 @@ are installed, run the following `build-script` command with your local paths
 substituted instead:
 ```
 ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android
---android-ndk /home/butta/android-ndk-r23c/ --android-arch aarch64 --android-api-level 24
---build-swift-tools=0 --native-swift-tools-path=/home/butta/swift-5.6.2-RELEASE-ubuntu20.04/usr/bin/
---native-clang-tools-path=/home/butta/swift-5.6.2-RELEASE-ubuntu20.04/usr/bin/
+--android-ndk /home/butta/android-ndk-r25b/ --android-arch aarch64 --android-api-level 24
+--build-swift-tools=0 --native-swift-tools-path=/home/butta/swift-5.6.3-RELEASE-ubuntu20.04/usr/bin/
+--native-clang-tools-path=/home/butta/swift-5.6.3-RELEASE-ubuntu20.04/usr/bin/
 --host-cc=/usr/bin/clang-13 --host-cxx=/usr/bin/clang++-13
 --cross-compile-hosts=android-aarch64 --cross-compile-deps-path=/home/butta/swift-release-android-aarch64-24-sdk
 --skip-local-build --xctest --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay'
 --install-swift --install-libdispatch --install-foundation --install-xctest
 --install-destdir=/home/butta/swift-release-android-aarch64-24-sdk
---cross-compile-append-host-target-to-destdir=False -j9
+--cross-compile-append-host-target-to-destdir=False --build-swift-static-stdlib -j9
 ```
 Make sure you have an up-to-date CMake and not something old like 3.16. The
 `--host-cc` and `--host-cxx` flags are not needed if you have a `clang` and
@@ -157,7 +149,7 @@ Finally, copy `libc++_shared.so` from the NDK and modify the cross-compiled
 `libdispatch.so` and Swift corelibs to include `$ORIGIN` and other relative
 directories in their rpaths:
 ```
-cp /home/yourname/android-ndk-r23c/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so swift-release-android-aarch64-24-sdk/usr/lib
+cp /home/yourname/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so swift-release-android-aarch64-24-sdk/usr/lib
 patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN swift-release-android-aarch64-24-sdk/usr/lib/swift/android/lib*.so
 ```
 
@@ -170,7 +162,7 @@ API 24. Specifically, it downloads the libicu, libicu-static, libandroid-spawn,
 libcurl, and libxml2 packages from the [Termux package
 repository](https://packages.termux.org/apt/termux-main/pool/main/).
 
-Each one is unpacked with `ar x libicu_70.1_aarch64.deb; tar xf data.tar.xz` and
+Each one is unpacked with `ar x libicu_71.1-1_aarch64.deb; tar xf data.tar.xz` and
 the resulting files moved to a newly-created Swift release SDK directory:
 ```
 mkdir swift-release-android-aarch64-24-sdk
@@ -185,14 +177,14 @@ rm swift-release-android-aarch64-24-sdk/usr/bin/*-config
 cd swift-release-android-aarch64-24-sdk/usr/lib
 
 rm libicu{io,test,tu}*
-patchelf --set-rpath \$ORIGIN libandroid-spawn.so libcurl.so libicu*so.70.1 libxml2.so
+patchelf --set-rpath \$ORIGIN libandroid-spawn.so libcurl.so libicu*so.71.1 libxml2.so
 
 # repeat the following for libicui18n.so and libicudata.so, as needed
-rm libicuuc.so libicuuc.so.70
-readelf -d libicuuc.so.70.1
-mv libicuuc.so.70.1 libicuuc.so
+rm libicuuc.so libicuuc.so.71
+readelf -d libicuuc.so.71.1
+mv libicuuc.so.71.1 libicuuc.so
 patchelf --set-soname libicuuc.so libicuuc.so
-patchelf --replace-needed libicudata.so.70 libicudata.so libicuuc.so
+patchelf --replace-needed libicudata.so.71 libicudata.so libicuuc.so
 ```
 The libcurl and libxml2 packages are [only needed for the FoundationNetworking
 and FoundationXML libraries respectively](https://github.com/apple/swift-corelibs-foundation/blob/release/5.6/Docs/ReleaseNotes_Swift5.md),
@@ -212,7 +204,7 @@ instead, so this Swift SDK for Android could be built without using
 any prebuilt Termux packages, if you're willing to put in the effort to
 cross-compile them yourself, for example, against a different Android API.
 
-Finally, it gets [the 5.6.2 source](https://github.com/apple/swift/releases/tag/swift-5.6.2-RELEASE)
+Finally, it gets [the 5.6.3 source](https://github.com/apple/swift/releases/tag/swift-5.6.3-RELEASE)
 tarballs for five Swift repos and renames them to `llvm-project/`, `swift/`,
 `swift-corelibs-libdispatch`, `swift-corelibs-foundation`, and
 `swift-corelibs-xctest`, as required by the Swift `build-script`, and creates
