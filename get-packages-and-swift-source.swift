@@ -4,7 +4,7 @@ import Foundation
 var termuxPackages = ["libicu", "libicu-static", "libandroid-spawn", "libcurl", "libxml2"]
 
 let swiftRepos = ["llvm-project", "swift", "swift-corelibs-libdispatch",
-                  "swift-corelibs-foundation", "swift-corelibs-xctest"]
+                  "swift-corelibs-foundation", "swift-corelibs-xctest", "swift-syntax"]
 
 let extraSwiftRepos = ["swift-llbuild", "swift-package-manager", "swift-driver",
                        "swift-tools-support-core", "swift-argument-parser", "swift-crypto",
