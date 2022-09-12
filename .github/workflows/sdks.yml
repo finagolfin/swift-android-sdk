@@ -18,7 +18,7 @@ jobs:
         id: check
         run: |
           if [ ${{ matrix.version }} = 'release' ]; then
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-5.6 | cut -d- -f2)
+            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-5.7 | cut -d- -f2)
             SWIFT_TAG="swift-${LATEST_TOOLCHAIN_VERSION}-RELEASE"
             echo "::set-output name=release-tag::$SWIFT_TAG"
           elif [ ${{ matrix.version }} = 'devel' ]; then
@@ -110,18 +110,6 @@ jobs:
           tar xf ~/$SWIFT_TAG-ubuntu20.04.tar.gz
           git apply swift-android.patch swift-android-ci.patch
           sed -i "s%cross_compile_config%cross_compile_config, '-Xlinker', '-landroid-spawn'%" sourcekit-lsp/Utilities/build-script-helper.py
-
-          if [ ${{ matrix.version }} == 'release' ]; then
-            cd swift
-            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40525.diff
-            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/40976.diff
-            wget -q https://patch-diff.githubusercontent.com/raw/apple/swift/pull/41510.diff
-
-            patch -p1 < 40525.diff
-            patch -p1 < 40976.diff || true
-            patch -p1 < 41510.diff
-            cd ..
-          fi
 
           ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --xctest --skip-early-swift-driver --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --sourcekit-lsp
 
