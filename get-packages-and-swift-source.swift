@@ -3,7 +3,7 @@ import Foundation
 // The Termux packages to download and unpack
 var termuxPackages = ["libicu", "libicu-static", "libandroid-spawn", "libcurl", "libxml2"]
 
-let swiftRepos = ["llvm-project", "swift", "swift-corelibs-libdispatch",
+var swiftRepos = ["llvm-project", "swift", "swift-corelibs-libdispatch",
                   "swift-corelibs-foundation", "swift-corelibs-xctest", "swift-syntax"]
 
 let extraSwiftRepos = ["swift-llbuild", "swift-package-manager", "swift-driver",
@@ -33,15 +33,22 @@ let tagExtract = try NSRegularExpression(pattern: "swift-([0-9]+\\.[0-9])?\\.?[0
 
 if tagExtract.numberOfMatches(in: SWIFT_TAG, range: tagRange) == 1 {
   let match = tagExtract.firstMatch(in: SWIFT_TAG, range: tagRange)
-  swiftVersion = SWIFT_TAG.substring(with: match!.range(at: 1))
+  if match!.range(at: 1).location != NSNotFound {
+    swiftVersion = SWIFT_TAG.substring(with: match!.range(at: 1))
+  }
+
   swiftBranch = SWIFT_TAG.substring(with: match!.range(at: 2))
-  swiftSnapshotDate = SWIFT_TAG.substring(with: match!.range(at: 3))
+
+  if match!.range(at: 3).location != NSNotFound {
+    swiftSnapshotDate = SWIFT_TAG.substring(with: match!.range(at: 3))
+  }
 } else {
   fatalError("Something went wrong with extracting data from the SWIFT_TAG environment variable: \(SWIFT_TAG)")
 }
 
 if swiftBranch == "RELEASE" {
   sdkDir = "swift-release-android-\(ANDROID_ARCH)-24-sdk"
+  swiftRepos += ["swift-experimental-string-processing"]
 } else {
   sdkDir = "swift-\(swiftVersion == "" ? "trunk" : "devel")-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"
 }

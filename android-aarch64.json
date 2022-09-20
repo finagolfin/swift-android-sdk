@@ -1,13 +1,13 @@
 {
     "version": 1,
     "target": "aarch64-unknown-linux-android24",
-    "toolchain-bin-dir": "/home/butta/swift-5.6.3-RELEASE-ubuntu20.04/usr/bin",
+    "toolchain-bin-dir": "/home/butta/swift-5.7-RELEASE-ubuntu20.04/usr/bin",
     "sdk": "/home/butta/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/sysroot",
     "extra-cc-flags": [
         "-fPIC"
     ],
     "extra-swiftc-flags": [
-        "-resource-dir", "/home/butta/swift-5.6.3-android-aarch64-24-sdk/usr/lib/swift",
+        "-resource-dir", "/home/butta/swift-5.7-android-aarch64-24-sdk/usr/lib/swift",
         "-tools-directory", "/home/butta/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/bin",
     ],
     "extra-cpp-flags": [
