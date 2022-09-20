@@ -88,7 +88,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-syntax-sdk
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-release-sdk
       - name: Clone
         uses: actions/checkout@v2
         with:
@@ -101,8 +101,7 @@ jobs:
         run: |
           cd sdk-config
           sudo apt install ninja-build
-          export BUILD_SWIFT_PM=1
-          swift get-packages-and-swift-source.swift
+          BUILD_SWIFT_PM=1 swift get-packages-and-swift-source.swift
 
           SDK_NAME=$(ls | grep swift-${{ matrix.version }}-android-${{ matrix.arch }})
           SDK=`pwd`/$SDK_NAME
@@ -117,7 +116,7 @@ jobs:
             cd ..
           fi
 
-          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --xctest --skip-early-swift-driver --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --sourcekit-lsp
+          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --skip-early-swift-driver --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --sourcekit-lsp
 
           patchelf --set-rpath \$ORIGIN $SDK/usr/lib/swift/android/libdispatch.so
           patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN $SDK/usr/lib/swift/android/lib[FXs]*.so
