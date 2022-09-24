@@ -114,6 +114,8 @@ jobs:
             cd swift-driver
             patch -p1 < ../package-patches/swift-driver-trunk-armv7.patch
             cd ..
+          else
+            git apply swift-android-clang.patch
           fi
 
           ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --skip-early-swift-driver --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --sourcekit-lsp
