@@ -23,7 +23,8 @@ jobs:
             echo "::set-output name=release-tag::$SWIFT_TAG"
           elif [ ${{ matrix.version }} = 'devel' ]; then
             LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-5.7-DEV | cut -d- -f5-7)
-            SWIFT_TAG="swift-5.7-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
+            SWIFT_TAG="swift-5.7-DEVELOPMENT-SNAPSHOT-2022-08-30-a"
+            #${LATEST_TOOLCHAIN_VERSION}-a"
             echo "::set-output name=devel-tag::$SWIFT_TAG"
           else
             LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-DEV | cut -d- -f4-6)
@@ -216,7 +217,6 @@ jobs:
       - name: Build Swift NIO SSL package
         run: |
           cd snl
-          git apply ../sdk-config/package-patches/swift-nio-ssl.patch
           SWIFTCI_USE_LOCAL_DEPS=1 ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
         uses: actions/checkout@v2
