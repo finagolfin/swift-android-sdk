@@ -22,11 +22,11 @@ jobs:
             SWIFT_TAG="swift-${LATEST_TOOLCHAIN_VERSION}-RELEASE"
             echo "::set-output name=release-tag::$SWIFT_TAG"
           elif [ ${{ matrix.version }} = 'devel' ]; then
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-5.7-DEV | cut -d- -f5-7)
+            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-5.7-DEV | cut -d- -f8-10)
             SWIFT_TAG="swift-5.7-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
             echo "::set-output name=devel-tag::$SWIFT_TAG"
           else
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-DEV | cut -d- -f4-6)
+            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-DEV | cut -d- -f7-9)
             SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
             echo "::set-output name=trunk-tag::$SWIFT_TAG"
           fi
@@ -110,7 +110,7 @@ jobs:
           git apply swift-android.patch swift-android-ci.patch
           sed -i "s%cross_compile_config%cross_compile_config, '-Xlinker', '-landroid-spawn'%" sourcekit-lsp/Utilities/build-script-helper.py
 
-          if [ ${{ matrix.version }} = 'release' ]; then
+          if [ ${{ matrix.version }} != 'trunk' ]; then
             git apply swift-android-clang.patch
           fi
 
