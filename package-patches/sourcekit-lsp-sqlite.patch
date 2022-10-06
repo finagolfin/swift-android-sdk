@@ -1,0 +1,14 @@
+diff --git a/sourcekit-lsp/Utilities/build-script-helper.py b/sourcekit-lsp/Utilities/build-script-helper.py
+index 17ad9e3..953fffd 100755
+--- a/sourcekit-lsp/Utilities/build-script-helper.py
++++ b/sourcekit-lsp/Utilities/build-script-helper.py
+@@ -179,6 +179,9 @@ def get_swiftpm_environment_variables(swift_exec: str, args: argparse.Namespace)
+     if args.action == 'test' and not args.skip_long_tests:
+         env['SOURCEKIT_LSP_ENABLE_LONG_TESTS'] = '1'
+ 
++    if args.cross_compile_host and re.match('android-', args.cross_compile_host):
++        env['PKG_CONFIG_PATH'] = os.path.join(os.path.split(args.cross_compile_config)[0], 'lib/pkgconfig')
++
+     return env
+ 
+ 

@@ -50,7 +50,17 @@ diff --git a/swiftpm/Utilities/bootstrap b/swiftpm/Utilities/bootstrap
 index 085056de..1ded1a90 100755
 --- a/swiftpm/Utilities/bootstrap
 +++ b/swiftpm/Utilities/bootstrap
-@@ -764,6 +764,7 @@ def get_swiftpm_flags(args):
+@@ -615,6 +615,9 @@
+         "SWIFT_DRIVER_SWIFT_EXEC=" + args.swiftc_path,
+     ]
+ 
++    if args.cross_compile_hosts and re.match('android-', args.cross_compile_hosts):
++        swiftpm_args.append("PKG_CONFIG_PATH=" + os.path.join(os.path.split(args.cross_compile_config)[0], "lib/pkgconfig"))
++
+     if args.bootstrap:
+         note("Building SwiftPM (with a freshly built swift-build)")
+         swiftpm_args.append("SWIFTPM_CUSTOM_LIBS_DIR=" + os.path.join(args.bootstrap_dir, "pm"))
+@@ -803,6 +806,7 @@
      if 'ANDROID_DATA' in os.environ or (args.cross_compile_hosts and re.match(
          'android-', args.cross_compile_hosts)):
          build_flags.extend(["-Xswiftc", "-Xcc", "-Xswiftc", "-U_GNU_SOURCE"])
