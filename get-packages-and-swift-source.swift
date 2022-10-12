@@ -2,6 +2,7 @@ import Foundation
 
 // The Termux packages to download and unpack
 var termuxPackages = ["libicu", "libicu-static", "libandroid-spawn", "libcurl", "libxml2"]
+let termuxURL = "https://packages.termux.dev/apt/termux-main"
 
 var swiftRepos = ["llvm-project", "swift", "swift-corelibs-libdispatch",
                   "swift-corelibs-foundation", "swift-corelibs-xctest", "swift-syntax"]
@@ -138,7 +139,7 @@ if !fmd.fileExists(atPath: termuxArchive) {
 
 if !fmd.fileExists(atPath: termuxArchive.appendingPathComponent("Packages-\(ANDROID_ARCH)")) {
   _ = runCommand("curl", with: ["-o", "termux/Packages-\(ANDROID_ARCH)",
-      "https://packages-cf.termux.dev/apt/termux-main/dists/stable/main/binary-\(ANDROID_ARCH == "armv7" ? "arm" : ANDROID_ARCH)/Packages"])
+      "\(termuxURL)/dists/stable/main/binary-\(ANDROID_ARCH == "armv7" ? "arm" : ANDROID_ARCH)/Packages"])
 }
 
 let packages = try String(contentsOfFile: termuxArchive.appendingPathComponent("Packages-\(ANDROID_ARCH)"), encoding: .utf8)
@@ -158,7 +159,7 @@ for termuxPackage in termuxPackages {
   if !fmd.fileExists(atPath: termuxArchive.appendingPathComponent(String(packageName))) {
     print("Downloading \(packageName)")
     _ = runCommand("curl", with: ["-o", "termux/\(packageName)",
-        "https://packages-cf.termux.dev/apt/termux-main/\(packagePath)"])
+        "\(termuxURL)/\(packagePath)"])
   }
 
   if termuxPackage == "libicu" {
