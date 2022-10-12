@@ -95,13 +95,45 @@ Revert that with `export LD_PRELOAD=/data/data/com.termux/files/usr/lib/libtermu
 when you're done running armv7 tests and want to go back to the normal aarch64
 mode.
 
+# Porting Swift packages to Android
+
+The most commonly needed change is to simply import Glibc for Android too (while
+Bionic is the name of the C library on Android, currently Swift uses the name
+`Glibc` as a placeholder for all non-Darwin, non-Windows C libraries), so add
+or change these two lines for Android:
+```
+#if canImport(Glibc)
+import Glibc
+```
+For example, that is all I had to do [to port swift-argument-parser to
+Android](https://github.com/apple/swift-argument-parser/pull/14/files).
+
+You may also need to add some Android-specific support using `#if os(Android)`,
+for example, since FILE is an opaque struct since Android 7, you will [have to
+refer to any FILE pointers like this](https://github.com/apple/swift-tools-support-core/pull/243/files):
+```
+#if os(Android)
+typealias FILEPointer = OpaquePointer
+```
+Some people have reported an issue with using the libraries from this SDK in
+their Android app, that the Android toolchain strips `libdispatch.so` and
+complains that it has an `empty/missing DT_HASH/DT_GNU_HASH`. You can [work
+around this issue by adding the following to your `build.gradle`](https://github.com/buttaface/swift-android-sdk/issues/67#issuecomment-1227460068):
+```
+packagingOptions {
+    doNotStrip "*/arm64-v8a/libdispatch.so"
+    doNotStrip "*/armeabi-v7a/libdispatch.so"
+    doNotStrip "*/x86_64/libdispatch.so"
+}
+```
+
 # Building the Android SDKs
 
 Download the Swift 5.7 compiler and Android NDK 25b as above. Check out this
 repo and run
 `SWIFT_TAG=swift-5.7-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
 to get some prebuilt Android libraries and the Swift source to build the SDK. If
-you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2022-09-12-a`
+you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2022-10-09-a`
 for the latest Swift trunk snapshot and pass in the path to the corresponding
 official prebuilt Swift toolchain to `build-script` below, you can build a Swift
 trunk SDK too, as seen on the CI.
