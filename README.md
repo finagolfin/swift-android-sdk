@@ -133,16 +133,17 @@ Download the Swift 5.7 compiler and Android NDK 25b as above. Check out this
 repo and run
 `SWIFT_TAG=swift-5.7-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
 to get some prebuilt Android libraries and the Swift source to build the SDK. If
-you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2022-10-09-a`
+you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2022-10-18-a`
 for the latest Swift trunk snapshot and pass in the path to the corresponding
 official prebuilt Swift toolchain to `build-script` below, you can build a Swift
 trunk SDK too, as seen on the CI.
 
-Next, apply a patch to the Swift source, `swift-android.patch` from
-this repo, which adds a dependency for the Foundation core library in this
-Android SDK and extracts the clang resource directory from the NDK:
+Next, apply two patches to the Swift source, `swift-android.patch` and
+`swift-android-clang.patch` from this repo, which add a dependency for the
+Foundation core library in this Android SDK and extract the clang resource
+directory from the NDK:
 ```
-git apply swift-android.patch
+git apply swift-android.patch swift-android-clang.patch
 ```
 
 After making sure [needed build tools like python 3, CMake, and ninja](https://github.com/apple/swift/blob/release/5.7/docs/HowToGuides/GettingStarted.md#linux)
