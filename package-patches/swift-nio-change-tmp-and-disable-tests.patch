@@ -10,8 +10,8 @@ index eacd4b02..a6a92e48 100644
 -#if !compiler(>=5.5)
 +#if compiler(>=5.5)
  #if os(Linux) || os(FreeBSD) || os(Android)
-    @testable import NIOBetaTests
     @testable import NIOConcurrencyHelpersTests
+    @testable import NIOCoreTests
 diff --git a/Tests/NIOCoreTests/XCTest+Extensions.swift b/Tests/NIOCoreTests/XCTest+Extensions.swift
 index 94862d29..b93fd8f6 100644
 --- a/Tests/NIOCoreTests/XCTest+Extensions.swift
