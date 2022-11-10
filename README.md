@@ -7,8 +7,8 @@ toolchain for AArch64, armv7, and x86_64, builds several Swift packages against
 those SDKs, and then runs their tests in the Android x86_64
 emulator](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml).
 
-To build with a Swift 5.7 SDK, first download [the latest Android LTS NDK
-25b](https://developer.android.com/ndk/downloads) and [Swift 5.7
+To build with a Swift 5.7.1 SDK, first download [the latest Android LTS NDK
+25b](https://developer.android.com/ndk/downloads) and [Swift 5.7.1
 compiler](https://swift.org/download/#releases) (make sure to install the Swift
 compiler's dependencies listed there). Unpack these archives and the SDK.
 
@@ -16,12 +16,12 @@ I will write up a Swift script to do this SDK configuration one day, but you
 will need to do it manually for now (I'll show aarch64 below, the same will
 need to be done separately for the armv7 or x86_64 SDKs).
 
-Change the symbolic link at `swift-5.7-android-aarch64-24-sdk/usr/lib/swift/clang`
+Change the symbolic link at `swift-5.7.1-android-aarch64-24-sdk/usr/lib/swift/clang`
 to point to the clang headers that come with your swift compiler, eg
 
 ```
-ln -sf /home/yourname/swift-5.7-RELEASE-ubuntu20.04/usr/lib/clang/13.0.0
-swift-5.7-android-aarch64-24-sdk/usr/lib/swift/clang
+ln -sf /home/yourname/swift-5.7.1-RELEASE-ubuntu20.04/usr/lib/clang/13.0.0
+swift-5.7.1-android-aarch64-24-sdk/usr/lib/swift/clang
 ```
 
 Next, modify the cross-compilation JSON file `android-aarch64.json` in this repo
@@ -30,11 +30,11 @@ similarly:
 1. All paths to the NDK should change from `/home/butta/android-ndk-r25b`
 to the path to your NDK, `/home/yourname/android-ndk-r25b`.
 
-2. The path to the compiler should change from `/home/butta/swift-5.7-RELEASE-ubuntu20.04`
-to the path to your Swift compiler, `/home/yourname/swift-5.7-RELEASE-centos8`.
+2. The path to the compiler should change from `/home/butta/swift-5.7.1-RELEASE-ubuntu20.04`
+to the path to your Swift compiler, `/home/yourname/swift-5.7.1-RELEASE-centos8`.
 
-3. The path to the Android SDK should change from `/home/butta/swift-5.7-android-aarch64-24-sdk`
-to the path where you unpacked the Android SDK, `/home/yourname/swift-5.7-android-aarch64-24-sdk`.
+3. The path to the Android SDK should change from `/home/butta/swift-5.7.1-android-aarch64-24-sdk`
+to the path where you unpacked the Android SDK, `/home/yourname/swift-5.7.1-android-aarch64-24-sdk`.
 
 Now you're ready to cross-compile a Swift package with the cross-compilation
 configuration JSON file, `android-aarch64.json`, and run its tests on Android.
@@ -44,9 +44,9 @@ git clone --depth 1 https://github.com/apple/swift-argument-parser.git
 
 cd swift-argument-parser/
 
-/home/yourname/swift-5.7-RELEASE-ubuntu20.04/usr/bin/swift build --build-tests
+/home/yourname/swift-5.7.1-RELEASE-ubuntu20.04/usr/bin/swift build --build-tests
 --enable-test-discovery --destination ~/swift-android-sdk/android-aarch64.json
--Xlinker -rpath -Xlinker \$ORIGIN/swift-5.7-android-aarch64-24-sdk/usr/lib/swift/android
+-Xlinker -rpath -Xlinker \$ORIGIN/swift-5.7.1-android-aarch64-24-sdk/usr/lib/swift/android
 ```
 This will cross-compile the package for Android aarch64 and produce a test
 runner executable with the `.xctest` extension, in this case at
@@ -60,13 +60,13 @@ one depends on the example executables `generate-manual`, `math`, `repeat`, and
 data in the repo: I've had success moving this data with the test runner, after
 modifying the test source so it has the path to this test data in the Android
 test environment. See the example of [swift-crypto on the
-CI](https://github.com/buttaface/swift-android-sdk/blob/5.7/.github/workflows/sdks.yml#L282).
+CI](https://github.com/buttaface/swift-android-sdk/blob/5.7.1/.github/workflows/sdks.yml#L286).
 
 You can copy these executables and the SDK to [an emulator or a USB
 debugging-enabled device with adb](https://github.com/apple/swift/blob/release/5.7/docs/Android.md#3-deploying-the-build-products-to-the-device),
 or put them on an Android device with [a terminal emulator app like Termux](https://termux.dev/en/).
 I test aarch64 with Termux so I'll show how to run the test runner there, but
-the process is similar with adb, [as can be seen on the CI](https://github.com/buttaface/swift-android-sdk/blob/5.7/.github/workflows/sdks.yml#L316).
+the process is similar with adb, [as can be seen on the CI](https://github.com/buttaface/swift-android-sdk/blob/5.7.1/.github/workflows/sdks.yml#L320).
 
 Copy the test executables to the same directory as the SDK:
 ```
@@ -79,10 +79,10 @@ uname -m # check if you're running on the right architecture, should say `aarch6
 cd       # move to the Termux app's home directory
 pkg install openssh
 
-scp yourname@192.168.1.1:{swift-5.7-android-aarch64-24-sdk.tar.xz,
+scp yourname@192.168.1.1:{swift-5.7.1-android-aarch64-24-sdk.tar.xz,
 swift-argument-parserPackageTests.xctest,generate-manual,math,repeat,roll} .
 
-tar xf swift-5.7-android-aarch64-24-sdk.tar.xz
+tar xf swift-5.7.1-android-aarch64-24-sdk.tar.xz
 
 ./swift-argument-parserPackageTests.xctest
 ```
@@ -129,9 +129,9 @@ packagingOptions {
 
 # Building the Android SDKs
 
-Download the Swift 5.7 compiler and Android NDK 25b as above. Check out this
+Download the Swift 5.7.1 compiler and Android NDK 25b as above. Check out this
 repo and run
-`SWIFT_TAG=swift-5.7-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
+`SWIFT_TAG=swift-5.7.1-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
 to get some prebuilt Android libraries and the Swift source to build the SDK. If
 you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2022-10-18-a`
 for the latest Swift trunk snapshot and pass in the path to the corresponding
@@ -152,8 +152,8 @@ substituted instead:
 ```
 ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android
 --android-ndk /home/butta/android-ndk-r25b/ --android-arch aarch64 --android-api-level 24
---build-swift-tools=0 --native-swift-tools-path=/home/butta/swift-5.7-RELEASE-ubuntu20.04/usr/bin/
---native-clang-tools-path=/home/butta/swift-5.7-RELEASE-ubuntu20.04/usr/bin/
+--build-swift-tools=0 --native-swift-tools-path=/home/butta/swift-5.7.1-RELEASE-ubuntu20.04/usr/bin/
+--native-clang-tools-path=/home/butta/swift-5.7.1-RELEASE-ubuntu20.04/usr/bin/
 --host-cc=/usr/bin/clang-13 --host-cxx=/usr/bin/clang++-13
 --cross-compile-hosts=android-aarch64 --cross-compile-deps-path=/home/butta/swift-release-android-aarch64-24-sdk
 --skip-local-build --xctest --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay'
@@ -226,7 +226,7 @@ instead, so this Swift SDK for Android could be built without using
 any prebuilt Termux packages, if you're willing to put in the effort to
 cross-compile them yourself, for example, against a different Android API.
 
-Finally, it gets [the 5.7 source](https://github.com/apple/swift/releases/tag/swift-5.7-RELEASE)
+Finally, it gets [the 5.7.1 source](https://github.com/apple/swift/releases/tag/swift-5.7.1-RELEASE)
 tarballs for five Swift repos and renames them to `llvm-project/`, `swift/`,
 `swift-corelibs-libdispatch`, `swift-corelibs-foundation`, and
 `swift-corelibs-xctest`, as required by the Swift `build-script`, and creates

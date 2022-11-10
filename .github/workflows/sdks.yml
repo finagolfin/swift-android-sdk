@@ -89,7 +89,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-release-sdk
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-upload-sdk
       - name: Clone
         uses: actions/checkout@v2
         with:
@@ -120,6 +120,7 @@ jobs:
 
           ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --skip-early-swift-driver --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --sourcekit-lsp
 
+          cp $ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$(echo ${{ matrix.arch }} | sed "s/v7//")-linux-android*/libc++_shared.so $SDK/usr/lib
           patchelf --set-rpath \$ORIGIN $SDK/usr/lib/swift/android/libdispatch.so
           patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN $SDK/usr/lib/swift/android/lib[FXs]*.so
 
@@ -255,44 +256,45 @@ jobs:
         with:
           path: ~/termux-debug.apk
           key: termux-app
-      - name: Put tests in one directory to push to Android x86_64 emulator
-        if: ${{ matrix.arch == 'x86_64' }}
+      - name: Put SDK and x86_64 tests in one directory to push to Android x86_64 emulator
         run: |
-          mkdir -p pack/lib/swift/android
-          TARGET="x86_64-unknown-linux-android$ANDROID_API_LEVEL"
-          cp swift-argument-parser/.build/$TARGET/debug/{generate-manual,math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
+          mkdir pack
+          cp ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-${ANDROID_API_LEVEL}-sdk.tar.xz pack
 
-          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v1.10/termux-elf-cleaner.cpp
-          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v1.10/elf.h
-          clang -D__ANDROID_API__=$ANDROID_API_LEVEL -o elf-cleaner termux-elf-cleaner.cpp
+          if [ ${{ matrix.arch }} = 'x86_64' ]; then
+            mkdir -p pack/lib/swift/android
+            TARGET="x86_64-unknown-linux-android$ANDROID_API_LEVEL"
+            cp swift-argument-parser/.build/$TARGET/debug/{generate-manual,math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
 
-          ./elf-cleaner pack/{generate-manual,math,repeat,roll} || true
+            wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v1.10/termux-elf-cleaner.cpp
+            wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v1.10/elf.h
+            clang -D__ANDROID_API__=$ANDROID_API_LEVEL -o elf-cleaner termux-elf-cleaner.cpp
+            ./elf-cleaner pack/{generate-manual,math,repeat,roll} || true
 
-          cp swift-crypto/.build/$TARGET/debug/swift-cryptoPackageTests.xctest pack
-          cp swift-nio/.build/$TARGET/debug/swift-nioPackageTests.xctest pack
-          cp sn/.build/$TARGET/debug/swift-numericsPackageTests.xctest pack
-          cp ss/.build/$TARGET/debug/swift-systemPackageTests.xctest pack
-          cp sco/.build/$TARGET/debug/swift-collectionsPackageTests.xctest pack
-          cp sns/.build/$TARGET/debug/swift-nio-sshPackageTests.xctest pack
-          cp snl/.build/$TARGET/debug/swift-nio-sslPackageTests.xctest pack
-          cp yams/.build/$TARGET/debug/YamsPackageTests.xctest pack
-          cp snh/.build/$TARGET/debug/swift-nio-http2PackageTests.xctest pack
-          cp sa/.build/$TARGET/debug/swift-algorithmsPackageTests.xctest pack
+            cp swift-crypto/.build/$TARGET/debug/swift-cryptoPackageTests.xctest pack
+            cp swift-nio/.build/$TARGET/debug/swift-nioPackageTests.xctest pack
+            cp sn/.build/$TARGET/debug/swift-numericsPackageTests.xctest pack
+            cp ss/.build/$TARGET/debug/swift-systemPackageTests.xctest pack
+            cp sco/.build/$TARGET/debug/swift-collectionsPackageTests.xctest pack
+            cp sns/.build/$TARGET/debug/swift-nio-sshPackageTests.xctest pack
+            cp snl/.build/$TARGET/debug/swift-nio-sslPackageTests.xctest pack
+            cp yams/.build/$TARGET/debug/YamsPackageTests.xctest pack
+            cp snh/.build/$TARGET/debug/swift-nio-http2PackageTests.xctest pack
+            cp sa/.build/$TARGET/debug/swift-algorithmsPackageTests.xctest pack
 
-          mkdir pack/crypto-vectors
-          cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/_CryptoExtrasVectors/* pack/crypto-vectors
-          cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
-          cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/lib*so pack/lib
-          cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/swift/android/lib*so pack/lib/swift/android
-          cp $ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so pack/lib/swift/android
-          cp ~/termux-debug.apk pack
+            mkdir pack/crypto-vectors
+            cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/_CryptoExtrasVectors/* pack/crypto-vectors
+            cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
+            cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/lib*so pack/lib
+            cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/swift/android/lib*so pack/lib/swift/android
+            mv pack/lib/libc++_shared.so pack/lib/swift/android
+            cp ~/termux-debug.apk pack
+          fi
       - name: Upload test directory
-        if: ${{ matrix.arch == 'x86_64' }}
         uses: actions/upload-artifact@v2
         with:
-          name: tests-${{ matrix.version }}
+          name: sdk-tests-${{ matrix.version }}-${{ matrix.arch }}
           path: pack/
-          retention-days: 3
   run-tests-on-android-x86_64-emulator:
     runs-on: macos-latest
     needs: build-sdk-and-tests
@@ -304,7 +306,7 @@ jobs:
       - name: Download test directory
         uses: actions/download-artifact@v2
         with:
-          name: tests-${{ matrix.version }}
+          name: sdk-tests-${{ matrix.version }}-x86_64
           path: pack
       - name: Run tests on Android x86_64 emulator
         uses: reactivecircus/android-emulator-runner@v2
@@ -312,6 +314,7 @@ jobs:
           api-level: 24
           arch: x86_64
           script: |
+            rm pack/swift-${{ matrix.version }}-android-x86_64*-sdk.tar.xz
             adb install pack/termux-debug.apk
             chmod 755 pack/{generate-manual,math,repeat,roll,*.xctest}
             adb push pack /data/local/tmp
