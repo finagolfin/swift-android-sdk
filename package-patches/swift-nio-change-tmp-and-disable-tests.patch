@@ -71,26 +71,6 @@ index f3e452dc..a2db1282 100644
                  ("testReceiveEcnAndPacketInfoIPV6VectorReadVectorWrite", testReceiveEcnAndPacketInfoIPV6VectorReadVectorWrite),
                  ("testSendingAddressedEnvelopeOnUnconnectedSocketSucceeds", testSendingAddressedEnvelopeOnUnconnectedSocketSucceeds),
                  ("testSendingByteBufferOnUnconnectedSocketFails", testSendingByteBufferOnUnconnectedSocketFails),
-diff --git a/Tests/NIOPosixTests/SocketChannelTest.swift b/Tests/NIOPosixTests/SocketChannelTest.swift
-index 082cb70b..609c8aff 100644
---- a/Tests/NIOPosixTests/SocketChannelTest.swift
-+++ b/Tests/NIOPosixTests/SocketChannelTest.swift
-@@ -907,6 +907,7 @@ public final class SocketChannelTest : XCTestCase {
-     }
- 
-     func testSimpleMPTCP() throws {
-+      #if os(Linux)
-         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-         defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
- 
-@@ -942,6 +943,7 @@ public final class SocketChannelTest : XCTestCase {
-             XCTAssertEqual(error.errnoCode, EOPNOTSUPP, "Unexpected error: \(error)")
-             return
-         }
-+      #endif
-     }
- }
- 
 diff --git a/Tests/NIOPosixTests/TestUtils.swift b/Tests/NIOPosixTests/TestUtils.swift
 index 603b4141..f0937993 100644
 --- a/Tests/NIOPosixTests/TestUtils.swift
