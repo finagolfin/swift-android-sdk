@@ -113,7 +113,7 @@ jobs:
           sed -i "s%cross_compile_config%cross_compile_config, '-Xlinker', '-landroid-spawn'%" sourcekit-lsp/Utilities/build-script-helper.py
 
           if [ ${{ matrix.version }} = 'trunk' ]; then
-            git apply package-patches/sourcekit-lsp-sqlite.patch
+            git apply package-patches/swiftpm-sqlite.patch
           else
             git apply swift-android-clang.patch
           fi
