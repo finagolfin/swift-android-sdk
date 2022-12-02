@@ -71,6 +71,28 @@ index f3e452dc..a2db1282 100644
                  ("testReceiveEcnAndPacketInfoIPV6VectorReadVectorWrite", testReceiveEcnAndPacketInfoIPV6VectorReadVectorWrite),
                  ("testSendingAddressedEnvelopeOnUnconnectedSocketSucceeds", testSendingAddressedEnvelopeOnUnconnectedSocketSucceeds),
                  ("testSendingByteBufferOnUnconnectedSocketFails", testSendingByteBufferOnUnconnectedSocketFails),
+diff --git a/Tests/NIOPosixTests/IPv4Header.swift b/Tests/NIOPosixTests/IPv4Header.swift
+index 1bda7fa5..2d2affe4 100644
+--- a/Tests/NIOPosixTests/IPv4Header.swift
++++ b/Tests/NIOPosixTests/IPv4Header.swift
+@@ -329,7 +329,7 @@ extension IPv4Header {
+         // This is known bug which can't be fixed without breaking old apps which already workaround the issue
+         // like e.g. we do now too.
+         return totalLength + 20
+-        #elseif os(Linux)
++        #elseif os(Linux) || os(Android)
+         return totalLength
+         #endif
+     }
+@@ -338,7 +338,7 @@ extension IPv4Header {
+         // On BSD the checksum is always zero and we need to compute it
+         precondition(headerChecksum == 0)
+         return computeChecksum()
+-        #elseif os(Linux)
++        #elseif os(Linux) || os(Android)
+         return headerChecksum
+         #endif
+     }
 diff --git a/Tests/NIOPosixTests/TestUtils.swift b/Tests/NIOPosixTests/TestUtils.swift
 index 603b4141..f0937993 100644
 --- a/Tests/NIOPosixTests/TestUtils.swift
