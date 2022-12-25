@@ -180,6 +180,7 @@ jobs:
         with:
           repository: apple/swift-system
           path: ss
+          ref: 1.2.1
       - name: Build Swift System package
         run: |
           cd ss
