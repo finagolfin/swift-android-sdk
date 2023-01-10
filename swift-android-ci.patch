@@ -46,6 +46,28 @@ index 92a1ee38..52273afb 100644
  add_subdirectory(BuildSystem)
 -add_subdirectory(Ninja)
 +#add_subdirectory(Ninja)
+diff --git a/swiftpm/Sources/PackageRegistryTool/SwiftPackageRegistryTool.swift b/swiftpm/Sources/PackageRegistryTool/SwiftPackageRegistryTool.swift
+index 48fad504..36a57319 100644
+--- a/swiftpm/Sources/PackageRegistryTool/SwiftPackageRegistryTool.swift
++++ b/swiftpm/Sources/PackageRegistryTool/SwiftPackageRegistryTool.swift
+@@ -194,7 +194,7 @@ public struct SwiftPackageRegistryTool: ParsableCommand {
+                     saveChanges = false
+                 } else {
+                     // Prompt user for password
+-                    storePassword = String(cString: getpass("Enter password for '\(storeUsername)': "))
++                    storePassword = "fake" //String(cString: getpass("Enter password for '\(storeUsername)': "))
+                 }
+             } else {
+                 authenticationType = .token
+@@ -210,7 +210,7 @@ public struct SwiftPackageRegistryTool: ParsableCommand {
+                     saveChanges = false
+                 } else {
+                     // Prompt user for token
+-                    storePassword = String(cString: getpass("Enter access token: "))
++                    storePassword = "fake" //String(cString: getpass("Enter access token: "))
+                 }
+             }
+ 
 diff --git a/swiftpm/Utilities/bootstrap b/swiftpm/Utilities/bootstrap
 index 085056de..1ded1a90 100755
 --- a/swiftpm/Utilities/bootstrap
