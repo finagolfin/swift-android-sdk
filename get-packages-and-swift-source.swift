@@ -4,7 +4,7 @@ import Foundation
 var termuxPackages = ["libicu", "libicu-static", "libandroid-spawn", "libcurl", "libxml2"]
 let termuxURL = "https://packages.termux.dev/apt/termux-main"
 
-var swiftRepos = ["llvm-project", "swift", "swift-corelibs-libdispatch",
+let swiftRepos = ["llvm-project", "swift", "swift-experimental-string-processing", "swift-corelibs-libdispatch",
                   "swift-corelibs-foundation", "swift-corelibs-xctest", "swift-syntax"]
 
 let extraSwiftRepos = ["swift-llbuild", "swift-package-manager", "swift-driver",
@@ -47,11 +47,10 @@ if tagExtract.numberOfMatches(in: SWIFT_TAG, range: tagRange) == 1 {
 }
 
 if swiftBranch == "RELEASE" {
-  sdkDir = "swift-release-android-\(ANDROID_ARCH)-24-sdk"
-  swiftRepos += ["swift-experimental-string-processing"]
   repoTags["swift-argument-parser"] = "1.0.3"
   repoTags["swift-crypto"] = "1.1.5"
   repoTags["Yams"] = "5.0.0"
+  sdkDir = "swift-release-android-\(ANDROID_ARCH)-24-sdk"
 } else {
   repoTags["swift-crypto"] = "2.2.3"
   repoTags["Yams"] = "5.0.1"
