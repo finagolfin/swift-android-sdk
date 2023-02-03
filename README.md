@@ -20,7 +20,7 @@ Change the symbolic link at `swift-5.7.1-android-aarch64-24-sdk/usr/lib/swift/cl
 to point to the clang headers that come with your swift compiler, eg
 
 ```
-ln -sf /home/yourname/swift-5.7.3-RELEASE-ubuntu20.04/usr/lib/clang/13.0.0
+ln -sf /home/yourname/swift-5.7.3-RELEASE-ubuntu22.04/usr/lib/clang/13.0.0
 swift-5.7.1-android-aarch64-24-sdk/usr/lib/swift/clang
 ```
 
@@ -30,7 +30,7 @@ similarly:
 1. All paths to the NDK should change from `/home/butta/android-ndk-r25b`
 to the path to your NDK, `/home/yourname/android-ndk-r25b`.
 
-2. The path to the compiler should change from `/home/butta/swift-5.7.3-RELEASE-ubuntu20.04`
+2. The path to the compiler should change from `/home/butta/swift-5.7.3-RELEASE-ubuntu22.04`
 to the path to your Swift compiler, `/home/yourname/swift-5.7.3-RELEASE-centos8`.
 
 3. The path to the Android SDK should change from `/home/butta/swift-5.7.1-android-aarch64-24-sdk`
@@ -44,7 +44,7 @@ git clone --depth 1 https://github.com/apple/swift-argument-parser.git
 
 cd swift-argument-parser/
 
-/home/yourname/swift-5.7.3-RELEASE-ubuntu20.04/usr/bin/swift build --build-tests
+/home/yourname/swift-5.7.3-RELEASE-ubuntu22.04/usr/bin/swift build --build-tests
 --enable-test-discovery --destination ~/swift-android-sdk/android-aarch64.json
 -Xlinker -rpath -Xlinker \$ORIGIN/swift-5.7.1-android-aarch64-24-sdk/usr/lib/swift/android
 ```
@@ -152,8 +152,8 @@ substituted instead:
 ```
 ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android
 --android-ndk /home/butta/android-ndk-r25b/ --android-arch aarch64 --android-api-level 24
---build-swift-tools=0 --native-swift-tools-path=/home/butta/swift-5.7.3-RELEASE-ubuntu20.04/usr/bin/
---native-clang-tools-path=/home/butta/swift-5.7.3-RELEASE-ubuntu20.04/usr/bin/
+--build-swift-tools=0 --native-swift-tools-path=/home/butta/swift-5.7.3-RELEASE-ubuntu22.04/usr/bin/
+--native-clang-tools-path=/home/butta/swift-5.7.3-RELEASE-ubuntu22.04/usr/bin/
 --host-cc=/usr/bin/clang-13 --host-cxx=/usr/bin/clang++-13
 --cross-compile-hosts=android-aarch64 --cross-compile-deps-path=/home/butta/swift-release-android-aarch64-24-sdk
 --skip-local-build --xctest --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay'

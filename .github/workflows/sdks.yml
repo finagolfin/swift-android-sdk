@@ -35,7 +35,7 @@ jobs:
         id: cache-toolchain
         uses: actions/cache@v3
         with:
-          path: ~/${{ steps.check.outputs.latest-tag }}-ubuntu20.04.tar.gz
+          path: ~/${{ steps.check.outputs.latest-tag }}-ubuntu22.04.tar.gz
           key: ${{ steps.check.outputs.latest-tag }}-toolchain
       - name: Get latest toolchain if not cached
         if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' }}
@@ -49,7 +49,7 @@ jobs:
           fi
           cd
           SWIFT_TAG="${{ steps.check.outputs.latest-tag }}"
-          wget -q https://download.swift.org/$SWIFT_BRANCH/ubuntu2004/$SWIFT_TAG/$SWIFT_TAG-ubuntu20.04.tar.gz
+          wget -q https://download.swift.org/$SWIFT_BRANCH/ubuntu2204/$SWIFT_TAG/$SWIFT_TAG-ubuntu22.04.tar.gz
           echo "got latest toolchain: ${SWIFT_TAG}"
   build-sdk-and-tests:
     runs-on: ubuntu-latest
@@ -80,14 +80,14 @@ jobs:
         id: cache-toolchain
         uses: actions/cache@v3
         with:
-          path: ~/${{ steps.version.outputs.tag }}-ubuntu20.04.tar.gz
+          path: ~/${{ steps.version.outputs.tag }}-ubuntu22.04.tar.gz
           key: ${{ steps.version.outputs.tag }}-toolchain
       - name: Get cached SDK
         id: cache-sdk
         uses: actions/cache@v3
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-version-sdk
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-sdk
       - name: Clone
         uses: actions/checkout@v3
         with:
@@ -105,7 +105,7 @@ jobs:
           SDK_NAME=$(ls | grep swift-${{ matrix.version }}-android-${{ matrix.arch }})
           SDK=`pwd`/$SDK_NAME
 
-          tar xf ~/$SWIFT_TAG-ubuntu20.04.tar.gz
+          tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
           git apply swift-android.patch swift-android-ci.patch
           sed -i "s%/data/data/com.termux/files%$SDK%" $SDK/usr/lib/pkgconfig/sqlite3.pc
           sed -i "s%cross_compile_config%cross_compile_config, '-Xlinker', '-landroid-spawn'%" sourcekit-lsp/Utilities/build-script-helper.py
@@ -120,7 +120,7 @@ jobs:
             sed -i "s%String(cString: getpass%\"fake\" //%" swiftpm/Sources/PackageRegistryTool/SwiftPackageRegistryTool.swift
           fi
 
-          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu20.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --skip-early-swift-driver --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --sourcekit-lsp $BUILD_TRUNK_FLAG
+          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu22.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu22.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --skip-early-swift-driver --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --sourcekit-lsp $BUILD_TRUNK_FLAG
 
           cp $ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$(echo ${{ matrix.arch }} | sed "s/v7//")-linux-android*/libc++_shared.so $SDK/usr/lib
           patchelf --set-rpath \$ORIGIN $SDK/usr/lib/swift/android/libdispatch.so
@@ -133,8 +133,8 @@ jobs:
         run: |
           cd sdk-config
 
-          if [ ! -d ${{ steps.version.outputs.tag }}-ubuntu20.04 ]; then
-            tar xf ~/${{ steps.version.outputs.tag }}-ubuntu20.04.tar.gz
+          if [ ! -d ${{ steps.version.outputs.tag }}-ubuntu22.04 ]; then
+            tar xf ~/${{ steps.version.outputs.tag }}-ubuntu22.04.tar.gz
           fi
 
           tar xf ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-${ANDROID_API_LEVEL}-sdk.tar.xz
@@ -146,7 +146,7 @@ jobs:
       - name: Build Swift Argument Parser package
         run: |
           cd swift-argument-parser
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift crypto package
         uses: actions/checkout@v3
         with:
@@ -156,7 +156,7 @@ jobs:
         run: |
           cd swift-crypto
           sed -i "s%\\\\(testsDirectory)/.*Vectors%/data/local/tmp/pack/crypto-vectors%" Tests/CryptoTests/Utils/RFCVector.swift Tests/CryptoTests/Utils/Wycheproof.swift Tests/_CryptoExtrasTests/Utils/Wycheproof.swift
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO package
         uses: actions/checkout@v3
         with:
@@ -166,7 +166,7 @@ jobs:
         run: |
           cd swift-nio
           git apply ../sdk-config/package-patches/swift-nio-change-tmp-and-disable-tests.patch
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Numerics package
         uses: actions/checkout@v3
         with:
@@ -175,7 +175,7 @@ jobs:
       - name: Build Swift Numerics package
         run: |
           cd sn
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift System package
         uses: actions/checkout@v3
         with:
@@ -185,7 +185,7 @@ jobs:
         run: |
           cd ss
           sed -i "s%/tmp%/data/local/tmp%" Tests/SystemTests/FileOperationsTest.swift
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Collections package
         uses: actions/checkout@v3
         with:
@@ -195,7 +195,7 @@ jobs:
       - name: Build Swift Collections package
         run: |
           cd sco
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build -j 1 --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build -j 1 --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Atomics package
         uses: actions/checkout@v3
         with:
@@ -211,7 +211,7 @@ jobs:
           cd sns
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
           git apply ../sdk-config/package-patches/swift-nio-ssh.patch
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO SSL package
         uses: actions/checkout@v3
         with:
@@ -220,7 +220,7 @@ jobs:
       - name: Build Swift NIO SSL package
         run: |
           cd snl
-          SWIFTCI_USE_LOCAL_DEPS=1 ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          SWIFTCI_USE_LOCAL_DEPS=1 ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
         uses: actions/checkout@v3
         with:
@@ -230,7 +230,7 @@ jobs:
         run: |
           cd yams
           sed -i "s% fixturesDirectory + \"/SourceKitten#289% \"/data/local/tmp/pack%" Tests/YamsTests/PerformanceTests.swift
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO HTTP/2 package
         uses: actions/checkout@v3
         with:
@@ -241,7 +241,7 @@ jobs:
         run: |
           cd snh
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Algorithms package
         uses: actions/checkout@v3
         with:
@@ -251,7 +251,7 @@ jobs:
         run: |
           cd sa
           sed -i "s%url: .*$%path: \"../sn\"),%" Package.swift
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu20.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get cached Termux debug app for NIO tests
         if: ${{ matrix.arch == 'x86_64' }}
         id: cache-termux
