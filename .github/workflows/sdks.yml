@@ -87,7 +87,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-sdk
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-ndk-sdk
       - name: Clone
         uses: actions/checkout@v3
         with:
@@ -120,7 +120,7 @@ jobs:
             if [ ${{ matrix.version }} = 'devel' ]; then
               sed -i "s%String(cString: getpass%\"fake\" //%" swiftpm/Sources/PackageRegistryTool/SwiftPackageRegistryTool.swift
             else
-              sed -i "s%String(cString: getpass%\"fake\" //%" swiftpm/Sources/PackageRegistryTool/SwiftPackageRegistryTool+Auth.swift
+              sed -i "s%String(cString: getpass%\"fake\" //%" swiftpm/Sources/PackageRegistryTool/PackageRegistryTool+Auth.swift
             fi
           fi
 
