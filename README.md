@@ -8,7 +8,7 @@ those SDKs, and then runs their tests in the Android x86_64
 emulator](https://github.com/buttaface/swift-android-sdk/blob/main/.github/workflows/sdks.yml).
 
 To build with a Swift 5.7.1 SDK, first download [the latest Android LTS NDK
-25b](https://developer.android.com/ndk/downloads) and [Swift 5.7.3
+25c](https://developer.android.com/ndk/downloads) and [Swift 5.7.3
 compiler](https://swift.org/download/#releases) (make sure to install the Swift
 compiler's dependencies listed there). Unpack these archives and the SDK.
 
@@ -27,8 +27,8 @@ swift-5.7.1-android-aarch64-24-sdk/usr/lib/swift/clang
 Next, modify the cross-compilation JSON file `android-aarch64.json` in this repo
 similarly:
 
-1. All paths to the NDK should change from `/home/butta/android-ndk-r25b`
-to the path to your NDK, `/home/yourname/android-ndk-r25b`.
+1. All paths to the NDK should change from `/home/butta/android-ndk-r25c`
+to the path to your NDK, `/home/yourname/android-ndk-r25c`.
 
 2. The path to the compiler should change from `/home/butta/swift-5.7.3-RELEASE-ubuntu22.04`
 to the path to your Swift compiler, `/home/yourname/swift-5.7.3-RELEASE-centos8`.
@@ -129,7 +129,7 @@ packagingOptions {
 
 # Building the Android SDKs
 
-Download the Swift 5.7.3 compiler and Android NDK 25b as above. Check out this
+Download the Swift 5.7.3 compiler and Android NDK 25c as above. Check out this
 repo and run
 `SWIFT_TAG=swift-5.7.3-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
 to get some prebuilt Android libraries and the Swift source to build the SDK. If
@@ -151,7 +151,7 @@ are installed, run the following `build-script` command with your local paths
 substituted instead:
 ```
 ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android
---android-ndk /home/butta/android-ndk-r25b/ --android-arch aarch64 --android-api-level 24
+--android-ndk /home/butta/android-ndk-r25c/ --android-arch aarch64 --android-api-level 24
 --build-swift-tools=0 --native-swift-tools-path=/home/butta/swift-5.7.3-RELEASE-ubuntu22.04/usr/bin/
 --native-clang-tools-path=/home/butta/swift-5.7.3-RELEASE-ubuntu22.04/usr/bin/
 --host-cc=/usr/bin/clang-13 --host-cxx=/usr/bin/clang++-13
@@ -171,7 +171,7 @@ Finally, copy `libc++_shared.so` from the NDK and modify the cross-compiled
 `libdispatch.so` and Swift corelibs to include `$ORIGIN` and other relative
 directories in their rpaths:
 ```
-cp /home/yourname/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so swift-release-android-aarch64-24-sdk/usr/lib
+cp /home/yourname/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so swift-release-android-aarch64-24-sdk/usr/lib
 patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN swift-release-android-aarch64-24-sdk/usr/lib/swift/android/lib*.so
 ```
 
