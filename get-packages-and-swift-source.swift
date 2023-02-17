@@ -55,7 +55,7 @@ if swiftBranch == "RELEASE" {
   repoTags["swift-crypto"] = "2.2.3"
   repoTags["Yams"] = "5.0.1"
   if swiftVersion == "" {
-    repoTags["swift-argument-parser"] = "1.1.4"
+    repoTags["swift-argument-parser"] = "1.2.2"
   } else {
     repoTags["swift-argument-parser"] = "1.0.3"
   }
