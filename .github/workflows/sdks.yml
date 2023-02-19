@@ -262,6 +262,9 @@ jobs:
         with:
           path: ~/termux-debug.apk
           key: termux-app
+      - name: Get Termux debug app if not cached
+        if: ${{ matrix.arch == 'x86_64' && steps.cache-termux.outputs.cache-hit != 'true'}}
+        run: wget -O ~/termux-debug.apk https://github.com/termux/termux-app/releases/download/v0.118.0/termux-app_v0.118.0+github-debug_x86_64.apk
       - name: Put SDK and x86_64 tests in one directory to push to Android x86_64 emulator
         run: |
           mkdir pack
