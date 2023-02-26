@@ -121,6 +121,7 @@ jobs:
               sed -i "s%String(cString: getpass%\"fake\" //%" swiftpm/Sources/PackageRegistryTool/SwiftPackageRegistryTool.swift
             else
               sed -i "s%String(cString: getpass%\"fake\" //%" swiftpm/Sources/PackageRegistryTool/PackageRegistryTool+Auth.swift
+              sed -i "s%set(THREAD%set(CMAKE_HAVE_LIBC_PTHREAD TRUE)\nset(THREAD%" llbuild/CMakeLists.txt
             fi
           fi
 
