@@ -87,7 +87,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-ndk-sdk
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-llvm-sdk
       - name: Clone
         uses: actions/checkout@v3
         with:
@@ -122,6 +122,10 @@ jobs:
             else
               sed -i "s%String(cString: getpass%\"fake\" //%" swiftpm/Sources/PackageRegistryTool/PackageRegistryTool+Auth.swift
               sed -i "s%set(THREAD%set(CMAKE_HAVE_LIBC_PTHREAD TRUE)\nset(THREAD%" llbuild/CMakeLists.txt
+              sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" swift-corelibs-libdispatch/dispatch/dispatch.h
+              sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" llbuild/products/libllbuild/include/llbuild/buildsystem.h
+              sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-tools-support-core/Sources/TSCclibc/include/indexstore_functions.h
+              sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-crypto/Sources/CCryptoBoringSSL/include/CCryptoBoringSSL_asn1.h
             fi
           fi
 
@@ -160,6 +164,7 @@ jobs:
       - name: Build Swift crypto package
         run: |
           cd swift-crypto
+          sed -i "s%#include <time%#include <signal.h>\n#include <time%" Sources/CCryptoBoringSSL/include/CCryptoBoringSSL_asn1.h
           sed -i "s%\\\\(testsDirectory)/.*Vectors%/data/local/tmp/pack/crypto-vectors%" Tests/CryptoTests/Utils/RFCVector.swift Tests/CryptoTests/Utils/Wycheproof.swift Tests/_CryptoExtrasTests/Utils/Wycheproof.swift
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO package
@@ -224,6 +229,7 @@ jobs:
       - name: Build Swift NIO SSL package
         run: |
           cd snl
+          sed -i "s%#include <time%#include <signal.h>\n#include <time%" Sources/CNIOBoringSSL/include/CNIOBoringSSL_asn1.h
           SWIFTCI_USE_LOCAL_DEPS=1 ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
         uses: actions/checkout@v3
