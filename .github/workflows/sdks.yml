@@ -200,7 +200,6 @@ jobs:
         with:
           repository: apple/swift-collections
           path: sco
-          ref: 1.0.4
       - name: Build Swift Collections package
         run: |
           cd sco
