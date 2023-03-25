@@ -54,13 +54,8 @@ if swiftBranch == "RELEASE" {
   sdkDir = "swift-release-android-\(ANDROID_ARCH)-24-sdk"
 } else {
   repoTags["Yams"] = "5.0.1"
-  if swiftVersion == "" {
-    repoTags["swift-argument-parser"] = "1.2.2"
-    repoTags["swift-crypto"] = "2.4.0"
-  } else {
-    repoTags["swift-argument-parser"] = "1.0.3"
-    repoTags["swift-crypto"] = "2.2.3"
-  }
+  repoTags["swift-argument-parser"] = "1.2.2"
+  repoTags["swift-crypto"] = "2.4.0"
   sdkDir = "swift-\(swiftVersion == "" ? "trunk" : "devel")-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"
 }
 
