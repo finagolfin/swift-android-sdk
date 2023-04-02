@@ -16,7 +16,7 @@ I will write up a Swift script to do this SDK configuration one day, but you
 will need to do it manually for now (I'll show aarch64 below, the same will
 need to be done separately for the armv7 or x86_64 json files).
 
-Change the symbolic link at `swift-5.8.1-android-24-sdk/usr/lib/swift/clang`
+Change the symbolic link at `swift-5.8-android-24-sdk/usr/lib/swift/clang`
 to point to the clang headers that come with your swift compiler, eg
 
 ```
@@ -66,7 +66,7 @@ You can copy these executables and the SDK to [an emulator or a USB
 debugging-enabled device with adb](https://github.com/apple/swift/blob/release/5.8/docs/Android.md#3-deploying-the-build-products-to-the-device),
 or put them on an Android device with [a terminal emulator app like Termux](https://termux.dev/en/).
 I test aarch64 with Termux so I'll show how to run the test runner there, but
-the process is similar with adb, [as can be seen on the CI](https://github.com/buttaface/swift-android-sdk/blob/5.7.1/.github/workflows/sdks.yml#L326).
+the process is similar with adb, [as can be seen on the CI](https://github.com/buttaface/swift-android-sdk/blob/5.8/.github/workflows/sdks.yml#L326).
 
 Copy the test executables to the same directory as the SDK:
 ```
