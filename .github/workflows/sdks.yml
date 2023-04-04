@@ -20,17 +20,17 @@ jobs:
           if [ ${{ matrix.version }} = 'release' ]; then
             LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-5.8 | cut -d- -f2)
             SWIFT_TAG="swift-${LATEST_TOOLCHAIN_VERSION}-RELEASE"
-            echo "::set-output name=release-tag::$SWIFT_TAG"
+            echo "release-tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
           elif [ ${{ matrix.version }} = 'devel' ]; then
             LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-5.9-DEV | cut -d- -f8-10)
             SWIFT_TAG="swift-5.9-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
-            echo "::set-output name=devel-tag::$SWIFT_TAG"
+            echo "devel-tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
           else
             LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-DEV | cut -d- -f7-9)
             SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
-            echo "::set-output name=trunk-tag::$SWIFT_TAG"
+            echo "trunk-tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
           fi
-          echo "::set-output name=latest-tag::$SWIFT_TAG"
+          echo "latest-tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
       - name: Get cached toolchain
         id: cache-toolchain
         uses: actions/cache@v3
@@ -67,15 +67,15 @@ jobs:
         run: |
           if [ ${{ matrix.version }} = 'release' ]; then
             TAG="${{ needs.get-latest-toolchain.outputs.release-version }}"
-            echo "::set-output name=latest::$(echo $TAG | cut -d- -f2)"
+            echo "latest=$(echo $TAG | cut -d- -f2)" >> $GITHUB_OUTPUT
           elif [ ${{ matrix.version }} = 'devel' ]; then
             TAG="${{ needs.get-latest-toolchain.outputs.devel-version }}"
-            echo "::set-output name=latest::$(echo $TAG | cut -d- -f5-7)"
+            echo "latest=$(echo $TAG | cut -d- -f5-7)" >> $GITHUB_OUTPUT
           else
             TAG="${{ needs.get-latest-toolchain.outputs.trunk-version }}"
-            echo "::set-output name=latest::$(echo $TAG | cut -d- -f4-6)"
+            echo "latest=$(echo $TAG | cut -d- -f4-6)" >> $GITHUB_OUTPUT
           fi
-          echo "::set-output name=tag::$TAG"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
       - name: Get cached Swift ${{ matrix.version }} toolchain
         id: cache-toolchain
         uses: actions/cache@v3
