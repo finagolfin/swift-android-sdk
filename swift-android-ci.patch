@@ -59,16 +59,3 @@ index bd31bec..4469cab 100755
          else:
              fatal_error("cannot cross-compile for %s" % args.cross_compile_host)
  
-diff --git a/swiftpm/Utilities/bootstrap b/swiftpm/Utilities/bootstrap
-index 085056de..1ded1a90 100755
---- a/swiftpm/Utilities/bootstrap
-+++ b/swiftpm/Utilities/bootstrap
-@@ -803,6 +806,8 @@
-     if 'ANDROID_DATA' in os.environ or (args.cross_compile_hosts and re.match(
-         'android-', args.cross_compile_hosts)):
-         build_flags.extend(["-Xswiftc", "-Xcc", "-Xswiftc", "-U_GNU_SOURCE"])
-+        build_flags.extend(["-Xlinker", "-landroid-spawn"])
-+        build_flags.extend(["--pkg-config-path", os.path.join(os.path.split(args.cross_compile_config)[0], 'lib/pkgconfig')])
- 
-     if platform.system() == "OpenBSD":
-         build_flags.extend(["-Xcc", "-I/usr/local/include"])
