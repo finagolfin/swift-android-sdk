@@ -53,7 +53,7 @@ if swiftBranch == "RELEASE" {
   sdkDir = "swift-release-android-\(ANDROID_ARCH)-24-sdk"
 } else {
   repoTags["swift-argument-parser"] = "1.2.2"
-  repoTags["swift-crypto"] = "2.4.0"
+  repoTags["swift-crypto"] = "2.4.1"
   sdkDir = "swift-\(swiftVersion == "" ? "trunk" : "devel")-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"
 }
 
