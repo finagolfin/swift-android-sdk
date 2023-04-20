@@ -114,11 +114,7 @@ jobs:
             git apply swift-android-spm-release.patch
             sed -i "s%String(cString: getpass%\"fake\" //%" swiftpm/Sources/PackageRegistryTool/SwiftPackageRegistryTool.swift
           else
-            if [ ${{ matrix.version }} = 'devel' ]; then
-              git apply swift-android-spm-release.patch
-            else
-              git apply swift-android-spm.patch
-            fi
+            git apply swift-android-spm.patch
             sed -i "s%String(cString: getpass%\"fake\" //%" swiftpm/Sources/PackageRegistryTool/PackageRegistryTool+Auth.swift
             sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" swift-corelibs-libdispatch/dispatch/dispatch.h
             sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" llbuild/products/libllbuild/include/llbuild/buildsystem.h
