@@ -12,8 +12,8 @@ let extraSwiftRepos = ["swift-llbuild", "swift-package-manager", "swift-driver",
                        "Yams", "indexstore-db", "sourcekit-lsp", "swift-system",
                        "swift-collections", "swift-certificates", "swift-asn1"]
 let renameRepos = ["swift-llbuild" : "llbuild", "swift-package-manager" : "swiftpm", "Yams" : "yams"]
-var repoTags = ["swift-system" : "1.1.1", "swift-collections" : "1.0.1", "swift-asn1" : "0.7.0",
-                "swift-certificates" : "0.1.0", "Yams" : "5.0.1"]
+var repoTags = ["swift-system" : "1.1.1", "swift-collections" : "1.0.1", "swift-asn1" : "0.8.0",
+                "swift-certificates" : "0.4.0", "Yams" : "5.0.1"]
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
   termuxPackages += ["ncurses", "libsqlite"]
 }
@@ -53,7 +53,7 @@ if swiftBranch == "RELEASE" {
   sdkDir = "swift-release-android-\(ANDROID_ARCH)-24-sdk"
 } else {
   repoTags["swift-argument-parser"] = "1.2.2"
-  repoTags["swift-crypto"] = "2.4.1"
+  repoTags["swift-crypto"] = "2.5.0"
   sdkDir = "swift-\(swiftVersion == "" ? "trunk" : "devel")-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"
 }
 
