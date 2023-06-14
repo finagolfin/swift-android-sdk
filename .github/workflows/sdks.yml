@@ -288,8 +288,9 @@ jobs:
             cp snh/.build/$TARGET/debug/swift-nio-http2PackageTests.xctest pack
             cp sa/.build/$TARGET/debug/swift-algorithmsPackageTests.xctest pack
 
-            mkdir pack/crypto-vectors
+            mkdir pack/crypto-vectors pack/swift-crypto_CryptoTests.resources
             cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/_CryptoExtrasVectors/* pack/crypto-vectors
+            cp swift-crypto/Tests/CryptoTests/HPKE/hpke-test-vectors.json pack/swift-crypto_CryptoTests.resources
             cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
             cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/lib*so pack/lib
             cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/swift/android/lib*so pack/lib/swift/android
