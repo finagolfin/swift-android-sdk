@@ -12,28 +12,6 @@ index 94862d29..b93fd8f6 100644
  #else
          if #available(macOS 10.12, iOS 10, tvOS 10, watchOS 3, *) {
              return FileManager.default.temporaryDirectory.path
-diff --git a/Tests/NIOPosixTests/BootstrapTest.swift b/Tests/NIOPosixTests/BootstrapTest.swift
-index 689b5b37..96a821d5 100644
---- a/Tests/NIOPosixTests/BootstrapTest.swift
-+++ b/Tests/NIOPosixTests/BootstrapTest.swift
-@@ -605,7 +605,7 @@ class BootstrapTest: XCTestCase {
-                                    shortOption: .disableAutoRead)
-     }
- 
--    func testClientBindWorksOnSocketsBoundToEitherIPv4OrIPv6Only() {
-+    /*func testClientBindWorksOnSocketsBoundToEitherIPv4OrIPv6Only() {
-         for isIPv4 in [true, false] {
-             guard System.supportsIPv6 || isIPv4 else {
-                 continue // need to skip IPv6 tests if we don't support it.
-@@ -668,7 +668,7 @@ class BootstrapTest: XCTestCase {
-                                 .close()
-                                 .wait())
-         }
--    }
-+    }*/
- }
- 
- private final class WriteStringOnChannelActive: ChannelInboundHandler {
 diff --git a/Tests/NIOPosixTests/DatagramChannelTests.swift b/Tests/NIOPosixTests/DatagramChannelTests.swift
 index 8cfe8de4..c36fb838 100644
 --- a/Tests/NIOPosixTests/DatagramChannelTests.swift
