@@ -108,18 +108,18 @@ jobs:
           tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
           git apply swift-android.patch swift-android-ci.patch
           sed -i "s%/data/data/com.termux/files%$SDK%" $SDK/usr/lib/pkgconfig/sqlite3.pc
-          sed -i "s%clang-path\", self.toolchain.cc,%clang-path\", os.path.join(toolchain_path, 'bin', 'clang'),%" swift/utils/swift_build_support/swift_build_support/products/swiftpm.py
 
           if [ ${{ matrix.version }} = 'release' ]; then
             sed -i "s%String(cString: getpass%\"fake\" //%" swiftpm/Sources/PackageRegistryTool/SwiftPackageRegistryTool.swift
+            sed -i "s%clang-path\", self.toolchain.cc,%clang-path\", os.path.join(toolchain_path, 'bin', 'clang'),%" swift/utils/swift_build_support/swift_build_support/products/swiftpm.py
           else
             sed -i "s%String(cString: getpass%\"fake\" //%" swiftpm/Sources/PackageRegistryTool/PackageRegistryTool+Auth.swift
             sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" swift-corelibs-libdispatch/dispatch/dispatch.h
             sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" llbuild/products/libllbuild/include/llbuild/buildsystem.h
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-tools-support-core/Sources/TSCclibc/include/indexstore_functions.h
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-crypto/Sources/CCryptoBoringSSL/include/CCryptoBoringSSL_asn1.h
-            if [ ${{ matrix.version }} = 'trunk' ]; then
-              sed -i "s%__has_include(<execinfo.h>)%__ANDROID_API__ >= 33%" llbuild/include/llvm/Config/config.h
+            if [ ${{ matrix.version }} = 'devel' ]; then
+              sed -i "s%clang-path\", self.toolchain.cc,%clang-path\", os.path.join(toolchain_path, 'bin', 'clang'),%" swift/utils/swift_build_support/swift_build_support/products/swiftpm.py
             fi
           fi
 
