@@ -50,14 +50,14 @@ if tagExtract.numberOfMatches(in: SWIFT_TAG, range: tagRange) == 1 {
 if swiftBranch == "RELEASE" {
   repoTags["swift-argument-parser"] = "1.0.3"
   repoTags["swift-crypto"] = "2.2.3"
-  sdkDir = "swift-release-android-\(ANDROID_ARCH)-24-sdk"
+  sdkDir = "swift-release-android-\(ANDROID_ARCH)-21-sdk"
 } else {
   repoTags["swift-argument-parser"] = "1.2.2"
   repoTags["swift-crypto"] = "2.5.0"
   if swiftVersion == "" {
     repoTags["swift-certificates"] = "0.6.0"
   }
-  sdkDir = "swift-\(swiftVersion == "" ? "trunk" : "devel")-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"
+  sdkDir = "swift-\(swiftVersion == "" ? "trunk" : "devel")-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-21-sdk"
 }
 
 // takes the name of a command-line executable and the arguments to pass to it
