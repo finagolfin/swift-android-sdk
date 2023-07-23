@@ -60,7 +60,7 @@ jobs:
         version: [release, devel, trunk]
         arch: [aarch64, x86_64, armv7]
     env:
-      ANDROID_API_LEVEL: 24
+      ANDROID_API_LEVEL: 21
     steps:
       - name: Extract the latest version string
         id: version
@@ -87,7 +87,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-bump-sdk
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-rump-sdk
       - name: Clone
         uses: actions/checkout@v3
         with:
@@ -322,7 +322,7 @@ jobs:
       - name: Run tests on Android x86_64 emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 24
+          api-level: 21
           arch: x86_64
           script: |
             rm pack/swift-${{ matrix.version }}-android-x86_64*-sdk.tar.xz
