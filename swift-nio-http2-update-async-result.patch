@@ -1,0 +1,67 @@
+diff --git a/Sources/NIOHTTP2/HTTP2PipelineHelpers.swift b/Sources/NIOHTTP2/HTTP2PipelineHelpers.swift
+index bc76895..ff63315 100644
+--- a/Sources/NIOHTTP2/HTTP2PipelineHelpers.swift
++++ b/Sources/NIOHTTP2/HTTP2PipelineHelpers.swift
+@@ -398,10 +398,10 @@ extension Channel {
+             switch result {
+             case .negotiated("h2"):
+                 // Successful upgrade to HTTP/2. Let the user configure the pipeline.
+-                return http2ConnectionInitializer(self).map { http2Output in .finished(.http2(http2Output)) }
++                return http2ConnectionInitializer(self).map { http2Output in .init(result: (.http2(http2Output))) }
+             case .negotiated("http/1.1"), .fallback:
+                 // Explicit or implicit HTTP/1.1 choice.
+-                return http1ConnectionInitializer(self).map { http1Output in .finished(.http1_1(http1Output)) }
++                return http1ConnectionInitializer(self).map { http1Output in .init(result: (.http1_1(http1Output))) }
+             case .negotiated:
+                 // We negotiated something that isn't HTTP/1.1. This is a bad scene, and is a good indication
+                 // of a user configuration error. We're going to close the connection directly.
+diff --git a/Tests/NIOHTTP2Tests/ConfiguringPipelineAsyncMultiplexerTests.swift b/Tests/NIOHTTP2Tests/ConfiguringPipelineAsyncMultiplexerTests.swift
+index e98c400..3babaf9 100644
+--- a/Tests/NIOHTTP2Tests/ConfiguringPipelineAsyncMultiplexerTests.swift
++++ b/Tests/NIOHTTP2Tests/ConfiguringPipelineAsyncMultiplexerTests.swift
+@@ -257,21 +257,16 @@ final class ConfiguringPipelineAsyncMultiplexerTests: XCTestCase {
+         // Let's pretend the TLS handler did protocol negotiation for us
+         self.serverChannel.pipeline.fireUserInboundEventTriggered(TLSUserEvent.handshakeCompleted(negotiatedProtocol: "h2"))
+ 
+-        let nioProtocolNegotiationResult = try await nioProtocolNegotiationHandler.protocolNegotiationResult.get()
++        let nioProtocolNegotiationResult = try await nioProtocolNegotiationHandler.protocolNegotiationResult.get().waitForFinalResult()
+ 
+         try await assertNoThrow(try await self.assertDoHandshake(client: self.clientChannel, server: self.serverChannel))
+ 
+         let serverMultiplexer: NIOHTTP2Handler.AsyncStreamMultiplexer<Channel>
+         switch nioProtocolNegotiationResult {
+-        case .deferredResult:
+-            preconditionFailure("Negotiation result must be ready")
+-        case .finished(let negotiationResult):
+-            switch negotiationResult {
+             case .http1_1:
+                 preconditionFailure("Negotiation result must be ready")
+             case .http2(let (_, multiplexer)):
+                 serverMultiplexer = multiplexer
+-            }
+         }
+ 
+         try await withThrowingTaskGroup(of: Int.self, returning: Void.self) { group in
+@@ -332,21 +327,16 @@ final class ConfiguringPipelineAsyncMultiplexerTests: XCTestCase {
+         // Let's pretend the TLS handler did protocol negotiation for us
+         self.serverChannel.pipeline.fireUserInboundEventTriggered(TLSUserEvent.handshakeCompleted(negotiatedProtocol: "http/1.1"))
+ 
+-        let nioProtocolNegotiationResult = try await nioProtocolNegotiationHandler.protocolNegotiationResult.get()
++        let nioProtocolNegotiationResult = try await nioProtocolNegotiationHandler.protocolNegotiationResult.get().waitForFinalResult()
+ 
+         try await self.deliverAllBytes(from: self.clientChannel, to: self.serverChannel)
+         try await self.deliverAllBytes(from: self.serverChannel, to: self.clientChannel)
+ 
+         switch nioProtocolNegotiationResult {
+-        case .deferredResult:
+-            preconditionFailure("Negotiation result must be ready")
+-        case .finished(let negotiationResult):
+-            switch negotiationResult {
+             case .http1_1:
+                 break
+             case .http2:
+                 preconditionFailure("Negotiation result must be http/1.1")
+-            }
+         }
+ 
+         // client
