@@ -118,9 +118,9 @@ jobs:
             sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" llbuild/products/libllbuild/include/llbuild/buildsystem.h
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-tools-support-core/Sources/TSCclibc/include/indexstore_functions.h
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-crypto/Sources/CCryptoBoringSSL/include/CCryptoBoringSSL_asn1.h
-            if [ ${{ matrix.version }} = 'devel' ]; then
-              sed -i "s%clang-path\", self.toolchain.cc,%clang-path\", os.path.join(toolchain_path, 'bin', 'clang'),%" swift/utils/swift_build_support/swift_build_support/products/swiftpm.py
-            fi
+            # if [ ${{ matrix.version }} = 'devel' ]; then
+            sed -i "s%clang-path\", self.toolchain.cc,%clang-path\", os.path.join(toolchain_path, 'bin', 'clang'),%" swift/utils/swift_build_support/swift_build_support/products/swiftpm.py
+            # fi
           fi
 
           ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu22.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu22.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --skip-early-swift-driver --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --sourcekit-lsp --skip-early-swiftsyntax
