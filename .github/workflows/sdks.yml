@@ -169,7 +169,7 @@ jobs:
       - name: Build Swift NIO package
         run: |
           cd swift-nio
-          git apply ../sdk-config/swift-nio-change-tmp-and-disable-tests.patch
+          git apply ../sdk-config/swift-nio-disable-ecn-tests.patch
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Numerics package
         uses: actions/checkout@v3
@@ -244,8 +244,6 @@ jobs:
         if: ${{ matrix.arch != 'armv7' }}
         run: |
           cd snh
-          wget -q https://patch-diff.githubusercontent.com/raw/apple/swift-nio-http2/pull/411.patch
-          git apply 411.patch
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Algorithms package
@@ -337,7 +335,7 @@ jobs:
             adb shell "run-as com.termux mkdir /data/data/com.termux/pack"
             adb shell "run-as com.termux cp /data/local/tmp/pack/swift-nioPackageTests.xctest /data/data/com.termux/pack"
             adb shell "run-as com.termux cp -r /data/local/tmp/pack/lib /data/data/com.termux/pack"
-            adb shell "run-as com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest"
+            adb shell "run-as com.termux sh -c 'TMPDIR=/data/data/com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest'"
             adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-systemPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest
