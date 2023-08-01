@@ -114,7 +114,7 @@ func runCommand(_ name: String, with args: [String]) -> String {
     if command.terminationStatus == 0 {
       return commandResult.replacingOccurrences(of: "\\s+$", with: "", options: .regularExpression)
     } else {
-      fatalError("couldn't run \(name) because of \(errorResult)")
+      fatalError("couldn't run \(name) \(args) because of \(errorResult)")
     }
   } else {
     if errorResult != "" {
