@@ -1,0 +1,22 @@
+diff --git a/Tests/NIOSSLTests/TLSConfigurationTest.swift b/Tests/NIOSSLTests/TLSConfigurationTest.swift
+index c3acd57..f0a1e08 100644
+--- a/Tests/NIOSSLTests/TLSConfigurationTest.swift
++++ b/Tests/NIOSSLTests/TLSConfigurationTest.swift
+@@ -494,7 +494,7 @@ class TLSConfigurationTest: XCTestCase {
+         try assertHandshakeSucceeded(withClientConfig: clientConfig, andServerConfig: serverConfig)
+     }
+     
+-    func testFullVerificationWithCANamesFromCertificate() throws {
++/*    func testFullVerificationWithCANamesFromCertificate() throws {
+         // Custom certificates for TLS and client authentication.
+         let root = try NIOSSLCertificate(bytes: .init(customCARoot.utf8), format: .pem)
+         
+@@ -630,7 +630,7 @@ class TLSConfigurationTest: XCTestCase {
+         XCTAssertNoThrow(try interactInMemory(clientChannel: clientChannel, serverChannel: serverChannel))
+         XCTAssertNoThrow(try FileManager.default.removeItem(at: URL(string: "file://" + rootPath)!))
+     }
+-    
++  */
+     func testRehashFormatToPopulateCANamesFromDirectory() throws {
+         // Use the test name as the directory name in the temporary directory.
+         let testName = String("\(#function)".dropLast(2))
