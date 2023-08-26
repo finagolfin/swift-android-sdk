@@ -118,9 +118,9 @@ jobs:
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-tools-support-core/Sources/TSCclibc/include/indexstore_functions.h
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-crypto/Sources/CCryptoBoringSSL/include/CCryptoBoringSSL_asn1.h
             if [ ${{ matrix.version }} = 'trunk' ]; then
-              sed -i "s%, \"llbuild\"]%]%" llbuild/Package.swift
+              sed -i "s%, \"llbuild\"\]%\]%" llbuild/Package.swift
               sed -i "s%name: \"llbuild\", package: \"swift-llbuild%name: \"libllbuild\", package: \"swift-llbuild%" swiftpm/Package.swift
-              sed -i "s%build_flags.extend([\"--explicit-target%#build_flags.extend([\"--explicit-target%" swiftpm/Utilities/bootstrap
+              sed -i "s%build_flags.extend(\[\"--explicit-target%#build_flags.extend(\[\"--explicit-target%" swiftpm/Utilities/bootstrap
             fi
           fi
 
