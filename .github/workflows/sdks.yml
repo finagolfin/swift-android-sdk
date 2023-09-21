@@ -59,6 +59,7 @@ jobs:
       matrix:
         version: [release, devel, trunk]
         arch: [aarch64, x86_64, armv7]
+        ndk: [25c, 26b]
     env:
       ANDROID_API_LEVEL: 24
     steps:
@@ -86,8 +87,8 @@ jobs:
         id: cache-sdk
         uses: actions/cache@v3
         with:
-          path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-bump-sdk
+          path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-ndk${{ matrix.ndk }}-sdk.tar.xz
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-ndk${{ matrix.ndk }}-sdk
       - name: Clone
         uses: actions/checkout@v3
         with:
@@ -106,21 +107,30 @@ jobs:
           SDK=`pwd`/$SDK_NAME
 
           tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
-          git apply swift-android.patch swift-android-ci.patch
+          git apply swift-android.patch swift-android-ci.patch swift-android-both-ndks.patch
+          if [ ${{ matrix.version }} != 'release' ]; then
+            git apply swift-android-arm.patch
+          fi
+          if [ ${{ matrix.ndk }} = '26b' ]; then
+            NDK=$ANDROID_NDK_LATEST_HOME
+            git apply swift-android-ndk26.patch
+          else
+            NDK=$ANDROID_NDK
+            sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" swift-corelibs-libdispatch/dispatch/dispatch.h
+            sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" llbuild/products/libllbuild/include/llbuild/buildsystem.h
+            sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-tools-support-core/Sources/TSCclibc/include/indexstore_functions.h
+            sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-crypto/Sources/CCryptoBoringSSL/include/CCryptoBoringSSL_asn1.h
+          fi
           sed -i "s%/data/data/com.termux/files%$SDK%" $SDK/usr/lib/pkgconfig/sqlite3.pc
           sed -i "s%String(cString: getpass%\"fake\" //%" swiftpm/Sources/PackageRegistryTool/PackageRegistryTool+Auth.swift
-          sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" swift-corelibs-libdispatch/dispatch/dispatch.h
-          sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" llbuild/products/libllbuild/include/llbuild/buildsystem.h
-          sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-tools-support-core/Sources/TSCclibc/include/indexstore_functions.h
-          sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-crypto/Sources/CCryptoBoringSSL/include/CCryptoBoringSSL_asn1.h
 
-          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu22.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu22.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --skip-early-swift-driver --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --sourcekit-lsp --skip-early-swiftsyntax
+          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $NDK --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=`pwd`/$SWIFT_TAG-ubuntu22.04/usr/bin --native-clang-tools-path=`pwd`/$SWIFT_TAG-ubuntu22.04/usr/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --skip-early-swift-driver --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --sourcekit-lsp --skip-early-swiftsyntax
 
-          cp $ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$(echo ${{ matrix.arch }} | sed "s/v7//")-linux-android*/libc++_shared.so $SDK/usr/lib
+          cp $NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$(echo ${{ matrix.arch }} | sed "s/v7//")-linux-android*/libc++_shared.so $SDK/usr/lib
           patchelf --set-rpath \$ORIGIN $SDK/usr/lib/swift/android/libdispatch.so
           patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN $SDK/usr/lib/swift/android/lib[FXs]*.so
 
-          tar cJf ~/$SDK_NAME.tar.xz $SDK_NAME
+          tar cJf ~/${SDK_NAME/-sdk/-ndk${{ matrix.ndk }}-sdk}.tar.xz $SDK_NAME
           rm -rf $SDK_NAME
       - name: Unpack ${{ matrix.version }} toolchain and SDK
         id: sdk-unpack
@@ -131,7 +141,7 @@ jobs:
             tar xf ~/${{ steps.version.outputs.tag }}-ubuntu22.04.tar.gz
           fi
 
-          tar xf ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-${ANDROID_API_LEVEL}-sdk.tar.xz
+          tar xf ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-sdk.tar.xz
       - name: Get Swift Argument Parser package
         uses: actions/checkout@v3
         with:
@@ -149,7 +159,9 @@ jobs:
       - name: Build Swift crypto package
         run: |
           cd swift-crypto
-          sed -i "s%#include <time%#include <signal.h>\n#include <time%" Sources/CCryptoBoringSSL/include/CCryptoBoringSSL_asn1.h
+          if [ ${{ matrix.ndk }} = '25c' ]; then
+            sed -i "s%#include <time%#include <signal.h>\n#include <time%" Sources/CCryptoBoringSSL/include/CCryptoBoringSSL_asn1.h
+          fi
           sed -i "s%\\\\(testsDirectory)/.*Vectors%/data/local/tmp/pack/crypto-vectors%" Tests/CryptoTests/Utils/RFCVector.swift Tests/CryptoTests/Utils/Wycheproof.swift Tests/_CryptoExtrasTests/Utils/Wycheproof.swift
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO package
@@ -160,7 +172,10 @@ jobs:
       - name: Build Swift NIO package
         run: |
           cd swift-nio
-          git apply ../sdk-config/swift-nio-disable-ecn-tests.patch
+          git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-force-unwrap.patch
+          if [ ${{ matrix.ndk }} = '26b' ]; then
+            git apply ../sdk-config/swift-nio-ndk26.patch
+          fi
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Numerics package
         uses: actions/checkout@v3
@@ -180,6 +195,7 @@ jobs:
         run: |
           cd ss
           sed -i "s%/tmp%/data/local/tmp%" Tests/SystemTests/FileOperationsTest.swift
+          git apply ../sdk-config/swift-system-ndk26.patch
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Collections package
         uses: actions/checkout@v3
@@ -205,6 +221,7 @@ jobs:
         run: |
           cd sns
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
+          git apply ../sdk-config/swift-nio-ssh-ndk26.patch
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO SSL package
         uses: actions/checkout@v3
@@ -214,7 +231,12 @@ jobs:
       - name: Build Swift NIO SSL package
         run: |
           cd snl
-          sed -i "s%#include <time%#include <signal.h>\n#include <time%" Sources/CNIOBoringSSL/include/CNIOBoringSSL_asn1.h
+          git apply ../sdk-config/swift-nio-ssl-force-unwrap.patch
+          if [ ${{ matrix.ndk }} = '26b' ]; then
+            git apply ../sdk-config/swift-nio-ssl-ndk26.patch
+          else
+            sed -i "s%#include <time%#include <signal.h>\n#include <time%" Sources/CNIOBoringSSL/include/CNIOBoringSSL_asn1.h
+          fi
           SWIFTCI_USE_LOCAL_DEPS=1 ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
         uses: actions/checkout@v3
@@ -260,7 +282,7 @@ jobs:
       - name: Put SDK and x86_64 tests in one directory to push to Android x86_64 emulator
         run: |
           mkdir pack
-          cp ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-${ANDROID_API_LEVEL}-sdk.tar.xz pack
+          cp ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-sdk.tar.xz pack
 
           if [ ${{ matrix.arch }} = 'x86_64' ]; then
             mkdir -p pack/lib/swift/android
@@ -295,7 +317,7 @@ jobs:
       - name: Upload test directory
         uses: actions/upload-artifact@v3
         with:
-          name: sdk-tests-${{ matrix.version }}-${{ matrix.arch }}
+          name: sdk-tests-${{ matrix.version }}-${{ matrix.arch }}-ndk${{ matrix.ndk }}
           path: pack/
   run-tests-on-android-x86_64-emulator:
     runs-on: macos-latest
@@ -304,11 +326,12 @@ jobs:
       fail-fast: false
       matrix:
         version: [release, devel, trunk]
+        ndk: [25c, 26b]
     steps:
       - name: Download test directory
         uses: actions/download-artifact@v3
         with:
-          name: sdk-tests-${{ matrix.version }}-x86_64
+          name: sdk-tests-${{ matrix.version }}-x86_64-ndk${{ matrix.ndk }}
           path: pack
       - name: Run tests on Android x86_64 emulator
         uses: reactivecircus/android-emulator-runner@v2

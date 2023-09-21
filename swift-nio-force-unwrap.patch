@@ -1,0 +1,57 @@
+diff --git a/Sources/NIOCore/Interfaces.swift b/Sources/NIOCore/Interfaces.swift
+index 1c656db0..5fcbbf83 100644
+--- a/Sources/NIOCore/Interfaces.swift
++++ b/Sources/NIOCore/Interfaces.swift
+@@ -123,7 +123,7 @@ public final class NIONetworkInterface {
+     }
+ #else
+     internal init?(_ caddr: ifaddrs) {
+-        self.name = String(cString: caddr.ifa_name)
++        self.name = String(cString: caddr.ifa_name!)
+ 
+         guard caddr.ifa_addr != nil else {
+             return nil
+@@ -414,7 +414,7 @@ extension NIONetworkDevice {
+         }
+ #else
+         internal init?(_ caddr: ifaddrs) {
+-            self.name = String(cString: caddr.ifa_name)
++            self.name = String(cString: caddr.ifa_name!)
+             self.address = caddr.ifa_addr.flatMap { $0.convert() }
+             self.netmask = caddr.ifa_netmask.flatMap { $0.convert() }
+ 
+diff --git a/Sources/NIOCore/SystemCallHelpers.swift b/Sources/NIOCore/SystemCallHelpers.swift
+index dc9b457a..676d22d9 100644
+--- a/Sources/NIOCore/SystemCallHelpers.swift
++++ b/Sources/NIOCore/SystemCallHelpers.swift
+@@ -173,7 +173,7 @@ enum SystemCalls {
+     @inline(never)
+     internal static func if_nametoindex(_ name: UnsafePointer<CChar>?) throws -> CUnsignedInt {
+         return try syscall(blocking: false) {
+-            sysIfNameToIndex(name)
++            sysIfNameToIndex(name!)
+         }.result
+     }
+ 
+diff --git a/Sources/NIOPosix/System.swift b/Sources/NIOPosix/System.swift
+index 025e60f0..79096568 100644
+--- a/Sources/NIOPosix/System.swift
++++ b/Sources/NIOPosix/System.swift
+@@ -90,7 +90,7 @@ func sysRecvFrom_wrapper(sockfd: CInt, buf: UnsafeMutableRawPointer, len: CLong,
+     return recvfrom(sockfd, buf, len, flags, src_addr, addrlen) // src_addr is 'UnsafeMutablePointer', but it need to be 'UnsafePointer'
+ }
+ func sysWritev_wrapper(fd: CInt, iov: UnsafePointer<iovec>?, iovcnt: CInt) -> CLong {
+-    return CLong(writev(fd, iov, iovcnt)) // cast 'Int32' to 'CLong'
++    return CLong(writev(fd, iov!, iovcnt)) // cast 'Int32' to 'CLong'
+ }
+ private let sysWritev = sysWritev_wrapper
+ #elseif !os(Windows)
+@@ -732,7 +732,7 @@ internal enum Posix {
+     @inline(never)
+     internal static func if_nametoindex(_ name: UnsafePointer<CChar>?) throws -> CUnsignedInt {
+         return try syscall(blocking: false) {
+-            sysIfNameToIndex(name)
++            sysIfNameToIndex(name!)
+         }.result
+     }
+ 
