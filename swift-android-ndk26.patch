@@ -1,0 +1,52 @@
+diff --git a/swift/stdlib/public/SwiftShims/swift/shims/LibcShims.h b/swift/stdlib/public/SwiftShims/swift/shims/LibcShims.h
+index 1e4132f6279..045b8a28746 100644
+--- a/swift/stdlib/public/SwiftShims/swift/shims/LibcShims.h
++++ b/swift/stdlib/public/SwiftShims/swift/shims/LibcShims.h
+@@ -61,7 +61,7 @@ SWIFT_READONLY
+ static inline int _swift_stdlib_memcmp(const void *s1, const void *s2,
+                                        __swift_size_t n) {
+ // FIXME: Is there a way to identify Glibc specifically?
+-#if defined(__gnu_linux__)
++#if defined(__gnu_linux__) || defined(__ANDROID__)
+   extern int memcmp(const void * _Nonnull, const void * _Nonnull, __swift_size_t);
+ #else
+   extern int memcmp(const void * _Null_unspecified, const void * _Null_unspecified, __swift_size_t);
+diff --git a/swift-corelibs-foundation/Sources/Foundation/FileManager+POSIX.swift b/swift-corelibs-foundation/Sources/Foundation/FileManager+POSIX.swift
+index d90ece91..d2bbd22b 100644
+--- a/swift-corelibs-foundation/Sources/Foundation/FileManager+POSIX.swift
++++ b/swift-corelibs-foundation/Sources/Foundation/FileManager+POSIX.swift
+@@ -741,9 +741,15 @@ extension FileManager {
+             if rmdir(fsRep) == 0 {
+                 return
+             } else if errno == ENOTEMPTY {
++                #if os(Android)
++                let ps = UnsafeMutablePointer<UnsafeMutablePointer<Int8>>.allocate(capacity: 2)
++                ps.initialize(to: UnsafeMutablePointer(mutating: fsRep))
++                ps.advanced(by: 1).initialize(to: unsafeBitCast(0, to: UnsafeMutablePointer<Int8>.self))
++                #else
+                 let ps = UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>.allocate(capacity: 2)
+                 ps.initialize(to: UnsafeMutablePointer(mutating: fsRep))
+                 ps.advanced(by: 1).initialize(to: nil)
++                #endif
+                 let stream = fts_open(ps, FTS_PHYSICAL | FTS_XDEV | FTS_NOCHDIR | FTS_NOSTAT, nil)
+                 ps.deinitialize(count: 2)
+                 ps.deallocate()
+@@ -1085,10 +1091,18 @@ extension FileManager {
+             do {
+                 guard fm.fileExists(atPath: _url.path) else { throw _NSErrorWithErrno(ENOENT, reading: true, url: url) }
+                 _stream = try FileManager.default._fileSystemRepresentation(withPath: _url.path) { fsRep in
++                    #if os(Android)
++                    let ps = UnsafeMutablePointer<UnsafeMutablePointer<Int8>>.allocate(capacity: 2)
++                    #else
+                     let ps = UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>.allocate(capacity: 2)
++                    #endif
+                     defer { ps.deallocate() }
+                     ps.initialize(to: UnsafeMutablePointer(mutating: fsRep))
++                    #if os(Android)
++                    ps.advanced(by: 1).initialize(to: unsafeBitCast(0, to: UnsafeMutablePointer<Int8>.self))
++                    #else
+                     ps.advanced(by: 1).initialize(to: nil)
++                    #endif
+                     return fts_open(ps, FTS_PHYSICAL | FTS_XDEV | FTS_NOCHDIR | FTS_NOSTAT, nil)
+                 }
+                 if _stream == nil {
