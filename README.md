@@ -7,7 +7,7 @@ the Swift toolchain for AArch64, armv7, and x86_64, builds several Swift
 packages against those SDKs, and then runs their tests in the Android x86_64
 emulator](https://github.com/finagolfin/swift-android-sdk/blob/main/.github/workflows/sdks.yml).
 
-# Cross-compiling and testing Swift packages with the Android SDK
+## Cross-compiling and testing Swift packages with the Android SDK
 
 To build with the Swift 5.9 SDK, first download [the last Android LTS NDK
 25c](https://github.com/android/ndk/wiki/Unsupported-Downloads) and [Swift 5.9
@@ -97,7 +97,7 @@ Now that the LTS NDK 26 is out and Swift 5.9 supports [the new experimental SDK
 bundle format](https://github.com/apple/swift-evolution/blob/main/proposals/0387-cross-compilation-destinations.md),
 I plan to distribute an Android SDK bundle soon.
 
-# Porting Swift packages to Android
+## Porting Swift packages to Android
 
 The most commonly needed change is to simply import Glibc for Android too (while
 Bionic is the name of the C library on Android, currently Swift uses the name
@@ -118,7 +118,7 @@ refer to any FILE pointers like this](https://github.com/apple/swift-tools-suppo
 typealias FILEPointer = OpaquePointer
 ```
 
-# Building an Android app with Swift
+## Building an Android app with Swift
 
 Some people have reported an issue with using the libraries from this SDK in
 their Android app, that the Android toolchain strips `libdispatch.so` and
@@ -138,7 +138,7 @@ library dependencies that aren't included. If you want to use either of these
 separate Foundation libraries, you will have to track down those other libcurl/xml2
 dependencies and include them yourself.
 
-# Building the Android SDKs from source
+## Building the Android SDKs from source
 
 Download the Swift 5.9 compiler and Android NDK 25c as above. Check out this
 repo and run
