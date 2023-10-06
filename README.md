@@ -149,10 +149,12 @@ for the latest Swift trunk snapshot and pass in the path to the corresponding
 prebuilt Swift toolchain to `build-script` below, you can build a Swift trunk
 SDK too, as seen on the CI.
 
-Next, apply a patch to the Swift source, `swift-android.patch` from
-this repo, which adds a dependency for the Foundation core library in this
-Android SDK:
+Next, add a header to the libdispatch source to work around a recent tightening
+in how C headers are imported, apple/swift#64321, and apply a patch to the Swift
+source, `swift-android.patch` from this repo, which adds a dependency for the
+Foundation core library in this Android SDK:
 ```
+sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" swift-corelibs-libdispatch/dispatch/dispatch.h
 git apply swift-android.patch
 ```
 
