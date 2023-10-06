@@ -169,10 +169,10 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: apple/swift-numerics
-          path: sn
+          path: swift-numerics
       - name: Build Swift Numerics package
         run: |
-          cd sn
+          cd swift-numerics
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift System package
         uses: actions/checkout@v3
@@ -248,8 +248,8 @@ jobs:
       - name: Build Swift Algorithms package
         run: |
           cd sa
-          sed -i "s%url: .*$%path: \"../sn\"),%" Package.swift
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          sed -i "s%url: .*$%path: \"../swift-numerics\"),%" Package.swift
+          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get cached Termux debug app for NIO tests
         if: ${{ matrix.arch == 'x86_64' }}
         id: cache-termux
@@ -277,7 +277,7 @@ jobs:
 
             cp swift-crypto/.build/$TARGET/debug/swift-cryptoPackageTests.xctest pack
             cp swift-nio/.build/$TARGET/debug/swift-nioPackageTests.xctest pack
-            cp sn/.build/$TARGET/debug/swift-numericsPackageTests.xctest pack
+            cp swift-numerics/.build/$TARGET/debug/swift-numericsPackageTests.xctest pack
             cp ss/.build/$TARGET/debug/swift-systemPackageTests.xctest pack
             cp sco/.build/$TARGET/debug/swift-collectionsPackageTests.xctest pack
             cp sns/.build/$TARGET/debug/swift-nio-sshPackageTests.xctest pack
