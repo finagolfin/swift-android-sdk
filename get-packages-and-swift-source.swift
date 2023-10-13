@@ -13,7 +13,7 @@ let extraSwiftRepos = ["swift-llbuild", "swift-package-manager", "swift-driver",
                        "swift-collections", "swift-certificates", "swift-asn1"]
 let renameRepos = ["swift-llbuild" : "llbuild", "swift-package-manager" : "swiftpm", "Yams" : "yams"]
 var repoTags = ["swift-system" : "1.1.1", "swift-collections" : "1.0.1", "swift-asn1" : "0.8.0",
-                "swift-certificates" : "0.6.0", "Yams" : "5.0.1", "swift-argument-parser" : "1.2.2",
+                "swift-certificates" : "0.6.0", "Yams" : "5.0.1", "swift-argument-parser" : "1.2.3",
                 "swift-crypto" : "2.5.0"]
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
   termuxPackages += ["ncurses", "libsqlite"]
@@ -49,10 +49,16 @@ if tagExtract.numberOfMatches(in: SWIFT_TAG, range: tagRange) == 1 {
 }
 
 if swiftBranch == "RELEASE" {
+  repoTags["swift-argument-parser"] = "1.2.2"
   repoTags["swift-asn1"] = "0.7.0"
   repoTags["swift-certificates"] = "0.4.1"
   sdkDir = "swift-release-android-\(ANDROID_ARCH)-24-sdk"
 } else {
+  if swiftVersion == "" {
+    repoTags["swift-asn1"] = "1.0.0"
+    repoTags["swift-certificates"] = "1.0.1"
+    repoTags["swift-crypto"] = "3.0.0"
+  }
   sdkDir = "swift-\(swiftVersion == "" ? "trunk" : "devel")-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"
 }
 
