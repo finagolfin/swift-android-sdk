@@ -1,15 +1,15 @@
 {
     "version": 1,
     "target": "aarch64-unknown-linux-android24",
-    "toolchain-bin-dir": "/home/butta/swift-5.9-RELEASE-ubuntu22.04/usr/bin",
-    "sdk": "/home/butta/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/sysroot",
+    "toolchain-bin-dir": "/home/finagolfin/swift-5.9.1-RELEASE-ubuntu22.04/usr/bin",
+    "sdk": "/home/finagolfin/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/sysroot",
     "extra-cc-flags": [
         "-fPIC"
     ],
     "extra-swiftc-flags": [
-        "-resource-dir", "/home/butta/swift-5.8-android-24-sdk/usr/lib/swift",
-        "-tools-directory", "/home/butta/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin",
-        "-L", "/home/butta/swift-5.8-android-24-sdk/usr/lib/aarch64-linux-android",
+        "-resource-dir", "/home/finagolfin/swift-5.9-android-24-sdk/usr/lib/swift",
+        "-tools-directory", "/home/finagolfin/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin",
+        "-L", "/home/finagolfin/swift-5.9-android-24-sdk/usr/lib/aarch64-linux-android",
     ],
     "extra-cpp-flags": [
         "-lstdc++"

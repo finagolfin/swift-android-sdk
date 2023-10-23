@@ -10,7 +10,7 @@ emulator](https://github.com/finagolfin/swift-android-sdk/blob/main/.github/work
 ## Cross-compiling and testing Swift packages with the Android SDK
 
 To build with the Swift 5.9 SDK, first download [the last Android LTS NDK
-25c](https://github.com/android/ndk/wiki/Unsupported-Downloads) and [Swift 5.9
+25c](https://github.com/android/ndk/wiki/Unsupported-Downloads) and [Swift 5.9.1
 compiler](https://swift.org/download/#releases) (make sure to install the Swift
 compiler's dependencies listed there). Unpack these archives and the SDK.
 
@@ -18,20 +18,20 @@ Change the symbolic link at `swift-5.9-android-24-sdk/usr/lib/swift/clang`
 to point to the clang headers that come with your swift compiler, eg
 
 ```
-ln -sf /home/yourname/swift-5.9-RELEASE-ubuntu22.04/usr/lib/clang/13.0.0
+ln -sf /home/yourname/swift-5.9.1-RELEASE-ubuntu22.04/usr/lib/clang/13.0.0
 swift-5.9-android-24-sdk/usr/lib/swift/clang
 ```
 
 Next, modify the cross-compilation JSON file `android-aarch64.json` in this repo
 similarly:
 
-1. All paths to the NDK should change from `/home/butta/android-ndk-r25c`
+1. All paths to the NDK should change from `/home/finagolfin/android-ndk-r25c`
 to the path to your NDK, `/home/yourname/android-ndk-r25c`.
 
-2. The path to the compiler should change from `/home/butta/swift-5.9-RELEASE-ubuntu22.04`
-to the path to your Swift compiler, `/home/yourname/swift-5.9-RELEASE-centos7`.
+2. The path to the compiler should change from `/home/finagolfin/swift-5.9.1-RELEASE-ubuntu22.04`
+to the path to your Swift compiler, `/home/yourname/swift-5.9.1-RELEASE-centos7`.
 
-3. The paths to the Android SDK should change from `/home/butta/swift-5.9-android-24-sdk`
+3. The paths to the Android SDK should change from `/home/finagolfin/swift-5.9-android-24-sdk`
 to the path where you unpacked the Android SDK, `/home/yourname/swift-5.9-android-24-sdk`.
 
 Now you're ready to cross-compile a Swift package with the cross-compilation
@@ -42,7 +42,7 @@ git clone --depth 1 https://github.com/apple/swift-argument-parser.git
 
 cd swift-argument-parser/
 
-/home/yourname/swift-5.9-RELEASE-ubuntu22.04/usr/bin/swift build --build-tests
+/home/yourname/swift-5.9.1-RELEASE-ubuntu22.04/usr/bin/swift build --build-tests
 --destination ~/swift-android-sdk/android-aarch64.json
 -Xlinker -rpath -Xlinker \$ORIGIN/swift-5.9-android-24-sdk/usr/lib/aarch64-linux-android
 ```
@@ -140,9 +140,9 @@ dependencies and include them yourself.
 
 ## Building the Android SDKs from source
 
-Download the Swift 5.9 compiler and Android NDK 25c as above. Check out this
+Download the Swift 5.9.1 compiler and Android NDK 25c as above. Check out this
 repo and run
-`SWIFT_TAG=swift-5.9-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
+`SWIFT_TAG=swift-5.9.1-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
 to get some prebuilt Android libraries and the Swift source to build the SDK. If
 you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2023-09-22-a`
 for the latest Swift trunk snapshot and pass in the path to the corresponding
@@ -163,14 +163,14 @@ are installed, run the following `build-script` command with your local paths
 substituted instead:
 ```
 ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android
---android-ndk /home/butta/android-ndk-r25c/ --android-arch aarch64 --android-api-level 24
---build-swift-tools=0 --native-swift-tools-path=/home/butta/swift-5.9-RELEASE-ubuntu22.04/usr/bin/
---native-clang-tools-path=/home/butta/swift-5.9-RELEASE-ubuntu22.04/usr/bin/
+--android-ndk /home/finagolfin/android-ndk-r25c/ --android-arch aarch64 --android-api-level 24
+--build-swift-tools=0 --native-swift-tools-path=/home/finagolfin/swift-5.9.1-RELEASE-ubuntu22.04/usr/bin/
+--native-clang-tools-path=/home/finagolfin/swift-5.9.1-RELEASE-ubuntu22.04/usr/bin/
 --host-cc=/usr/bin/clang-13 --host-cxx=/usr/bin/clang++-13
---cross-compile-hosts=android-aarch64 --cross-compile-deps-path=/home/butta/swift-release-android-aarch64-24-sdk
+--cross-compile-hosts=android-aarch64 --cross-compile-deps-path=/home/finagolfin/swift-release-android-aarch64-24-sdk
 --skip-local-build --xctest --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay'
 --install-swift --install-libdispatch --install-foundation --install-xctest
---install-destdir=/home/butta/swift-release-android-aarch64-24-sdk --skip-early-swiftsyntax
+--install-destdir=/home/finagolfin/swift-release-android-aarch64-24-sdk --skip-early-swiftsyntax
 --cross-compile-append-host-target-to-destdir=False --build-swift-static-stdlib -j9
 ```
 Make sure you have an up-to-date CMake and not something old like 3.16. The
@@ -232,7 +232,7 @@ instead, so this Swift SDK for Android could be built without using
 any prebuilt Termux packages, if you're willing to put in the effort to
 cross-compile them yourself, for example, against a different Android API.
 
-Finally, it gets [the 5.9 source](https://github.com/apple/swift/releases/tag/swift-5.9-RELEASE)
+Finally, it gets [the 5.9.1 source](https://github.com/apple/swift/releases/tag/swift-5.9.1-RELEASE)
 tarballs for seven Swift repos and renames them to `llvm-project/`, `swift/`,
 `swift-syntax`, `swift-experimental-string-processing`, `swift-corelibs-libdispatch`,
 `swift-corelibs-foundation`, and `swift-corelibs-xctest`, as required by the Swift
