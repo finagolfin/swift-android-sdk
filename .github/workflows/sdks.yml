@@ -172,9 +172,9 @@ jobs:
       - name: Build Swift NIO package
         run: |
           cd swift-nio
-          git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-force-unwrap.patch
-          if [ ${{ matrix.ndk }} = '26b' ]; then
-            git apply ../sdk-config/swift-nio-ndk26.patch
+          git apply ../sdk-config/swift-nio-disable-ecn-tests.patch
+          if [ ${{ matrix.ndk }} = '25c' ]; then
+            git apply -R ../sdk-config/swift-nio-ndk26.patch
           fi
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Numerics package
@@ -221,7 +221,6 @@ jobs:
         run: |
           cd sns
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
-          git apply ../sdk-config/swift-nio-ssh-ndk26.patch
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO SSL package
         uses: actions/checkout@v3
@@ -231,10 +230,8 @@ jobs:
       - name: Build Swift NIO SSL package
         run: |
           cd snl
-          git apply ../sdk-config/swift-nio-ssl-force-unwrap.patch
-          if [ ${{ matrix.ndk }} = '26b' ]; then
-            git apply ../sdk-config/swift-nio-ssl-ndk26.patch
-          else
+          if [ ${{ matrix.ndk }} = '25c' ]; then
+            git apply -R ../sdk-config/swift-nio-ssl-ndk26.patch
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" Sources/CNIOBoringSSL/include/CNIOBoringSSL_asn1.h
           fi
           SWIFTCI_USE_LOCAL_DEPS=1 ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
