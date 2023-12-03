@@ -108,7 +108,7 @@ jobs:
 
           tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
           git apply swift-android.patch swift-android-ci.patch swift-android-both-ndks.patch
-          if [ ${{ matrix.version }} != 'release' ]; then
+          if [ ${{ matrix.version }} != 'trunk' ]; then
             git apply swift-android-arm.patch
           fi
           if [ ${{ matrix.ndk }} = '26b' ]; then
