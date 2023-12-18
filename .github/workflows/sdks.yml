@@ -111,6 +111,11 @@ jobs:
           if [ ${{ matrix.version }} = 'release' ]; then
             git apply swift-android-arm.patch
           fi
+          if [ ${{ matrix.version }} = 'trunk' ]; then
+            git apply swift-android-tsc-trunk.patch
+          else
+            git apply swift-android-tsc.patch
+          fi
           if [ ${{ matrix.ndk }} = '26b' ]; then
             NDK=$ANDROID_NDK_LATEST_HOME
             git apply swift-android-ndk26.patch
