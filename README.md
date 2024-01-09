@@ -10,36 +10,39 @@ emulator](https://github.com/finagolfin/swift-android-sdk/blob/main/.github/work
 The CI now builds with both the latest LTS NDK 26 and the last LTS NDK 25c. Now
 that Swift 5.9 supports [the new experimental SDK bundle
 format](https://github.com/apple/swift-evolution/blob/main/proposals/0387-cross-compilation-destinations.md),
-I plan to distribute an Android SDK bundle for NDK 26 sometime in January. In
-the meantime, you can get architecture-specific SDKs supporting either NDK from
-the `Artifacts` section of a recent passing CI run and try it out.
+I plan to distribute an Android SDK bundle for NDK 26 sometime this month.
+
+If you cannot build against NDK 26 and the Swift 5.9.2 SDK because of the newly
+added nullability annotations, use the previous NDK 25c and Swift 5.9 SDK instead,
+until you can get your package updated (you can still use the Swift 5.9.2
+compiler with the older Swift 5.9 SDK).
 
 ## Cross-compiling and testing Swift packages with the Android SDK
 
-To build with the Swift 5.9 SDK, first download [the last Android LTS NDK
-25c](https://github.com/android/ndk/wiki/Unsupported-Downloads) and [Swift 5.9.2
+To build with the Swift 5.9.2 SDK, first download [the latest Android LTS NDK
+26b](https://developer.android.com/ndk/downloads) and [Swift 5.9.2
 compiler](https://swift.org/download/#releases) (make sure to install the Swift
 compiler's dependencies listed there). Unpack these archives and the SDK.
 
-Change the symbolic link at `swift-5.9-android-24-sdk/usr/lib/swift/clang`
+Change the symbolic link at `swift-5.9.2-android-24-sdk/usr/lib/swift/clang`
 to point to the clang headers that come with your swift compiler, eg
 
 ```
 ln -sf /home/yourname/swift-5.9.2-RELEASE-ubuntu22.04/usr/lib/clang/13.0.0
-swift-5.9-android-24-sdk/usr/lib/swift/clang
+swift-5.9.2-android-24-sdk/usr/lib/swift/clang
 ```
 
 Next, modify the cross-compilation JSON file `android-aarch64.json` in this repo
 similarly:
 
-1. All paths to the NDK should change from `/home/finagolfin/android-ndk-r25c`
-to the path to your NDK, `/home/yourname/android-ndk-r25c`.
+1. All paths to the NDK should change from `/home/finagolfin/android-ndk-r26b`
+to the path to your NDK, `/home/yourname/android-ndk-r26b`.
 
 2. The path to the compiler should change from `/home/finagolfin/swift-5.9.2-RELEASE-ubuntu22.04`
 to the path to your Swift compiler, `/home/yourname/swift-5.9.2-RELEASE-ubi9`.
 
-3. The paths to the Android SDK should change from `/home/finagolfin/swift-5.9-android-24-sdk`
-to the path where you unpacked the Android SDK, `/home/yourname/swift-5.9-android-24-sdk`.
+3. The paths to the Android SDK should change from `/home/finagolfin/swift-5.9.2-android-24-sdk`
+to the path where you unpacked the Android SDK, `/home/yourname/swift-5.9.2-android-24-sdk`.
 
 Now you're ready to cross-compile a Swift package with the cross-compilation
 configuration JSON file, `android-aarch64.json`, and run its tests on Android.
@@ -51,7 +54,7 @@ cd swift-argument-parser/
 
 /home/yourname/swift-5.9.2-RELEASE-ubuntu22.04/usr/bin/swift build --build-tests
 --destination ~/swift-android-sdk/android-aarch64.json
--Xlinker -rpath -Xlinker \$ORIGIN/swift-5.9-android-24-sdk/usr/lib/aarch64-linux-android
+-Xlinker -rpath -Xlinker \$ORIGIN/swift-5.9.2-android-24-sdk/usr/lib/aarch64-linux-android
 ```
 This will cross-compile the package for Android aarch64 and produce a test
 runner executable with the `.xctest` extension, in this case at
@@ -84,10 +87,10 @@ uname -m # check if you're running on the right architecture, should say `aarch6
 cd       # move to the Termux app's home directory
 pkg install openssh
 
-scp yourname@192.168.1.1:{swift-5.9-android-24-sdk.tar.xz,
+scp yourname@192.168.1.1:{swift-5.9.2-android-24-sdk.tar.xz,
 swift-argument-parserPackageTests.xctest,generate-manual,math,repeat,roll} .
 
-tar xf swift-5.9-android-24-sdk.tar.xz
+tar xf swift-5.9.2-android-24-sdk.tar.xz
 
 ./swift-argument-parserPackageTests.xctest
 ```
@@ -143,22 +146,21 @@ dependencies and include them yourself.
 
 ## Building the Android SDKs from source
 
-Download the Swift 5.9.2 compiler and Android NDK 25c as above. Check out this
+Download the Swift 5.9.2 compiler and Android NDK 26b as above. Check out this
 repo and run
 `SWIFT_TAG=swift-5.9.2-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
 to get some prebuilt Android libraries and the Swift source to build the SDK. If
-you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2023-12-15-a`
+you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2024-01-08-a`
 for the latest Swift trunk snapshot and pass in the path to the corresponding
 prebuilt Swift toolchain to `build-script` below, you can build a Swift trunk
 SDK too, as seen on the CI.
 
-Next, add a header to the libdispatch source to work around a recent tightening
-in how C headers are imported, apple/swift#64321, and apply a patch to the Swift
-source, `swift-android.patch` from this repo, which adds a dependency for the
-Foundation core library in this Android SDK:
+Next, apply a patch to the Swift source, `swift-android.patch` from this repo,
+which adds a dependency for the Foundation core library in this Android SDK, and
+two more patches that make modifications for the nullability annotations newly
+added in NDK 26:
 ```
-sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" swift-corelibs-libdispatch/dispatch/dispatch.h
-git apply swift-android.patch
+git apply swift-android.patch swift-android-both-ndks.patch swift-android-ndk26.patch
 ```
 
 After making sure [needed build tools like python 3, CMake, and ninja](https://github.com/apple/swift/blob/release/5.9/docs/HowToGuides/GettingStarted.md#linux)
@@ -166,7 +168,7 @@ are installed, run the following `build-script` command with your local paths
 substituted instead:
 ```
 ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android
---android-ndk /home/finagolfin/android-ndk-r25c/ --android-arch aarch64 --android-api-level 24
+--android-ndk /home/finagolfin/android-ndk-r26b/ --android-arch aarch64 --android-api-level 24
 --build-swift-tools=0 --native-swift-tools-path=/home/finagolfin/swift-5.9.2-RELEASE-ubuntu22.04/usr/bin/
 --native-clang-tools-path=/home/finagolfin/swift-5.9.2-RELEASE-ubuntu22.04/usr/bin/
 --host-cc=/usr/bin/clang-13 --host-cxx=/usr/bin/clang++-13
@@ -186,7 +188,7 @@ Finally, copy `libc++_shared.so` from the NDK and modify the cross-compiled
 `libdispatch.so` and Swift corelibs to include `$ORIGIN` and other relative
 directories in their rpaths:
 ```
-cp /home/yourname/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so swift-release-android-aarch64-24-sdk/usr/lib
+cp /home/yourname/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so swift-release-android-aarch64-24-sdk/usr/lib
 patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN swift-release-android-aarch64-24-sdk/usr/lib/swift/android/lib*.so
 ```
 
@@ -199,7 +201,7 @@ API 24. Specifically, it downloads the libicu, libicu-static, libandroid-spawn,
 libcurl, and libxml2 packages from the [Termux package
 repository](https://packages.termux.dev/apt/termux-main/pool/main/).
 
-Each one is unpacked with `ar x libicu_73.2_aarch64.deb; tar xf data.tar.xz` and
+Each one is unpacked with `ar x libicu_74.1_aarch64.deb; tar xf data.tar.xz` and
 the resulting files moved to a newly-created Swift release SDK directory:
 ```
 mkdir swift-release-android-aarch64-24-sdk
@@ -214,14 +216,14 @@ rm swift-release-android-aarch64-24-sdk/usr/bin/*-config
 cd swift-release-android-aarch64-24-sdk/usr/lib
 
 rm libicu{io,test,tu}*
-patchelf --set-rpath \$ORIGIN libandroid-spawn.so libcurl.so libicu*so.73.2 libxml2.so
+patchelf --set-rpath \$ORIGIN libandroid-spawn.so libcurl.so libicu*so.74.1 libxml2.so
 
 # repeat the following for libicui18n.so and libicudata.so, as needed
-rm libicuuc.so libicuuc.so.73
-readelf -d libicuuc.so.73.2
-mv libicuuc.so.73.2 libicuuc.so
+rm libicuuc.so libicuuc.so.74
+readelf -d libicuuc.so.74.1
+mv libicuuc.so.74.1 libicuuc.so
 patchelf --set-soname libicuuc.so libicuuc.so
-patchelf --replace-needed libicudata.so.73 libicudata.so libicuuc.so
+patchelf --replace-needed libicudata.so.74 libicudata.so libicuuc.so
 ```
 The libcurl and libxml2 packages are [only needed for the FoundationNetworking
 and FoundationXML libraries respectively](https://github.com/apple/swift-corelibs-foundation/blob/release/5.9/Docs/ReleaseNotes_Swift5.md),
