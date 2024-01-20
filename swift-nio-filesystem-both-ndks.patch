@@ -1,0 +1,99 @@
+diff --git a/Sources/CNIOLinux/shim.c b/Sources/CNIOLinux/shim.c
+index 4102bb2b..dfd1eb01 100644
+--- a/Sources/CNIOLinux/shim.c
++++ b/Sources/CNIOLinux/shim.c
+@@ -198,10 +198,12 @@ int CNIOLinux_renameat2(int oldfd, const char* old, int newfd, const char* newNa
+     return syscall(SYS_renameat2, oldfd, old, newfd, newName, flags);
+ }
+ 
++#if !defined(__BIONIC__) && !defined(__GLIBC__)
+ // Musl also doesn't define the flags for renameat2, so we will do so.
+ // Again, we may as well do this unconditionally.
+ #define RENAME_NOREPLACE 1
+ #define RENAME_EXCHANGE  2
++#endif
+ 
+ const int CNIOLinux_O_TMPFILE = O_TMPFILE;
+ const unsigned int CNIOLinux_RENAME_NOREPLACE = RENAME_NOREPLACE;
+diff --git a/Sources/NIOFileSystem/DirectoryEntries.swift b/Sources/NIOFileSystem/DirectoryEntries.swift
+index 33c9275a..7f53e314 100644
+--- a/Sources/NIOFileSystem/DirectoryEntries.swift
++++ b/Sources/NIOFileSystem/DirectoryEntries.swift
+@@ -649,6 +649,6 @@ private struct DirectoryEnumerator: Sendable {
+ 
+ extension UnsafeMutablePointer<CInterop.FTSEnt> {
+     fileprivate var path: FilePath {
+-        return FilePath(platformString: self.pointee.fts_path)
++        return FilePath(platformString: self.pointee.fts_path!)
+     }
+ }
+diff --git a/Sources/NIOFileSystem/FileInfo.swift b/Sources/NIOFileSystem/FileInfo.swift
+index ca362a4b..848e44f9 100644
+--- a/Sources/NIOFileSystem/FileInfo.swift
++++ b/Sources/NIOFileSystem/FileInfo.swift
+@@ -72,8 +72,8 @@ public struct FileInfo: Hashable, Sendable {
+     /// Creates a ``FileInfo`` by deriving values from a platform-specific value.
+     public init(platformSpecificStatus: CInterop.Stat) {
+         self._platformSpecificStatus = Stat(platformSpecificStatus)
+-        self.type = FileType(platformSpecificMode: platformSpecificStatus.st_mode)
+-        self.permissions = FilePermissions(masking: platformSpecificStatus.st_mode)
++        self.type = FileType(platformSpecificMode: CInterop.Mode(platformSpecificStatus.st_mode))
++        self.permissions = FilePermissions(masking: CInterop.Mode(platformSpecificStatus.st_mode))
+         self.size = Int64(platformSpecificStatus.st_size)
+         self.userID = UserID(rawValue: platformSpecificStatus.st_uid)
+         self.groupID = GroupID(rawValue: platformSpecificStatus.st_gid)
+diff --git a/Sources/NIOFileSystem/FileType.swift b/Sources/NIOFileSystem/FileType.swift
+index 031a04ec..a352c98d 100644
+--- a/Sources/NIOFileSystem/FileType.swift
++++ b/Sources/NIOFileSystem/FileType.swift
+@@ -135,7 +135,7 @@ extension FileType {
+     /// Initializes a file type from the `d_type` from `dirent`.
+     @_spi(Testing)
+     public init(direntType: UInt8) {
+-        #if canImport(Darwin) || canImport(Musl)
++        #if canImport(Darwin) || canImport(Musl) || os(Android)
+         let value = Int32(direntType)
+         #elseif canImport(Glibc)
+         let value = Int(direntType)
+diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift
+index 423dd56b..721a747c 100644
+--- a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift	
++++ b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift	
+@@ -238,7 +238,7 @@ public enum Syscall {
+         size: Int
+     ) -> Result<Int, Errno> {
+         valueOrErrno(retryOnInterrupt: false) {
+-            system_sendfile(output.rawValue, input.rawValue, offset, size)
++            system_sendfile(output.rawValue, input.rawValue, off_t(offset), size)
+         }
+     }
+     #endif
+diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift
+index be043e9d..a0cadd15 100644
+--- a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift	
++++ b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift	
+@@ -329,7 +329,7 @@ internal func system_sendfile(
+ internal func libc_fdopendir(
+     _ fd: FileDescriptor.RawValue
+ ) -> CInterop.DirPointer {
+-    return fdopendir(fd)
++    return fdopendir(fd)!
+ }
+ 
+ /// readdir(3): Returns a pointer to the next directory entry
+diff --git a/Tests/NIOFileSystemTests/FileInfoTests.swift b/Tests/NIOFileSystemTests/FileInfoTests.swift
+index b26dcaf5..97c443c3 100644
+--- a/Tests/NIOFileSystemTests/FileInfoTests.swift
++++ b/Tests/NIOFileSystemTests/FileInfoTests.swift
+@@ -25,7 +25,11 @@ final class FileInfoTests: XCTestCase {
+     private var status: CInterop.Stat {
+         var status = CInterop.Stat()
+         status.st_dev = 1
++        #if arch(arm)
++        status.st_mode = UInt32(S_IFREG | 0o777)
++        #else
+         status.st_mode = S_IFREG | 0o777
++        #endif
+         status.st_nlink = 3
+         status.st_ino = 4
+         status.st_uid = 5
