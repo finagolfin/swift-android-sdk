@@ -1,0 +1,52 @@
+From 65fbeec557a2a495b0aaf3c8d1bc1f6d0cc73d5d
+Date: Thu, 1 Feb 2024 19:05:58 +0530
+Subject: [PATCH] Keep posix_memalign() around for older Android APIs
+
+diff --git a/swift-corelibs-libdispatch/src/io.c b/swift-corelibs-libdispatch/src/io.c
+index 70c6721be..f317c1857 100644
+--- a/swift-corelibs-libdispatch/src/io.c
++++ b/swift-corelibs-libdispatch/src/io.c
+@@ -2373,6 +2373,11 @@ _dispatch_operation_perform(dispatch_operation_t op)
+ 				bQueried = true;
+ 			}
+ 			op->buf = _aligned_malloc(op->buf_siz, siInfo.dwPageSize);
++#elif defined(__ANDROID_API__) && __ANDROID_API__ < 28
++			err = posix_memalign(&op->buf, (size_t)PAGE_SIZE, op->buf_siz);
++			if (err != 0) {
++				goto error;
++			}
+ #else
+ 			op->buf = aligned_alloc((size_t)PAGE_SIZE, op->buf_siz)
+ #endif
+diff --git a/swift-corelibs-libdispatch/tests/dispatch_io.c b/swift-corelibs-libdispatch/tests/dispatch_io.c
+index a5a1cea67..1988cea69 100644
+--- a/swift-corelibs-libdispatch/tests/dispatch_io.c
++++ b/swift-corelibs-libdispatch/tests/dispatch_io.c
+@@ -398,7 +398,11 @@ test_async_read(char *path, size_t size, int option, dispatch_queue_t queue,
+ 				buffer = _aligned_malloc(size, si.dwPageSize);
+ #else
+ 				size_t pagesize = (size_t)sysconf(_SC_PAGESIZE);
++#if defined(__ANDROID_API__) && __ANDROID_API__ < 28
++				posix_memalign((void **)&buffer, pagesize, size);
++#else
+ 				buffer = aligned_alloc(pagesize, size);
++#endif
+ #endif
+ 				ssize_t r = dispatch_test_fd_read(fd, buffer, size);
+ 				if (r == -1) {
+diff --git a/swift-corelibs-libdispatch/tests/dispatch_read2.c b/swift-corelibs-libdispatch/tests/dispatch_read2.c
+index 401fb4f62..36e5575b2 100644
+--- a/swift-corelibs-libdispatch/tests/dispatch_read2.c
++++ b/swift-corelibs-libdispatch/tests/dispatch_read2.c
+@@ -91,7 +91,11 @@ dispatch_read2(dispatch_fd_t fd,
+ 		buffer = _aligned_malloc(bufsiz, pagesize);
+ #else
+ 		size_t pagesize = (size_t)sysconf(_SC_PAGESIZE);
++#if defined(__ANDROID_API__) && __ANDROID_API__ < 28
++		posix_memalign((void **)&buffer, pagesize, bufsiz);
++#else
+ 		buffer = aligned_alloc(pagesize, bufsiz);
++#endif
+ #endif
+ 		ssize_t actual = dispatch_test_fd_read(fd, buffer, bufsiz);
+ 		if (actual == -1) {

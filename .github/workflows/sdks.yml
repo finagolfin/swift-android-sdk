@@ -110,6 +110,8 @@ jobs:
           git apply swift-android.patch swift-android-ci.patch swift-android-both-ndks.patch
           if [ ${{ matrix.version }} != 'trunk' ]; then
             git apply swift-android-tsc.patch
+          else
+            git apply libdispatch-trunk.patch
           fi
           if [ ${{ matrix.ndk }} = '26b' ]; then
             NDK=$ANDROID_NDK_LATEST_HOME
