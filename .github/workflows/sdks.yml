@@ -33,7 +33,7 @@ jobs:
           echo "latest-tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
       - name: Get cached toolchain
         id: cache-toolchain
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/${{ steps.check.outputs.latest-tag }}-ubuntu22.04.tar.gz
           key: ${{ steps.check.outputs.latest-tag }}-toolchain
@@ -79,18 +79,18 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
       - name: Get cached Swift ${{ matrix.version }} toolchain
         id: cache-toolchain
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/${{ steps.version.outputs.tag }}-ubuntu22.04.tar.gz
           key: ${{ steps.version.outputs.tag }}-toolchain
       - name: Get cached SDK
         id: cache-sdk
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-ndk${{ matrix.ndk }}-sdk.tar.xz
           key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-ndk${{ matrix.ndk }}-sdk
       - name: Clone
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: sdk-config
       - name: Build Swift ${{ matrix.version }} Android SDK if not the latest
@@ -145,7 +145,7 @@ jobs:
 
           tar xf ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-sdk.tar.xz
       - name: Get Swift Argument Parser package
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: apple/swift-argument-parser
           path: swift-argument-parser
@@ -154,7 +154,7 @@ jobs:
           cd swift-argument-parser
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift crypto package
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: apple/swift-crypto
           path: swift-crypto
@@ -167,7 +167,7 @@ jobs:
           sed -i "s%\\\\(testsDirectory)/.*Vectors%/data/local/tmp/pack/crypto-vectors%" Tests/CryptoTests/Utils/RFCVector.swift Tests/CryptoTests/Utils/Wycheproof.swift Tests/_CryptoExtrasTests/Utils/Wycheproof.swift
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO package
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: apple/swift-nio
           path: swift-nio
@@ -182,7 +182,7 @@ jobs:
           fi
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Numerics package
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: apple/swift-numerics
           path: swift-numerics
@@ -191,7 +191,7 @@ jobs:
           cd swift-numerics
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift System package
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: apple/swift-system
           path: ss
@@ -202,7 +202,7 @@ jobs:
           git apply ../sdk-config/swift-system-ndk26.patch
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --enable-test-discovery --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Collections package
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: apple/swift-collections
           path: sco
@@ -211,13 +211,13 @@ jobs:
           cd sco
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build -j 1 --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Atomics package
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: apple/swift-atomics
           path: swift-atomics
           ref: 1.1.0
       - name: Get Swift NIO SSH package
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: apple/swift-nio-ssh
           path: sns
@@ -227,7 +227,7 @@ jobs:
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO SSL package
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: apple/swift-nio-ssl
           path: snl
@@ -239,7 +239,7 @@ jobs:
           fi
           SWIFTCI_USE_LOCAL_DEPS=1 ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: jpsim/Yams
           path: yams
@@ -249,7 +249,7 @@ jobs:
           sed -i "s% fixturesDirectory + \"/SourceKitten#289% \"/data/local/tmp/pack%" Tests/YamsTests/PerformanceTests.swift
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO HTTP/2 package
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: apple/swift-nio-http2
           path: snh
@@ -260,7 +260,7 @@ jobs:
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Algorithms package
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: apple/swift-algorithms
           path: sa
@@ -272,7 +272,7 @@ jobs:
       - name: Get cached Termux debug app for NIO tests
         if: ${{ matrix.arch == 'x86_64' }}
         id: cache-termux
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/termux-debug.apk
           key: termux-app
@@ -315,7 +315,7 @@ jobs:
             cp ~/termux-debug.apk pack
           fi
       - name: Upload test directory
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: sdk-tests-${{ matrix.version }}-${{ matrix.arch }}-ndk${{ matrix.ndk }}
           path: pack/
@@ -329,7 +329,7 @@ jobs:
         ndk: [25c, 26b]
     steps:
       - name: Download test directory
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: sdk-tests-${{ matrix.version }}-x86_64-ndk${{ matrix.ndk }}
           path: pack
