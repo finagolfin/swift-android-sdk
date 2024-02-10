@@ -1,20 +1,3 @@
-diff --git a/Sources/CNIOLinux/shim.c b/Sources/CNIOLinux/shim.c
-index 4102bb2b..dfd1eb01 100644
---- a/Sources/CNIOLinux/shim.c
-+++ b/Sources/CNIOLinux/shim.c
-@@ -198,10 +198,12 @@ int CNIOLinux_renameat2(int oldfd, const char* old, int newfd, const char* newNa
-     return syscall(SYS_renameat2, oldfd, old, newfd, newName, flags);
- }
- 
-+#if !defined(__BIONIC__) && !defined(__GLIBC__)
- // Musl also doesn't define the flags for renameat2, so we will do so.
- // Again, we may as well do this unconditionally.
- #define RENAME_NOREPLACE 1
- #define RENAME_EXCHANGE  2
-+#endif
- 
- const int CNIOLinux_O_TMPFILE = O_TMPFILE;
- const unsigned int CNIOLinux_RENAME_NOREPLACE = RENAME_NOREPLACE;
 diff --git a/Sources/NIOFileSystem/DirectoryEntries.swift b/Sources/NIOFileSystem/DirectoryEntries.swift
 index 33c9275a..7f53e314 100644
 --- a/Sources/NIOFileSystem/DirectoryEntries.swift
@@ -58,7 +41,7 @@ index 031a04ec..a352c98d 100644
 diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift
 index 423dd56b..721a747c 100644
 --- a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift	
-+++ b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift	
++++ b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift
 @@ -238,7 +238,7 @@ public enum Syscall {
          size: Int
      ) -> Result<Int, Errno> {
@@ -71,7 +54,7 @@ index 423dd56b..721a747c 100644
 diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift
 index be043e9d..a0cadd15 100644
 --- a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift	
-+++ b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift	
++++ b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift
 @@ -329,7 +329,7 @@ internal func system_sendfile(
  internal func libc_fdopendir(
      _ fd: FileDescriptor.RawValue
