@@ -31,7 +31,7 @@ index 56a7c3e7..48b3356e 100644
 diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift
 index 423dd56b..721a747c 100644
 --- a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift	
-+++ b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift	
++++ b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift
 @@ -346,7 +346,11 @@ public enum Libc {
          return valueOrErrno {
              pathBytes.withUnsafeMutableBufferPointer { pointer in
@@ -47,7 +47,7 @@ index 423dd56b..721a747c 100644
 diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift
 index be043e9d..a0cadd15 100644
 --- a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift	
-+++ b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift	
++++ b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift
 @@ -395,12 +395,21 @@ internal func libc_confstr(
  #endif
  
