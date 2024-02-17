@@ -308,17 +308,20 @@ jobs:
             mkdir pack/crypto-vectors pack/swift-crypto_CryptoTests.resources
             cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/_CryptoExtrasVectors/* pack/crypto-vectors
             cp swift-crypto/Tests/CryptoTests/HPKE/hpke-test-vectors.json pack/swift-crypto_CryptoTests.resources
+            rm swift-nio/Tests/NIOFileSystemIntegrationTests/Test\ Data/*symlink
+            cp -r swift-nio/Tests/NIOFileSystemIntegrationTests/Test\ Data/ swift-nio/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift pack
             cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
             cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/lib*so pack/lib
             cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/swift/android/lib*so pack/lib/swift/android
             mv pack/lib/libc++_shared.so pack/lib/swift/android
             cp ~/termux-debug.apk pack
           fi
-      - name: Upload test directory
+          tar cvf pack.tar pack
+      - name: Upload test directory tarfile
         uses: actions/upload-artifact@v4
         with:
           name: sdk-tests-${{ matrix.version }}-${{ matrix.arch }}-ndk${{ matrix.ndk }}
-          path: pack/
+          path: pack.tar
   run-tests-on-android-x86_64-emulator:
     runs-on: macos-latest
     needs: build-sdk-and-tests
@@ -328,27 +331,30 @@ jobs:
         version: [release, devel, trunk]
         ndk: [25c, 26b]
     steps:
-      - name: Download test directory
+      - name: Download test directory tarfile
         uses: actions/download-artifact@v4
         with:
           name: sdk-tests-${{ matrix.version }}-x86_64-ndk${{ matrix.ndk }}
-          path: pack
       - name: Run tests on Android x86_64 emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 24
           arch: x86_64
           script: |
-            rm pack/swift-${{ matrix.version }}-android-x86_64*-sdk.tar.xz
+            tar xf pack.tar
             adb install pack/termux-debug.apk
-            chmod 755 pack/{generate-manual,math,repeat,roll,*.xctest}
+            rm pack/termux-debug.apk pack/swift-${{ matrix.version }}-android-x86_64*-sdk.tar.xz
             adb push pack /data/local/tmp
 
             adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-cryptoPackageTests.xctest
             adb shell "run-as com.termux mkdir /data/data/com.termux/pack"
-            adb shell "run-as com.termux cp /data/local/tmp/pack/swift-nioPackageTests.xctest /data/data/com.termux/pack"
+            adb shell "run-as com.termux cp /data/local/tmp/pack/{swift-nioPackageTests.xctest,FileHandleTests.swift} /data/data/com.termux/pack"
             adb shell "run-as com.termux cp -r /data/local/tmp/pack/lib /data/data/com.termux/pack"
+            adb shell "run-as com.termux cp -r /data/local/tmp/pack/Test\ Data /data/data/com.termux/pack"
+            adb shell "run-as com.termux ln -s README.md /data/data/com.termux/pack/Test\ Data/README.md.symlink"
+            adb shell "run-as com.termux ln -s Foo /data/data/com.termux/pack/Test\ Data/Foo.symlink"
+            adb shell "run-as com.termux sh -c 'TMPDIR=/data/data/com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest'"
             adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-systemPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest

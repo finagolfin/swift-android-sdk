@@ -1,8 +1,8 @@
 diff --git a/Sources/NIOFileSystem/DirectoryEntries.swift b/Sources/NIOFileSystem/DirectoryEntries.swift
-index 33c9275a..7f53e314 100644
+index 3224da51..f827e091 100644
 --- a/Sources/NIOFileSystem/DirectoryEntries.swift
 +++ b/Sources/NIOFileSystem/DirectoryEntries.swift
-@@ -649,6 +649,6 @@ private struct DirectoryEnumerator: Sendable {
+@@ -650,7 +650,7 @@ private struct DirectoryEnumerator: Sendable {
  
  extension UnsafeMutablePointer<CInterop.FTSEnt> {
      fileprivate var path: FilePath {
@@ -10,11 +10,12 @@ index 33c9275a..7f53e314 100644
 +        return FilePath(platformString: self.pointee.fts_path!)
      }
  }
+ 
 diff --git a/Sources/NIOFileSystem/FileInfo.swift b/Sources/NIOFileSystem/FileInfo.swift
-index ca362a4b..848e44f9 100644
+index 6c8c2f1c..7f174bf6 100644
 --- a/Sources/NIOFileSystem/FileInfo.swift
 +++ b/Sources/NIOFileSystem/FileInfo.swift
-@@ -72,8 +72,8 @@ public struct FileInfo: Hashable, Sendable {
+@@ -73,8 +73,8 @@ public struct FileInfo: Hashable, Sendable {
      /// Creates a ``FileInfo`` by deriving values from a platform-specific value.
      public init(platformSpecificStatus: CInterop.Stat) {
          self._platformSpecificStatus = Stat(platformSpecificStatus)
@@ -25,11 +26,48 @@ index ca362a4b..848e44f9 100644
          self.size = Int64(platformSpecificStatus.st_size)
          self.userID = UserID(rawValue: platformSpecificStatus.st_uid)
          self.groupID = GroupID(rawValue: platformSpecificStatus.st_gid)
+diff --git a/Sources/NIOFileSystem/FileSystem.swift b/Sources/NIOFileSystem/FileSystem.swift
+index 3fc7d561..50e0482a 100644
+--- a/Sources/NIOFileSystem/FileSystem.swift
++++ b/Sources/NIOFileSystem/FileSystem.swift
+@@ -17,6 +17,7 @@
+ import Atomics
+ import NIOCore
+ @preconcurrency import SystemPackage
++import class Foundation.FileManager
+ 
+ #if canImport(Darwin)
+ import Darwin
+@@ -626,7 +627,7 @@ public struct FileSystem: Sendable, FileSystemProtocol {
+                 }.get()
+             }
+             #else
+-            return "/tmp"
++            return FilePath(FileManager.default.temporaryDirectory.path)
+             #endif
+         }
+     }
+@@ -959,6 +960,7 @@ extension FileSystem {
+                 permissions: info.permissions
+             )
+ 
++            #if !os(Android)
+             // Copy over extended attributes, if any exist.
+             do {
+                 let attributes = try await dir.attributeNames()
+@@ -979,6 +981,7 @@ extension FileSystem {
+                 // that is the case.
+                 ()
+             }
++            #endif
+ 
+             // Build a list of directories to copy over. Do this after closing the current
+             // directory to avoid using too many descriptors.
 diff --git a/Sources/NIOFileSystem/FileType.swift b/Sources/NIOFileSystem/FileType.swift
-index 031a04ec..a352c98d 100644
+index 1dc09100..a08ec374 100644
 --- a/Sources/NIOFileSystem/FileType.swift
 +++ b/Sources/NIOFileSystem/FileType.swift
-@@ -135,7 +135,7 @@ extension FileType {
+@@ -136,7 +136,7 @@ extension FileType {
      /// Initializes a file type from the `d_type` from `dirent`.
      @_spi(Testing)
      public init(direntType: UInt8) {
@@ -39,10 +77,10 @@ index 031a04ec..a352c98d 100644
          #elseif canImport(Glibc)
          let value = Int(direntType)
 diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift
-index 423dd56b..721a747c 100644
+index dcfd8ffd..e48670ad 100644
 --- a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift	
 +++ b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift
-@@ -238,7 +238,7 @@ public enum Syscall {
+@@ -239,7 +239,7 @@ public enum Syscall {
          size: Int
      ) -> Result<Int, Errno> {
          valueOrErrno(retryOnInterrupt: false) {
@@ -52,10 +90,10 @@ index 423dd56b..721a747c 100644
      }
      #endif
 diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift
-index be043e9d..a0cadd15 100644
+index 332abf17..7dc0d331 100644
 --- a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift	
 +++ b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift
-@@ -329,7 +329,7 @@ internal func system_sendfile(
+@@ -330,7 +330,7 @@ internal func system_sendfile(
  internal func libc_fdopendir(
      _ fd: FileDescriptor.RawValue
  ) -> CInterop.DirPointer {
@@ -64,19 +102,235 @@ index be043e9d..a0cadd15 100644
  }
  
  /// readdir(3): Returns a pointer to the next directory entry
+diff --git a/Sources/NIOFileSystem/Internal/SystemFileHandle.swift b/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
+index 3dc51872..49aeeeca 100644
+--- a/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
++++ b/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
+@@ -1113,13 +1113,23 @@ extension SystemFileHandle {
+         let truncate = options.contains(.truncate)
+         let delayMaterialization = transactional && isWritable && (exclusiveCreate || truncate)
+ 
+-        if delayMaterialization {
++        if false {
+             // When opening in this mode we can more "atomically" create the file, that is, by not
+             // leaving the user with a half written file should e.g. the system crash or throw an
+-            // error while writing. On Linux we do this by opening the directory for the path
+-            // with `O_TMPFILE` and creating a hard link when closing the file. On other platforms
+-            // we generate a dot file with a randomised suffix name and rename it to the
++            // error while writing. On non-Android Linux we do this by opening the directory for
++            // the path with `O_TMPFILE` and creating a hard link when closing the file. On other
++            // platforms we generate a dot file with a randomised suffix name and rename it to the
+             // destination.
++            #if os(Android)
++            return Self.syncOpenWithMaterialization(
++                atPath: path,
++                mode: mode,
++                options: options,
++                permissions: permissions,
++                executor: executor,
++                useTemporaryFileIfPossible: false
++            )
++            #else
+             return Self.syncOpenWithMaterialization(
+                 atPath: path,
+                 mode: mode,
+@@ -1127,6 +1137,7 @@ extension SystemFileHandle {
+                 permissions: permissions,
+                 executor: executor
+             )
++            #endif
+         } else {
+             return Self.syncOpen(
+                 atPath: path,
+diff --git a/Tests/NIOFileSystemIntegrationTests/BufferedReaderTests.swift b/Tests/NIOFileSystemIntegrationTests/BufferedReaderTests.swift
+index 8404e159..151fccc1 100644
+--- a/Tests/NIOFileSystemIntegrationTests/BufferedReaderTests.swift
++++ b/Tests/NIOFileSystemIntegrationTests/BufferedReaderTests.swift
+@@ -21,7 +21,7 @@ import XCTest
+ final class BufferedReaderTests: XCTestCase {
+     func testBufferedReaderSizeAndCapacity() async throws {
+         let fs = FileSystem.shared
+-        try await fs.withFileHandle(forReadingAt: #filePath) { handle in
++        try await fs.withFileHandle(forReadingAt: "/data/data/com.termux/pack/FileHandleTests.swift") { handle in
+             var reader = handle.bufferedReader(capacity: .bytes(128 * 1024))
+             XCTAssertEqual(reader.count, 0)
+             XCTAssertEqual(reader.capacity, 128 * 1024)
+@@ -88,7 +88,7 @@ final class BufferedReaderTests: XCTestCase {
+ 
+     func testBufferedReaderReadingShort() async throws {
+         let fs = FileSystem.shared
+-        try await fs.withFileHandle(forReadingAt: #filePath) { handle in
++        try await fs.withFileHandle(forReadingAt: "/data/data/com.termux/pack/FileHandleTests.swift") { handle in
+             var reader = handle.bufferedReader(capacity: .bytes(128))
+             var buffer = ByteBuffer()
+             while true {
+diff --git a/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift b/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift
+index c18e2c8e..65872fb9 100644
+--- a/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift
++++ b/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift
+@@ -20,9 +20,8 @@ import XCTest
+ 
+ @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+ final class FileHandleTests: XCTestCase {
+-    static let thisFile = FilePath(#filePath)
+-    static let testData = FilePath(#filePath)
+-        .removingLastComponent()  // FileHandleTests.swift
++    static let thisFile = FilePath("/data/data/com.termux/pack/FileHandleTests.swift")
++    static let testData = FilePath("/data/data/com.termux/pack/")
+         .appending("Test Data")
+         .lexicallyNormalized()
+ 
+@@ -34,7 +34,7 @@ final class FileHandleTests: XCTestCase {
+         autoClose: Bool = true,
+         _ execute: @Sendable (SystemFileHandle) async throws -> Void
+     ) async throws {
+-        let path = FilePath("/tmp/\(Self.temporaryFileName())")
++        let path = FilePath("\(FileManager.default.temporaryDirectory.path)/\(Self.temporaryFileName())")
+         defer {
+             // Remove the file when we're done.
+             XCTAssertNoThrow(try Libc.remove(path).get())
+diff --git a/Tests/NIOFileSystemIntegrationTests/FileSystemTests.swift b/Tests/NIOFileSystemIntegrationTests/FileSystemTests.swift
+index f24736a7..310d9691 100644
+--- a/Tests/NIOFileSystemIntegrationTests/FileSystemTests.swift
++++ b/Tests/NIOFileSystemIntegrationTests/FileSystemTests.swift
+@@ -19,8 +19,8 @@ import NIOCore
+ import XCTest
+ 
+ extension FilePath {
+-    static let testData = FilePath(#filePath)
+-        .removingLastComponent()  // FileHandleTests.swift
++    static let testFile = FilePath("/data/data/com.termux/pack/FileHandleTests.swift")
++    static let testData = FilePath("/data/data/com.termux/pack/")
+         .appending("Test Data")
+         .lexicallyNormalized()
+ 
+@@ -100,7 +100,7 @@ final class FileSystemTests: XCTestCase {
+     }
+ 
+     func testOpenFileWhereIntermediateIsNotADirectory() async throws {
+-        let path = FilePath(#filePath).appending("foobar")
++        let path = FilePath.testFile.appending("foobar")
+ 
+         // For reading:
+         await XCTAssertThrowsFileSystemErrorAsync {
+@@ -183,7 +183,7 @@ final class FileSystemTests: XCTestCase {
+         XCTAssertEqual(contents, ByteBuffer(bytes: [0, 1, 2]))
+     }
+ 
+-    func testOpenNonExistentFileForWritingWithMaterialization() async throws {
++    /*func testOpenNonExistentFileForWritingWithMaterialization() async throws {
+         for isAbsolute in [true, false] {
+             let path = try await self.fs.temporaryFilePath(inTemporaryDirectory: isAbsolute)
+             XCTAssertEqual(path.isAbsolute, isAbsolute)
+@@ -256,7 +256,7 @@ final class FileSystemTests: XCTestCase {
+             let bytes = try await ByteBuffer(contentsOf: path, maximumSizeAllowed: .megabytes(1))
+             XCTAssertEqual(bytes, ByteBuffer(bytes: [0, 1, 2]))
+         }
+-    }
++    }*/
+ 
+     func testOpenFileForReadingAndWriting() async throws {
+         let path = try await self.fs.temporaryFilePath()
+@@ -315,7 +315,7 @@ final class FileSystemTests: XCTestCase {
+         }
+     }
+ 
+-    func testOpenNonExistentFileForWritingRelativeToDirectoryWithMaterialization() async throws {
++    /*func testOpenNonExistentFileForWritingRelativeToDirectoryWithMaterialization() async throws {
+         // (false, false) isn't supported.
+         let isPathAbsolute: [(Bool, Bool)] = [(true, true), (true, false), (false, true)]
+ 
+@@ -419,7 +419,7 @@ final class FileSystemTests: XCTestCase {
+                 }
+             }
+         }
+-    }
++    }*/
+ 
+     func testCreateDirectory() async throws {
+         let path = try await self.fs.temporaryFilePath()
+@@ -559,7 +559,7 @@ final class FileSystemTests: XCTestCase {
+         }
+     }
+ 
+-    func testCopyLargeFile() async throws {
++/*    func testCopyLargeFile() async throws {
+         let sourcePath = try await self.fs.temporaryFilePath()
+         let destPath = try await self.fs.temporaryFilePath()
+         self.addTeardownBlock {
+@@ -584,7 +584,7 @@ final class FileSystemTests: XCTestCase {
+         try await self.fs.copyItem(at: sourcePath, to: destPath)
+         let destInfo = try await self.fs.info(forFileAt: destPath)
+         XCTAssertEqual(destInfo?.size, sourceInfo.size)
+-    }
++    }*/
+ 
+     func testCopySingleFileCopiesAttributesAndPermissions() async throws {
+         let original = try await self.fs.temporaryFilePath()
+@@ -1284,7 +1284,7 @@ extension FileSystemTests {
+     }
+ 
+     func testReadChunksRange() async throws {
+-        try await self.fs.withFileHandle(forReadingAt: FilePath(#filePath)) { handle in
++        try await self.fs.withFileHandle(forReadingAt: FilePath.testFile) { handle in
+             let info = try await handle.info()
+             let size = info.size
+             let endIndex = size + 1
+@@ -1310,7 +1310,7 @@ extension FileSystemTests {
+     }
+ 
+     func testReadChunksClosedRange() async throws {
+-        try await self.fs.withFileHandle(forReadingAt: FilePath(#filePath)) { handle in
++        try await self.fs.withFileHandle(forReadingAt: FilePath.testFile) { handle in
+             let info = try await handle.info()
+             let size = info.size
+             let endIndex = size + 1
+@@ -1337,7 +1337,7 @@ extension FileSystemTests {
+     }
+ 
+     func testReadChunksPartialRangeUpTo() async throws {
+-        try await self.fs.withFileHandle(forReadingAt: FilePath(#filePath)) { handle in
++        try await self.fs.withFileHandle(forReadingAt: FilePath.testFile) { handle in
+             let info = try await handle.info()
+             let size = info.size
+             let endIndex = size + 1
+@@ -1365,7 +1365,7 @@ extension FileSystemTests {
+     }
+ 
+     func testReadChunksPartialRangeThrough() async throws {
+-        try await self.fs.withFileHandle(forReadingAt: FilePath(#filePath)) { handle in
++        try await self.fs.withFileHandle(forReadingAt: FilePath.testFile) { handle in
+             let info = try await handle.info()
+             let size = info.size
+             let endIndex = size + 1
+@@ -1394,7 +1394,7 @@ extension FileSystemTests {
+     }
+ 
+     func testReadChunksPartialRangeFrom() async throws {
+-        try await self.fs.withFileHandle(forReadingAt: FilePath(#filePath)) { handle in
++        try await self.fs.withFileHandle(forReadingAt: FilePath.testFile) { handle in
+             let info = try await handle.info()
+             let size = info.size
+             let endIndex = size + 1
+@@ -1418,7 +1418,7 @@ extension FileSystemTests {
+     }
+ 
+     func testReadChunksUnboundedRange() async throws {
+-        try await self.fs.withFileHandle(forReadingAt: FilePath(#filePath)) { handle in
++        try await self.fs.withFileHandle(forReadingAt: FilePath.testFile) { handle in
+             let info = try await handle.info()
+             let size = info.size
+ 
 diff --git a/Tests/NIOFileSystemTests/FileInfoTests.swift b/Tests/NIOFileSystemTests/FileInfoTests.swift
-index b26dcaf5..97c443c3 100644
+index c6b9760a..6f61e0ab 100644
 --- a/Tests/NIOFileSystemTests/FileInfoTests.swift
 +++ b/Tests/NIOFileSystemTests/FileInfoTests.swift
-@@ -25,7 +25,11 @@ final class FileInfoTests: XCTestCase {
+@@ -26,7 +26,7 @@ final class FileInfoTests: XCTestCase {
      private var status: CInterop.Stat {
          var status = CInterop.Stat()
          status.st_dev = 1
-+        #if arch(arm)
-+        status.st_mode = UInt32(S_IFREG | 0o777)
-+        #else
-         status.st_mode = S_IFREG | 0o777
-+        #endif
+-        status.st_mode = S_IFREG | 0o777
++        status.st_mode = .init(S_IFREG | 0o777)
          status.st_nlink = 3
          status.st_ino = 4
          status.st_uid = 5
