@@ -59,7 +59,7 @@ jobs:
       matrix:
         version: [release, devel, trunk]
         arch: [aarch64, x86_64, armv7]
-        ndk: [25c, 26b]
+        ndk: [25c, 26c]
     env:
       ANDROID_API_LEVEL: 24
     steps:
@@ -108,12 +108,15 @@ jobs:
 
           tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
           git apply swift-android.patch swift-android-ci.patch swift-android-both-ndks.patch
+          if [ ${{ matrix.version }} = 'release' ]; then
+            git apply swift-android-arm.patch
+          fi
           if [ ${{ matrix.version }} != 'trunk' ]; then
             git apply swift-android-tsc.patch
           else
             git apply libdispatch-trunk.patch
           fi
-          if [ ${{ matrix.ndk }} = '26b' ]; then
+          if [ ${{ matrix.ndk }} = '26c' ]; then
             NDK=$ANDROID_NDK_LATEST_HOME
             git apply swift-android-ndk26.patch
           else
@@ -329,7 +332,7 @@ jobs:
       fail-fast: false
       matrix:
         version: [release, devel, trunk]
-        ndk: [25c, 26b]
+        ndk: [25c, 26c]
     steps:
       - name: Download test directory tarfile
         uses: actions/download-artifact@v4
