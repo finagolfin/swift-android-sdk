@@ -2,13 +2,13 @@
     "version": 1,
     "target": "aarch64-unknown-linux-android24",
     "toolchain-bin-dir": "/home/finagolfin/swift-5.9.2-RELEASE-ubuntu22.04/usr/bin",
-    "sdk": "/home/finagolfin/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/sysroot",
+    "sdk": "/home/finagolfin/android-ndk-r26c/toolchains/llvm/prebuilt/linux-x86_64/sysroot",
     "extra-cc-flags": [
         "-fPIC"
     ],
     "extra-swiftc-flags": [
         "-resource-dir", "/home/finagolfin/swift-5.9.2-android-24-sdk/usr/lib/swift",
-        "-tools-directory", "/home/finagolfin/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin",
+        "-tools-directory", "/home/finagolfin/android-ndk-r26c/toolchains/llvm/prebuilt/linux-x86_64/bin",
         "-L", "/home/finagolfin/swift-5.9.2-android-24-sdk/usr/lib/aarch64-linux-android",
     ],
     "extra-cpp-flags": [

@@ -10,7 +10,7 @@ emulator](https://github.com/finagolfin/swift-android-sdk/blob/main/.github/work
 The CI now builds with both the latest LTS NDK 26 and the last LTS NDK 25c. Now
 that Swift 5.9 supports [the new experimental SDK bundle
 format](https://github.com/apple/swift-evolution/blob/main/proposals/0387-cross-compilation-destinations.md),
-I plan to distribute an Android SDK bundle for NDK 26 sometime this month.
+I plan to distribute an Android SDK bundle for NDK 26 at some point.
 
 If you cannot build against NDK 26 and the Swift 5.9.2 SDK because of the newly
 added nullability annotations, use the previous NDK 25c and Swift 5.9 SDK instead,
@@ -20,9 +20,9 @@ compiler with the older Swift 5.9 SDK).
 ## Cross-compiling and testing Swift packages with the Android SDK
 
 To build with the Swift 5.9.2 SDK, first download [the latest Android LTS NDK
-26b](https://developer.android.com/ndk/downloads) and [Swift 5.9.2
+26c](https://developer.android.com/ndk/downloads) and [Swift 5.9.2
 compiler](https://swift.org/download/#releases) (make sure to install the Swift
-compiler's dependencies listed there). Unpack these archives and the SDK.
+compiler's dependencies linked there). Unpack these archives and the SDK.
 
 Change the symbolic link at `swift-5.9.2-android-24-sdk/usr/lib/swift/clang`
 to point to the clang headers that come with your swift compiler, eg
@@ -35,8 +35,8 @@ swift-5.9.2-android-24-sdk/usr/lib/swift/clang
 Next, modify the cross-compilation JSON file `android-aarch64.json` in this repo
 similarly:
 
-1. All paths to the NDK should change from `/home/finagolfin/android-ndk-r26b`
-to the path to your NDK, `/home/yourname/android-ndk-r26b`.
+1. All paths to the NDK should change from `/home/finagolfin/android-ndk-r26c`
+to the path to your NDK, `/home/yourname/android-ndk-r26c`.
 
 2. The path to the compiler should change from `/home/finagolfin/swift-5.9.2-RELEASE-ubuntu22.04`
 to the path to your Swift compiler, `/home/yourname/swift-5.9.2-RELEASE-ubi9`.
@@ -146,11 +146,11 @@ dependencies and include them yourself.
 
 ## Building the Android SDKs from source
 
-Download the Swift 5.9.2 compiler and Android NDK 26b as above. Check out this
+Download the Swift 5.9.2 compiler and Android NDK 26c as above. Check out this
 repo and run
 `SWIFT_TAG=swift-5.9.2-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
 to get some prebuilt Android libraries and the Swift source to build the SDK. If
-you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2024-01-08-a`
+you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2024-02-29-a`
 for the latest Swift trunk snapshot and pass in the path to the corresponding
 prebuilt Swift toolchain to `build-script` below, you can build a Swift trunk
 SDK too, as seen on the CI.
@@ -168,7 +168,7 @@ are installed, run the following `build-script` command with your local paths
 substituted instead:
 ```
 ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android
---android-ndk /home/finagolfin/android-ndk-r26b/ --android-arch aarch64 --android-api-level 24
+--android-ndk /home/finagolfin/android-ndk-r26c/ --android-arch aarch64 --android-api-level 24
 --build-swift-tools=0 --native-swift-tools-path=/home/finagolfin/swift-5.9.2-RELEASE-ubuntu22.04/usr/bin/
 --native-clang-tools-path=/home/finagolfin/swift-5.9.2-RELEASE-ubuntu22.04/usr/bin/
 --host-cc=/usr/bin/clang-13 --host-cxx=/usr/bin/clang++-13
@@ -188,7 +188,7 @@ Finally, copy `libc++_shared.so` from the NDK and modify the cross-compiled
 `libdispatch.so` and Swift corelibs to include `$ORIGIN` and other relative
 directories in their rpaths:
 ```
-cp /home/yourname/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so swift-release-android-aarch64-24-sdk/usr/lib
+cp /home/yourname/android-ndk-r26c/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so swift-release-android-aarch64-24-sdk/usr/lib
 patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN swift-release-android-aarch64-24-sdk/usr/lib/swift/android/lib*.so
 ```
 
