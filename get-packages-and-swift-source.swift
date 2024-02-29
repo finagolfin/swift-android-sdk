@@ -12,7 +12,7 @@ let extraSwiftRepos = ["swift-llbuild", "swift-package-manager", "swift-driver",
                        "Yams", "indexstore-db", "sourcekit-lsp", "swift-system",
                        "swift-collections", "swift-certificates", "swift-asn1"]
 let renameRepos = ["swift-llbuild" : "llbuild", "swift-package-manager" : "swiftpm", "Yams" : "yams"]
-var repoTags = ["swift-system" : "1.1.1", "swift-collections" : "1.0.1", "swift-asn1" : "1.0.0",
+var repoTags = ["swift-system" : "1.1.1", "swift-collections" : "1.0.5", "swift-asn1" : "1.0.0",
                 "swift-certificates" : "1.0.1", "Yams" : "5.0.1", "swift-argument-parser" : "1.2.3",
                 "swift-crypto" : "3.0.0"]
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
@@ -52,6 +52,7 @@ if swiftBranch == "RELEASE" {
   repoTags["swift-argument-parser"] = "1.2.2"
   repoTags["swift-asn1"] = "0.7.0"
   repoTags["swift-certificates"] = "0.4.1"
+  repoTags["swift-collections"] = "1.0.1"
   repoTags["swift-crypto"] = "2.5.0"
   sdkDir = "swift-release-android-\(ANDROID_ARCH)-24-sdk"
 } else {
