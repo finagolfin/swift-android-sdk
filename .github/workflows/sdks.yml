@@ -119,13 +119,19 @@ jobs:
           fi
           if [ ${{ matrix.ndk }} = '26c' ]; then
             NDK=$ANDROID_NDK_LATEST_HOME
-            git apply swift-android-ndk26.patch
+            git apply swift-android-foundation-ndk26.patch
+            if [ ${{ matrix.version }} != 'trunk' ]; then
+              git apply swift-android-stdlib-ndk26.patch
+            fi
           else
             NDK=$ANDROID_NDK
             sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" swift-corelibs-libdispatch/dispatch/dispatch.h
             sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" llbuild/products/libllbuild/include/llbuild/buildsystem.h
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-tools-support-core/Sources/TSCclibc/include/indexstore_functions.h
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-crypto/Sources/CCryptoBoringSSL/include/CCryptoBoringSSL_asn1.h
+            if [ ${{ matrix.version }} = 'trunk' ]; then
+              git apply -R swift-android-stdlib-ndk26.patch
+            fi
           fi
           sed -i "s%/data/data/com.termux/files%$SDK%" $SDK/usr/lib/pkgconfig/sqlite3.pc
           sed -i "s%String(cString: getpass%\"fake\" //%" swiftpm/Sources/PackageRegistry$STUPID_FILE_RENAMING/PackageRegistry$STUPID_FILE_RENAMING+Auth.swift
