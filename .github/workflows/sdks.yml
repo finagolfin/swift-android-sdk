@@ -107,7 +107,8 @@ jobs:
           SDK=`pwd`/$SDK_NAME
 
           tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
-          git apply swift-android.patch swift-android-ci.patch swift-android-both-ndks.patch
+          git apply swift-android.patch swift-android-ci.patch
+          git apply -C1 swift-android-both-ndks.patch
           if [ ${{ matrix.version }} != 'trunk' ]; then
             git apply swift-android-tsc.patch swift-android-both-ndks-except-trunk.patch
             STUPID_FILE_RENAMING=Tool
@@ -119,7 +120,7 @@ jobs:
           fi
           if [ ${{ matrix.ndk }} = '26c' ]; then
             NDK=$ANDROID_NDK_LATEST_HOME
-            git apply swift-android-foundation-ndk26.patch
+            git apply -C0 swift-android-foundation-ndk26.patch
             if [ ${{ matrix.version }} != 'trunk' ]; then
               git apply swift-android-stdlib-ndk26.patch
             fi
