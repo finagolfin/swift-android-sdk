@@ -38,6 +38,78 @@ index dc9b457a..b74092a1 100644
  
  private func isUnacceptableErrno(_ code: Int32) -> Bool {
      switch code {
+diff --git a/Sources/NIOFileSystem/Internal/Concurrency Primitives/ThreadPosix.swift b/Sources/NIOFileSystem/Internal/Concurrency Primitives/ThreadPosix.swift
+index 56a7c3e7..48b3356e 100644
+--- a/Sources/NIOFileSystem/Internal/Concurrency Primitives/ThreadPosix.swift	
++++ b/Sources/NIOFileSystem/Internal/Concurrency Primitives/ThreadPosix.swift
+@@ -17,8 +17,13 @@ import CNIOLinux
+ 
+ private let sys_pthread_getname_np = CNIOLinux_pthread_getname_np
+ private let sys_pthread_setname_np = CNIOLinux_pthread_setname_np
++#if os(Android)
++private typealias ThreadDestructor = @convention(c) (UnsafeMutableRawPointer) ->
++    UnsafeMutableRawPointer
++#else
+ private typealias ThreadDestructor = @convention(c) (UnsafeMutableRawPointer?) ->
+     UnsafeMutableRawPointer?
++#endif
+ #elseif canImport(Darwin)
+ import Darwin
+ 
+@@ -118,7 +123,11 @@ enum ThreadOpsPosix: ThreadOps {
+ 
+                 body(Thread(handle: hThread, desiredName: name))
+ 
++                #if os(Android)
++                return UnsafeMutableRawPointer(bitPattern: 0xdeadbee)!
++                #else
+                 return nil
++                #endif
+             },
+             args: argv0
+         )
+diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift
+index 423dd56b..721a747c 100644
+--- a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift	
++++ b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift
+@@ -346,7 +346,11 @@ public enum Libc {
+         return valueOrErrno {
+             pathBytes.withUnsafeMutableBufferPointer { pointer in
+                 // The array must be terminated with a nil.
++                #if os(Android)
++                libc_fts_open([pointer.baseAddress!, unsafeBitCast(0, to: UnsafeMutablePointer<CInterop.PlatformChar>.self)], options.rawValue)
++                #else
+                 libc_fts_open([pointer.baseAddress, nil], options.rawValue)
++                #endif
+             }
+         }
+     }
+diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift
+index be043e9d..a0cadd15 100644
+--- a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift	
++++ b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift
+@@ -395,12 +395,21 @@ internal func libc_confstr(
+ #endif
+ 
+ /// fts(3)
++#if os(Android)
++internal func libc_fts_open(
++    _ path: [UnsafeMutablePointer<CInterop.PlatformChar>],
++    _ options: CInt
++) -> UnsafeMutablePointer<CInterop.FTS> {
++    return fts_open(path, options, nil)!
++}
++#else
+ internal func libc_fts_open(
+     _ path: [UnsafeMutablePointer<CInterop.PlatformChar>?],
+     _ options: CInt
+ ) -> UnsafeMutablePointer<CInterop.FTS> {
+     return fts_open(path, options, nil)
+ }
++#endif
+ 
+ /// fts(3)
+ internal func libc_fts_read(
 diff --git a/Sources/NIOPosix/System.swift b/Sources/NIOPosix/System.swift
 index 025e60f0..fc6c0584 100644
 --- a/Sources/NIOPosix/System.swift

@@ -1,31 +1,3 @@
-diff --git a/Sources/NIOFileSystem/DirectoryEntries.swift b/Sources/NIOFileSystem/DirectoryEntries.swift
-index 3224da51..f827e091 100644
---- a/Sources/NIOFileSystem/DirectoryEntries.swift
-+++ b/Sources/NIOFileSystem/DirectoryEntries.swift
-@@ -650,7 +650,7 @@ private struct DirectoryEnumerator: Sendable {
- 
- extension UnsafeMutablePointer<CInterop.FTSEnt> {
-     fileprivate var path: FilePath {
--        return FilePath(platformString: self.pointee.fts_path)
-+        return FilePath(platformString: self.pointee.fts_path!)
-     }
- }
- 
-diff --git a/Sources/NIOFileSystem/FileInfo.swift b/Sources/NIOFileSystem/FileInfo.swift
-index 6c8c2f1c..7f174bf6 100644
---- a/Sources/NIOFileSystem/FileInfo.swift
-+++ b/Sources/NIOFileSystem/FileInfo.swift
-@@ -73,8 +73,8 @@ public struct FileInfo: Hashable, Sendable {
-     /// Creates a ``FileInfo`` by deriving values from a platform-specific value.
-     public init(platformSpecificStatus: CInterop.Stat) {
-         self._platformSpecificStatus = Stat(platformSpecificStatus)
--        self.type = FileType(platformSpecificMode: platformSpecificStatus.st_mode)
--        self.permissions = FilePermissions(masking: platformSpecificStatus.st_mode)
-+        self.type = FileType(platformSpecificMode: CInterop.Mode(platformSpecificStatus.st_mode))
-+        self.permissions = FilePermissions(masking: CInterop.Mode(platformSpecificStatus.st_mode))
-         self.size = Int64(platformSpecificStatus.st_size)
-         self.userID = UserID(rawValue: platformSpecificStatus.st_uid)
-         self.groupID = GroupID(rawValue: platformSpecificStatus.st_gid)
 diff --git a/Sources/NIOFileSystem/FileSystem.swift b/Sources/NIOFileSystem/FileSystem.swift
 index 3fc7d561..50e0482a 100644
 --- a/Sources/NIOFileSystem/FileSystem.swift
@@ -38,75 +10,21 @@ index 3fc7d561..50e0482a 100644
  
  #if canImport(Darwin)
  import Darwin
-@@ -626,7 +627,7 @@ public struct FileSystem: Sendable, FileSystemProtocol {
+@@ -626,7 +627,8 @@ public struct FileSystem: Sendable, FileSystemProtocol {
                  }.get()
              }
-             #else
--            return "/tmp"
+             #elseif os(Android)
+-            return "/data/local/tmp"
++            //return "/data/local/tmp"
 +            return FilePath(FileManager.default.temporaryDirectory.path)
+             #else
+             return "/tmp"
              #endif
-         }
-     }
-@@ -959,6 +960,7 @@ extension FileSystem {
-                 permissions: info.permissions
-             )
- 
-+            #if !os(Android)
-             // Copy over extended attributes, if any exist.
-             do {
-                 let attributes = try await dir.attributeNames()
-@@ -979,6 +981,7 @@ extension FileSystem {
-                 // that is the case.
-                 ()
-             }
-+            #endif
- 
-             // Build a list of directories to copy over. Do this after closing the current
-             // directory to avoid using too many descriptors.
-diff --git a/Sources/NIOFileSystem/FileType.swift b/Sources/NIOFileSystem/FileType.swift
-index 1dc09100..a08ec374 100644
---- a/Sources/NIOFileSystem/FileType.swift
-+++ b/Sources/NIOFileSystem/FileType.swift
-@@ -136,7 +136,7 @@ extension FileType {
-     /// Initializes a file type from the `d_type` from `dirent`.
-     @_spi(Testing)
-     public init(direntType: UInt8) {
--        #if canImport(Darwin) || canImport(Musl)
-+        #if canImport(Darwin) || canImport(Musl) || os(Android)
-         let value = Int32(direntType)
-         #elseif canImport(Glibc)
-         let value = Int(direntType)
-diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift
-index dcfd8ffd..e48670ad 100644
---- a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift	
-+++ b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift
-@@ -239,7 +239,7 @@ public enum Syscall {
-         size: Int
-     ) -> Result<Int, Errno> {
-         valueOrErrno(retryOnInterrupt: false) {
--            system_sendfile(output.rawValue, input.rawValue, offset, size)
-+            system_sendfile(output.rawValue, input.rawValue, off_t(offset), size)
-         }
-     }
-     #endif
-diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift
-index 332abf17..7dc0d331 100644
---- a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift	
-+++ b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift
-@@ -330,7 +330,7 @@ internal func system_sendfile(
- internal func libc_fdopendir(
-     _ fd: FileDescriptor.RawValue
- ) -> CInterop.DirPointer {
--    return fdopendir(fd)
-+    return fdopendir(fd)!
- }
- 
- /// readdir(3): Returns a pointer to the next directory entry
 diff --git a/Sources/NIOFileSystem/Internal/SystemFileHandle.swift b/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
 index 3dc51872..49aeeeca 100644
 --- a/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
 +++ b/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
-@@ -1113,13 +1113,23 @@ extension SystemFileHandle {
+@@ -1113,7 +1113,7 @@ extension SystemFileHandle {
          let truncate = options.contains(.truncate)
          let delayMaterialization = transactional && isWritable && (exclusiveCreate || truncate)
  
@@ -114,34 +32,7 @@ index 3dc51872..49aeeeca 100644
 +        if false {
              // When opening in this mode we can more "atomically" create the file, that is, by not
              // leaving the user with a half written file should e.g. the system crash or throw an
--            // error while writing. On Linux we do this by opening the directory for the path
--            // with `O_TMPFILE` and creating a hard link when closing the file. On other platforms
--            // we generate a dot file with a randomised suffix name and rename it to the
-+            // error while writing. On non-Android Linux we do this by opening the directory for
-+            // the path with `O_TMPFILE` and creating a hard link when closing the file. On other
-+            // platforms we generate a dot file with a randomised suffix name and rename it to the
-             // destination.
-+            #if os(Android)
-+            return Self.syncOpenWithMaterialization(
-+                atPath: path,
-+                mode: mode,
-+                options: options,
-+                permissions: permissions,
-+                executor: executor,
-+                useTemporaryFileIfPossible: false
-+            )
-+            #else
-             return Self.syncOpenWithMaterialization(
-                 atPath: path,
-                 mode: mode,
-@@ -1127,6 +1137,7 @@ extension SystemFileHandle {
-                 permissions: permissions,
-                 executor: executor
-             )
-+            #endif
-         } else {
-             return Self.syncOpen(
-                 atPath: path,
+             // error while writing. On non-Android Linux we do this by opening the directory for
 diff --git a/Tests/NIOFileSystemIntegrationTests/BufferedReaderTests.swift b/Tests/NIOFileSystemIntegrationTests/BufferedReaderTests.swift
 index 8404e159..151fccc1 100644
 --- a/Tests/NIOFileSystemIntegrationTests/BufferedReaderTests.swift
@@ -180,15 +71,6 @@ index c18e2c8e..65872fb9 100644
          .appending("Test Data")
          .lexicallyNormalized()
  
-@@ -34,7 +34,7 @@ final class FileHandleTests: XCTestCase {
-         autoClose: Bool = true,
-         _ execute: @Sendable (SystemFileHandle) async throws -> Void
-     ) async throws {
--        let path = FilePath("/tmp/\(Self.temporaryFileName())")
-+        let path = FilePath("\(FileManager.default.temporaryDirectory.path)/\(Self.temporaryFileName())")
-         defer {
-             // Remove the file when we're done.
-             XCTAssertNoThrow(try Libc.remove(path).get())
 diff --git a/Tests/NIOFileSystemIntegrationTests/FileSystemTests.swift b/Tests/NIOFileSystemIntegrationTests/FileSystemTests.swift
 index f24736a7..310d9691 100644
 --- a/Tests/NIOFileSystemIntegrationTests/FileSystemTests.swift
@@ -321,16 +203,3 @@ index f24736a7..310d9691 100644
              let info = try await handle.info()
              let size = info.size
  
-diff --git a/Tests/NIOFileSystemTests/FileInfoTests.swift b/Tests/NIOFileSystemTests/FileInfoTests.swift
-index c6b9760a..6f61e0ab 100644
---- a/Tests/NIOFileSystemTests/FileInfoTests.swift
-+++ b/Tests/NIOFileSystemTests/FileInfoTests.swift
-@@ -26,7 +26,7 @@ final class FileInfoTests: XCTestCase {
-     private var status: CInterop.Stat {
-         var status = CInterop.Stat()
-         status.st_dev = 1
--        status.st_mode = S_IFREG | 0o777
-+        status.st_mode = .init(S_IFREG | 0o777)
-         status.st_nlink = 3
-         status.st_ino = 4
-         status.st_uid = 5
