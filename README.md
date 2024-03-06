@@ -150,17 +150,17 @@ Download the Swift 5.9.2 compiler and Android NDK 26c as above. Check out this
 repo and run
 `SWIFT_TAG=swift-5.9.2-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
 to get some prebuilt Android libraries and the Swift source to build the SDK. If
-you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2024-02-29-a`
+you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2024-03-04-a`
 for the latest Swift trunk snapshot and pass in the path to the corresponding
 prebuilt Swift toolchain to `build-script` below, you can build a Swift trunk
 SDK too, as seen on the CI.
 
 Next, apply a patch to the Swift source, `swift-android.patch` from this repo,
 which adds a dependency for the Foundation core library in this Android SDK, and
-two more patches that make modifications for the nullability annotations newly
+three more patches that make modifications for the nullability annotations newly
 added in NDK 26:
 ```
-git apply swift-android.patch swift-android-both-ndks.patch swift-android-ndk26.patch
+git apply swift-android.patch swift-android-both-ndks.patch swift-android-foundation-ndk26.patch swift-android-stdlib-ndk26.patch
 ```
 
 After making sure [needed build tools like python 3, CMake, and ninja](https://github.com/apple/swift/blob/release/5.9/docs/HowToGuides/GettingStarted.md#linux)
