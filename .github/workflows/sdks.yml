@@ -18,7 +18,7 @@ jobs:
         id: check
         run: |
           if [ ${{ matrix.version }} = 'release' ]; then
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-5.9 | cut -d- -f2)
+            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-5.10 | cut -d- -f2)
             SWIFT_TAG="swift-${LATEST_TOOLCHAIN_VERSION}-RELEASE"
             echo "release-tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
           elif [ ${{ matrix.version }} = 'devel' ]; then
