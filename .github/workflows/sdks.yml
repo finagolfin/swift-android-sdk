@@ -366,7 +366,7 @@ jobs:
             adb shell "run-as com.termux ln -s Foo /data/data/com.termux/pack/Test\ Data/Foo.symlink"
             adb shell "run-as com.termux sh -c 'TMPDIR=/data/data/com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest'"
             adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest
-            if [ ${{ matrix.version }} != 'trunk' ]; then adb shell /data/local/tmp/pack/swift-systemPackageTests.xctest; fi
+            adb shell /data/local/tmp/pack/swift-systemPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-nio-sshPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-nio-sslPackageTests.xctest
