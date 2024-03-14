@@ -107,8 +107,8 @@ jobs:
           SDK=`pwd`/$SDK_NAME
 
           tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
-          git apply swift-android.patch swift-android-ci.patch
-          git apply -C1 swift-android-both-ndks.patch
+          git apply swift-android-ci.patch
+          git apply -C1 swift-android.patch swift-android-both-ndks.patch
           if [ ${{ matrix.version }} != 'trunk' ]; then
             git apply swift-android-tsc.patch swift-android-both-ndks-except-trunk.patch
             STUPID_FILE_RENAMING=Tool
