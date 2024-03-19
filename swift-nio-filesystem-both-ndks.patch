@@ -105,9 +105,9 @@ index f24736a7..310d9691 100644
              let path = try await self.fs.temporaryFilePath(inTemporaryDirectory: isAbsolute)
              XCTAssertEqual(path.isAbsolute, isAbsolute)
 @@ -256,7 +256,7 @@ final class FileSystemTests: XCTestCase {
-             let bytes = try await ByteBuffer(contentsOf: path, maximumSizeAllowed: .megabytes(1))
-             XCTAssertEqual(bytes, ByteBuffer(bytes: [0, 1, 2]))
-         }
+         XCTAssertEqual(buffer.readBytes(length: 1024), Array(repeating: 0, count: 1024))
+         XCTAssertEqual(buffer.readBytes(length: 1024), Array(repeating: 1, count: 1024))
+         XCTAssertEqual(buffer.readableBytes, 0)
 -    }
 +    }*/
  
