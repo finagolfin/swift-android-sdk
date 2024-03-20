@@ -114,7 +114,6 @@ jobs:
             STUPID_FILE_RENAMING=Tool
           else
             sed -i "s%r26%ndk/26%" swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
-            sed -i "s%getdtablesize()%Int32(sysconf(_SC_OPEN_MAX))%" swiftpm/Sources/Commands/SwiftRunCommand.swift
             git apply libdispatch-trunk.patch
             STUPID_FILE_RENAMING=Command
           fi
@@ -209,7 +208,6 @@ jobs:
         run: |
           cd ss
           sed -i "s%/tmp%/data/local/tmp%" Tests/SystemTests/FileOperationsTest.swift
-          git apply ../sdk-config/swift-system-ndk26.patch
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Collections package
         uses: actions/checkout@v4
