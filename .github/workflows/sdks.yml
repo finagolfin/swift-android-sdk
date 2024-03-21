@@ -22,7 +22,8 @@ jobs:
             SWIFT_TAG="swift-${LATEST_TOOLCHAIN_VERSION}-RELEASE"
             echo "release-tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
           elif [ ${{ matrix.version }} = 'devel' ]; then
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-5.10-DEV | cut -d- -f8-10)
+            #LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-5.10-DEV | cut -d- -f8-10)
+            LATEST_TOOLCHAIN_VERSION=2024-03-02
             SWIFT_TAG="swift-5.10-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
             echo "devel-tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
           else
