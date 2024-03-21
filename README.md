@@ -157,10 +157,10 @@ SDK too, as seen on the CI.
 
 Next, apply a patch to the Swift source, `swift-android.patch` from this repo,
 which adds a dependency for the Foundation core library in this Android SDK, and
-three more patches that make modifications for the nullability annotations newly
+four more patches that make modifications for the nullability annotations newly
 added in NDK 26:
 ```
-git apply swift-android.patch swift-android-both-ndks.patch swift-android-foundation-ndk26.patch swift-android-stdlib-ndk26.patch
+git apply swift-android.patch swift-android-both-ndks.patch swift-android-foundation-ndk26.patch swift-android-stdlib-ndk26.patch swift-android-stdlib-except-trunk.patch
 ```
 
 After making sure [needed build tools like python 3, CMake, and ninja](https://github.com/apple/swift/blob/release/5.9/docs/HowToGuides/GettingStarted.md#linux)

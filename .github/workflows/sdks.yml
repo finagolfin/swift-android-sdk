@@ -111,7 +111,7 @@ jobs:
           git apply swift-android-ci.patch
           git apply -C1 swift-android.patch swift-android-both-ndks.patch
           if [ ${{ matrix.version }} != 'trunk' ]; then
-            git apply swift-android-tsc.patch swift-android-both-ndks-except-trunk.patch
+            git apply swift-android-tsc.patch swift-android-stdlib-except-trunk.patch
             STUPID_FILE_RENAMING=Tool
           else
             sed -i "s%r26%ndk/26%" swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
