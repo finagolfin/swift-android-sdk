@@ -150,7 +150,7 @@ Download the Swift 5.9.2 compiler and Android NDK 26c as above. Check out this
 repo and run
 `SWIFT_TAG=swift-5.9.2-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
 to get some prebuilt Android libraries and the Swift source to build the SDK. If
-you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2024-03-04-a`
+you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2024-03-20-a`
 for the latest Swift trunk snapshot and pass in the path to the corresponding
 prebuilt Swift toolchain to `build-script` below, you can build a Swift trunk
 SDK too, as seen on the CI.

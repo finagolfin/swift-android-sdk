@@ -22,8 +22,7 @@ jobs:
             SWIFT_TAG="swift-${LATEST_TOOLCHAIN_VERSION}-RELEASE"
             echo "release-tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
           elif [ ${{ matrix.version }} = 'devel' ]; then
-            #LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-5.10-DEV | cut -d- -f8-10)
-            LATEST_TOOLCHAIN_VERSION=2024-03-02
+            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-6.0-DEV | cut -d- -f8-10)
             SWIFT_TAG="swift-5.10-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
             echo "devel-tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
           else
@@ -44,7 +43,7 @@ jobs:
           if [ ${{ matrix.version }} = 'release' ]; then
             SWIFT_BRANCH="swift-$(echo ${{ steps.check.outputs.release-tag }} | cut -d- -f2)-release"
           elif [ ${{ matrix.version }} = 'devel' ]; then
-            SWIFT_BRANCH="swift-5.10-branch"
+            SWIFT_BRANCH="swift-6.0-branch"
           else
             SWIFT_BRANCH="development"
           fi
@@ -110,7 +109,7 @@ jobs:
           tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
           git apply swift-android-ci.patch
           git apply -C1 swift-android.patch swift-android-both-ndks.patch
-          if [ ${{ matrix.version }} != 'trunk' ]; then
+          if [ ${{ matrix.version }} = 'release' ]; then
             git apply swift-android-tsc.patch swift-android-stdlib-except-trunk.patch
             STUPID_FILE_RENAMING=Tool
           else
@@ -121,7 +120,7 @@ jobs:
           if [ ${{ matrix.ndk }} = '26c' ]; then
             NDK=$ANDROID_NDK_LATEST_HOME
             git apply -C0 swift-android-foundation-ndk26.patch
-            if [ ${{ matrix.version }} != 'trunk' ]; then
+            if [ ${{ matrix.version }} = 'release' ]; then
               git apply swift-android-stdlib-ndk26.patch
             fi
           else
@@ -130,7 +129,7 @@ jobs:
             sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" llbuild/products/libllbuild/include/llbuild/buildsystem.h
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-tools-support-core/Sources/TSCclibc/include/indexstore_functions.h
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-crypto/Sources/CCryptoBoringSSL/include/CCryptoBoringSSL_asn1.h
-            if [ ${{ matrix.version }} = 'trunk' ]; then
+            if [ ${{ matrix.version }} != 'release' ]; then
               git apply -R swift-android-stdlib-ndk26.patch
             fi
           fi
