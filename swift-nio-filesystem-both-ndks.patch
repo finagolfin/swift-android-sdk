@@ -3,8 +3,8 @@ index 3fc7d561..50e0482a 100644
 --- a/Sources/NIOFileSystem/FileSystem.swift
 +++ b/Sources/NIOFileSystem/FileSystem.swift
 @@ -17,6 +17,7 @@
- import Atomics
  import NIOCore
+ import NIOPosix
  @preconcurrency import SystemPackage
 +import class Foundation.FileManager
  

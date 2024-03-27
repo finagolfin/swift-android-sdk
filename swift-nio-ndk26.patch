@@ -38,36 +38,6 @@ index dc9b457a..b74092a1 100644
  
  private func isUnacceptableErrno(_ code: Int32) -> Bool {
      switch code {
-diff --git a/Sources/NIOFileSystem/Internal/Concurrency Primitives/ThreadPosix.swift b/Sources/NIOFileSystem/Internal/Concurrency Primitives/ThreadPosix.swift
-index 56a7c3e7..48b3356e 100644
---- a/Sources/NIOFileSystem/Internal/Concurrency Primitives/ThreadPosix.swift	
-+++ b/Sources/NIOFileSystem/Internal/Concurrency Primitives/ThreadPosix.swift
-@@ -17,8 +17,13 @@ import CNIOLinux
- 
- private let sys_pthread_getname_np = CNIOLinux_pthread_getname_np
- private let sys_pthread_setname_np = CNIOLinux_pthread_setname_np
-+#if os(Android)
-+private typealias ThreadDestructor = @convention(c) (UnsafeMutableRawPointer) ->
-+    UnsafeMutableRawPointer
-+#else
- private typealias ThreadDestructor = @convention(c) (UnsafeMutableRawPointer?) ->
-     UnsafeMutableRawPointer?
-+#endif
- #elseif canImport(Darwin)
- import Darwin
- 
-@@ -118,7 +123,11 @@ enum ThreadOpsPosix: ThreadOps {
- 
-                 body(Thread(handle: hThread, desiredName: name))
- 
-+                #if os(Android)
-+                return UnsafeMutableRawPointer(bitPattern: 0xdeadbee)!
-+                #else
-                 return nil
-+                #endif
-             },
-             args: argv0
-         )
 diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift
 index 423dd56b..721a747c 100644
 --- a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift	
