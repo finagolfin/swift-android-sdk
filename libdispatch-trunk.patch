@@ -16,7 +16,7 @@ index 70c6721be..f317c1857 100644
 +				goto error;
 +			}
  #else
- 			op->buf = aligned_alloc((size_t)PAGE_SIZE, op->buf_siz)
+ 			op->buf = aligned_alloc((size_t)PAGE_SIZE, op->buf_siz);
  #endif
 diff --git a/swift-corelibs-libdispatch/tests/dispatch_io.c b/swift-corelibs-libdispatch/tests/dispatch_io.c
 index a5a1cea67..1988cea69 100644
