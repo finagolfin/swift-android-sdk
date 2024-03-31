@@ -10,26 +10,25 @@ emulator](https://github.com/finagolfin/swift-android-sdk/blob/main/.github/work
 The CI now builds with both the latest LTS NDK 26 and the last LTS NDK 25c. Now
 that Swift 5.9 supports [the new experimental SDK bundle
 format](https://github.com/apple/swift-evolution/blob/main/proposals/0387-cross-compilation-destinations.md),
-I plan to distribute an Android SDK bundle for NDK 26 at some point.
+I plan to distribute an Android SDK bundle for NDK 26 in the coming month.
 
-If you cannot build against NDK 26 and the Swift 5.9.2 SDK because of the newly
-added nullability annotations, use the previous NDK 25c and Swift 5.9 SDK instead,
-until you can get your package updated (you can still use the Swift 5.9.2
-compiler with the older Swift 5.9 SDK).
+If you cannot build against NDK 26 because of the newly added nullability
+annotations, you can download a 5.10 SDK built against 25c from a recent run of
+the CI, eg `sdk-tests-release-aarch64-ndk25c` under `Artifacts`.
 
 ## Cross-compiling and testing Swift packages with the Android SDK
 
-To build with the Swift 5.9.2 SDK, first download [the latest Android LTS NDK
-26c](https://developer.android.com/ndk/downloads) and [Swift 5.9.2
+To build with the Swift 5.10 SDK, first download [the latest Android LTS NDK
+26c](https://developer.android.com/ndk/downloads) and [Swift 5.10
 compiler](https://swift.org/download/#releases) (make sure to install the Swift
 compiler's dependencies linked there). Unpack these archives and the SDK.
 
-Change the symbolic link at `swift-5.9.2-android-24-sdk/usr/lib/swift/clang`
+Change the symbolic link at `swift-5.10-android-24-sdk/usr/lib/swift/clang`
 to point to the clang headers that come with your swift compiler, eg
 
 ```
-ln -sf /home/yourname/swift-5.9.2-RELEASE-ubuntu22.04/usr/lib/clang/13.0.0
-swift-5.9.2-android-24-sdk/usr/lib/swift/clang
+ln -sf /home/yourname/swift-5.10-RELEASE-ubuntu22.04/usr/lib/clang/15.0.0
+swift-5.10-android-24-sdk/usr/lib/swift/clang
 ```
 
 Next, modify the cross-compilation JSON file `android-aarch64.json` in this repo
@@ -38,11 +37,11 @@ similarly:
 1. All paths to the NDK should change from `/home/finagolfin/android-ndk-r26c`
 to the path to your NDK, `/home/yourname/android-ndk-r26c`.
 
-2. The path to the compiler should change from `/home/finagolfin/swift-5.9.2-RELEASE-ubuntu22.04`
-to the path to your Swift compiler, `/home/yourname/swift-5.9.2-RELEASE-ubi9`.
+2. The path to the compiler should change from `/home/finagolfin/swift-5.10-RELEASE-ubuntu22.04`
+to the path to your Swift compiler, `/home/yourname/swift-5.10-RELEASE-ubi9`.
 
-3. The paths to the Android SDK should change from `/home/finagolfin/swift-5.9.2-android-24-sdk`
-to the path where you unpacked the Android SDK, `/home/yourname/swift-5.9.2-android-24-sdk`.
+3. The paths to the Android SDK should change from `/home/finagolfin/swift-5.10-android-24-sdk`
+to the path where you unpacked the Android SDK, `/home/yourname/swift-5.10-android-24-sdk`.
 
 Now you're ready to cross-compile a Swift package with the cross-compilation
 configuration JSON file, `android-aarch64.json`, and run its tests on Android.
@@ -52,9 +51,9 @@ git clone --depth 1 https://github.com/apple/swift-argument-parser.git
 
 cd swift-argument-parser/
 
-/home/yourname/swift-5.9.2-RELEASE-ubuntu22.04/usr/bin/swift build --build-tests
+/home/yourname/swift-5.10-RELEASE-ubuntu22.04/usr/bin/swift build --build-tests
 --destination ~/swift-android-sdk/android-aarch64.json
--Xlinker -rpath -Xlinker \$ORIGIN/swift-5.9.2-android-24-sdk/usr/lib/aarch64-linux-android
+-Xlinker -rpath -Xlinker \$ORIGIN/swift-5.10-android-24-sdk/usr/lib/aarch64-linux-android
 ```
 This will cross-compile the package for Android aarch64 and produce a test
 runner executable with the `.xctest` extension, in this case at
@@ -68,13 +67,13 @@ one depends on the example executables `generate-manual`, `math`, `repeat`, and
 data in the repo: I've had success moving this data with the test runner, after
 modifying the test source so it has the path to this test data in the Android
 test environment. See the example of [swift-crypto on the
-CI](https://github.com/finagolfin/swift-android-sdk/blob/5.9/.github/workflows/sdks.yml#L293).
+CI](https://github.com/finagolfin/swift-android-sdk/blob/5.10/.github/workflows/sdks.yml#L317).
 
 You can copy these executables and the SDK to [an emulator or a USB
-debugging-enabled device with adb](https://github.com/apple/swift/blob/release/5.9/docs/Android.md#3-deploying-the-build-products-to-the-device),
+debugging-enabled device with adb](https://github.com/apple/swift/blob/release/5.10/docs/Android.md#3-deploying-the-build-products-to-the-device),
 or put them on an Android device with [a terminal emulator app like Termux](https://termux.dev/en/).
 I test aarch64 with Termux so I'll show how to run the test runner there, but
-the process is similar with adb, [as can be seen on the CI](https://github.com/finagolfin/swift-android-sdk/blob/5.9/.github/workflows/sdks.yml#L328).
+the process is similar with adb, [as can be seen on the CI](https://github.com/finagolfin/swift-android-sdk/blob/5.10/.github/workflows/sdks.yml#L355).
 
 Copy the test executables to the same directory as the SDK:
 ```
@@ -87,10 +86,10 @@ uname -m # check if you're running on the right architecture, should say `aarch6
 cd       # move to the Termux app's home directory
 pkg install openssh
 
-scp yourname@192.168.1.1:{swift-5.9.2-android-24-sdk.tar.xz,
+scp yourname@192.168.1.1:{swift-5.10-android-24-sdk.tar.xz,
 swift-argument-parserPackageTests.xctest,generate-manual,math,repeat,roll} .
 
-tar xf swift-5.9.2-android-24-sdk.tar.xz
+tar xf swift-5.10-android-24-sdk.tar.xz
 
 ./swift-argument-parserPackageTests.xctest
 ```
@@ -146,11 +145,11 @@ dependencies and include them yourself.
 
 ## Building the Android SDKs from source
 
-Download the Swift 5.9.2 compiler and Android NDK 26c as above. Check out this
+Download the Swift 5.10 compiler and Android NDK 26c as above. Check out this
 repo and run
-`SWIFT_TAG=swift-5.9.2-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
+`SWIFT_TAG=swift-5.10-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
 to get some prebuilt Android libraries and the Swift source to build the SDK. If
-you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2024-03-20-a`
+you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2024-03-30-a`
 for the latest Swift trunk snapshot and pass in the path to the corresponding
 prebuilt Swift toolchain to `build-script` below, you can build a Swift trunk
 SDK too, as seen on the CI.
@@ -163,14 +162,14 @@ added in NDK 26:
 git apply swift-android.patch swift-android-both-ndks.patch swift-android-foundation-ndk26.patch swift-android-stdlib-ndk26.patch swift-android-stdlib-except-trunk.patch
 ```
 
-After making sure [needed build tools like python 3, CMake, and ninja](https://github.com/apple/swift/blob/release/5.9/docs/HowToGuides/GettingStarted.md#linux)
+After making sure [needed build tools like python 3, CMake, and ninja](https://github.com/apple/swift/blob/release/5.10/docs/HowToGuides/GettingStarted.md#linux)
 are installed, run the following `build-script` command with your local paths
 substituted instead:
 ```
 ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android
 --android-ndk /home/finagolfin/android-ndk-r26c/ --android-arch aarch64 --android-api-level 24
---build-swift-tools=0 --native-swift-tools-path=/home/finagolfin/swift-5.9.2-RELEASE-ubuntu22.04/usr/bin/
---native-clang-tools-path=/home/finagolfin/swift-5.9.2-RELEASE-ubuntu22.04/usr/bin/
+--build-swift-tools=0 --native-swift-tools-path=/home/finagolfin/swift-5.10-RELEASE-ubuntu22.04/usr/bin/
+--native-clang-tools-path=/home/finagolfin/swift-5.10-RELEASE-ubuntu22.04/usr/bin/
 --host-cc=/usr/bin/clang-13 --host-cxx=/usr/bin/clang++-13
 --cross-compile-hosts=android-aarch64 --cross-compile-deps-path=/home/finagolfin/swift-release-android-aarch64-24-sdk
 --skip-local-build --xctest --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay'
@@ -201,7 +200,7 @@ API 24. Specifically, it downloads the libicu, libicu-static, libandroid-spawn,
 libcurl, and libxml2 packages from the [Termux package
 repository](https://packages.termux.dev/apt/termux-main/pool/main/).
 
-Each one is unpacked with `ar x libicu_74.1_aarch64.deb; tar xf data.tar.xz` and
+Each one is unpacked with `ar x libicu_74.2_aarch64.deb; tar xf data.tar.xz` and
 the resulting files moved to a newly-created Swift release SDK directory:
 ```
 mkdir swift-release-android-aarch64-24-sdk
@@ -216,17 +215,17 @@ rm swift-release-android-aarch64-24-sdk/usr/bin/*-config
 cd swift-release-android-aarch64-24-sdk/usr/lib
 
 rm libicu{io,test,tu}*
-patchelf --set-rpath \$ORIGIN libandroid-spawn.so libcurl.so libicu*so.74.1 libxml2.so
+patchelf --set-rpath \$ORIGIN libandroid-spawn.so libcurl.so libicu*so.74.2 libxml2.so
 
 # repeat the following for libicui18n.so and libicudata.so, as needed
 rm libicuuc.so libicuuc.so.74
-readelf -d libicuuc.so.74.1
-mv libicuuc.so.74.1 libicuuc.so
+readelf -d libicuuc.so.74.2
+mv libicuuc.so.74.2 libicuuc.so
 patchelf --set-soname libicuuc.so libicuuc.so
 patchelf --replace-needed libicudata.so.74 libicudata.so libicuuc.so
 ```
 The libcurl and libxml2 packages are [only needed for the FoundationNetworking
-and FoundationXML libraries respectively](https://github.com/apple/swift-corelibs-foundation/blob/release/5.9/Docs/ReleaseNotes_Swift5.md),
+and FoundationXML libraries respectively](https://github.com/apple/swift-corelibs-foundation/blob/release/5.10/Docs/ReleaseNotes_Swift5.md),
 so you don't have to deploy them on the Android device if you don't use those
 extra Foundation libraries. I simply include all four libraries since there's
 currently no way to disable building them in the CMake configuration.
@@ -237,7 +236,7 @@ instead, so this Swift SDK for Android could be built without using
 any prebuilt Termux packages, if you're willing to put in the effort to
 cross-compile them yourself, for example, against a different Android API.
 
-Finally, it gets [the 5.9.2 source](https://github.com/apple/swift/releases/tag/swift-5.9.2-RELEASE)
+Finally, it gets [the 5.10 source](https://github.com/apple/swift/releases/tag/swift-5.10-RELEASE)
 tarballs for seven Swift repos and renames them to `llvm-project/`, `swift/`,
 `swift-syntax`, `swift-experimental-string-processing`, `swift-corelibs-libdispatch`,
 `swift-corelibs-foundation`, and `swift-corelibs-xctest`, as required by the Swift
