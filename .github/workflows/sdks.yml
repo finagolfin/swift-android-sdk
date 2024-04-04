@@ -131,6 +131,9 @@ jobs:
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-crypto/Sources/CCryptoBoringSSL/include/CCryptoBoringSSL_asn1.h
             if [ ${{ matrix.version }} != 'release' ]; then
               git apply -R swift-android-stdlib-ndk26.patch
+              if [ ${{ matrix.version }} = 'trunk' ]; then
+                sed -i "s%#include <time%#include <signal.h>\n#include <time%" indexstore-db/include/indexstore/indexstore_functions.h
+              fi
             fi
           fi
           sed -i "s%/data/data/com.termux/files%$SDK%" $SDK/usr/lib/pkgconfig/sqlite3.pc
