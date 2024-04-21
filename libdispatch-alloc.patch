@@ -1,51 +1,67 @@
-From 65fbeec557a2a495b0aaf3c8d1bc1f6d0cc73d5d
-Date: Thu, 1 Feb 2024 19:05:58 +0530
-Subject: [PATCH] Keep posix_memalign() around for older Android APIs
+commit 4a832dc5009c52b73f8c6a8cf03b23f206872992
+Date:   Sun Apr 21 16:54:25 2024 +0530
 
+    Check for `aligned_alloc()` and use `posix_memalign()` instead on platforms, like Android before API 28, that didn't have it
+
+diff --git a/swift-corelibs-libdispatch/CMakeLists.txt b/swift-corelibs-libdispatch/CMakeLists.txt
+index 6f3d7ae..eff610b 100644
+--- a/swift-corelibs-libdispatch/CMakeLists.txt
++++ b/swift-corelibs-libdispatch/CMakeLists.txt
+@@ -188,6 +188,7 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL Android)
+ endif()
+ 
+ check_function_exists(_pthread_workqueue_init HAVE__PTHREAD_WORKQUEUE_INIT)
++check_function_exists(aligned_alloc HAVE_ALIGNED_ALLOC)
+ check_function_exists(getprogname HAVE_GETPROGNAME)
+ check_function_exists(mach_absolute_time HAVE_MACH_ABSOLUTE_TIME)
+ check_function_exists(mach_approximate_time HAVE_MACH_APPROXIMATE_TIME)
 diff --git a/swift-corelibs-libdispatch/src/io.c b/swift-corelibs-libdispatch/src/io.c
-index 70c6721be..f317c1857 100644
+index 4a2653c..12d2a2e 100644
 --- a/swift-corelibs-libdispatch/src/io.c
 +++ b/swift-corelibs-libdispatch/src/io.c
-@@ -2373,6 +2373,11 @@ _dispatch_operation_perform(dispatch_operation_t op)
+@@ -2373,8 +2373,13 @@ _dispatch_operation_perform(dispatch_operation_t op)
  				bQueried = true;
  			}
  			op->buf = _aligned_malloc(op->buf_siz, siInfo.dwPageSize);
-+#elif defined(__ANDROID_API__) && __ANDROID_API__ < 28
+-#else
++#elif defined(HAVE_ALIGNED_ALLOC)
+ 			op->buf = aligned_alloc((size_t)PAGE_SIZE, op->buf_siz);
++#else
 +			err = posix_memalign(&op->buf, (size_t)PAGE_SIZE, op->buf_siz);
 +			if (err != 0) {
 +				goto error;
 +			}
- #else
- 			op->buf = aligned_alloc((size_t)PAGE_SIZE, op->buf_siz);
  #endif
+ 			_dispatch_op_debug("buffer allocated", op);
+ 		} else if (op->direction == DOP_DIR_WRITE) {
 diff --git a/swift-corelibs-libdispatch/tests/dispatch_io.c b/swift-corelibs-libdispatch/tests/dispatch_io.c
-index a5a1cea67..1988cea69 100644
+index a5a1cea..74f3c9b 100644
 --- a/swift-corelibs-libdispatch/tests/dispatch_io.c
 +++ b/swift-corelibs-libdispatch/tests/dispatch_io.c
 @@ -398,7 +398,11 @@ test_async_read(char *path, size_t size, int option, dispatch_queue_t queue,
  				buffer = _aligned_malloc(size, si.dwPageSize);
  #else
  				size_t pagesize = (size_t)sysconf(_SC_PAGESIZE);
-+#if defined(__ANDROID_API__) && __ANDROID_API__ < 28
-+				posix_memalign((void **)&buffer, pagesize, size);
-+#else
++#if defined(HAVE_ALIGNED_ALLOC)
  				buffer = aligned_alloc(pagesize, size);
++#else
++				posix_memalign((void **)&buffer, pagesize, size);
 +#endif
  #endif
  				ssize_t r = dispatch_test_fd_read(fd, buffer, size);
  				if (r == -1) {
 diff --git a/swift-corelibs-libdispatch/tests/dispatch_read2.c b/swift-corelibs-libdispatch/tests/dispatch_read2.c
-index 401fb4f62..36e5575b2 100644
+index 401fb4f..274d942 100644
 --- a/swift-corelibs-libdispatch/tests/dispatch_read2.c
 +++ b/swift-corelibs-libdispatch/tests/dispatch_read2.c
 @@ -91,7 +91,11 @@ dispatch_read2(dispatch_fd_t fd,
  		buffer = _aligned_malloc(bufsiz, pagesize);
  #else
  		size_t pagesize = (size_t)sysconf(_SC_PAGESIZE);
-+#if defined(__ANDROID_API__) && __ANDROID_API__ < 28
-+		posix_memalign((void **)&buffer, pagesize, bufsiz);
-+#else
++#if defined(HAVE_ALIGNED_ALLOC)
  		buffer = aligned_alloc(pagesize, bufsiz);
++#else
++		posix_memalign((void **)&buffer, pagesize, bufsiz);
 +#endif
  #endif
  		ssize_t actual = dispatch_test_fd_read(fd, buffer, bufsiz);

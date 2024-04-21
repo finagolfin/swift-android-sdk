@@ -114,7 +114,7 @@ jobs:
             STUPID_FILE_RENAMING=Tool
           else
             sed -i "s%r26%ndk/26%" swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
-            git apply -C1 libdispatch-trunk.patch
+            git apply -C1 libdispatch-alloc.patch
             STUPID_FILE_RENAMING=Command
           fi
           if [ ${{ matrix.ndk }} = '26c' ]; then
