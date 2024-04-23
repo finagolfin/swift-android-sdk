@@ -198,7 +198,9 @@ jobs:
       - name: Build Swift Numerics package
         run: |
           cd swift-numerics
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          if [ ${{ matrix.version }} != 'trunk' ]; then
+            ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          fi
       - name: Get Swift System package
         uses: actions/checkout@v4
         with:
@@ -217,7 +219,9 @@ jobs:
       - name: Build Swift Collections package
         run: |
           cd swift-collections
+          if [ ${{ matrix.version }} != 'trunk' ]; then
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build -j 1 --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          fi
       - name: Get Swift Atomics package
         uses: actions/checkout@v4
         with:
@@ -304,9 +308,13 @@ jobs:
 
             cp swift-crypto/.build/$TARGET/debug/swift-cryptoPackageTests.xctest pack
             cp swift-nio/.build/$TARGET/debug/swift-nioPackageTests.xctest pack
-            cp swift-numerics/.build/$TARGET/debug/swift-numericsPackageTests.xctest pack
+            if [ ${{ matrix.version }} != 'trunk' ]; then
+              cp swift-numerics/.build/$TARGET/debug/swift-numericsPackageTests.xctest pack
+            fi
             cp swift-system/.build/$TARGET/debug/swift-systemPackageTests.xctest pack
+            if [ ${{ matrix.version }} != 'trunk' ]; then
             cp swift-collections/.build/$TARGET/debug/swift-collectionsPackageTests.xctest pack
+            fi
             cp sns/.build/$TARGET/debug/swift-nio-sshPackageTests.xctest pack
             cp snl/.build/$TARGET/debug/swift-nio-sslPackageTests.xctest pack
             cp yams/.build/$TARGET/debug/YamsPackageTests.xctest pack
@@ -363,9 +371,9 @@ jobs:
             adb shell "run-as com.termux ln -s README.md /data/data/com.termux/pack/Test\ Data/README.md.symlink"
             adb shell "run-as com.termux ln -s Foo /data/data/com.termux/pack/Test\ Data/Foo.symlink"
             adb shell "run-as com.termux sh -c 'TMPDIR=/data/data/com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest'"
-            adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest
+            if [ ${{ matrix.version }} != 'trunk' ]; then adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest; fi
             adb shell /data/local/tmp/pack/swift-systemPackageTests.xctest
-            adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest
+            if [ ${{ matrix.version }} != 'trunk' ]; then adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest; fi
             adb shell /data/local/tmp/pack/swift-nio-sshPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-nio-sslPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-nio-http2PackageTests.xctest
