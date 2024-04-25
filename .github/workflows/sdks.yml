@@ -59,7 +59,7 @@ jobs:
       matrix:
         version: [release, devel, trunk]
         arch: [aarch64, x86_64, armv7]
-        ndk: [25c, 26c]
+        ndk: [25c, 26d]
     env:
       ANDROID_API_LEVEL: 24
     steps:
@@ -88,7 +88,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-ndk${{ matrix.ndk }}-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-ndk${{ matrix.ndk }}-build-sdk
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-ndk${{ matrix.ndk }}-sdk
       - name: Clone
         uses: actions/checkout@v4
         with:
@@ -117,7 +117,7 @@ jobs:
             git apply -C1 libdispatch-alloc.patch
             STUPID_FILE_RENAMING=Command
           fi
-          if [ ${{ matrix.ndk }} = '26c' ]; then
+          if [ ${{ matrix.ndk }} = '26d' ]; then
             NDK=$ANDROID_NDK_LATEST_HOME
             git apply -C0 swift-android-foundation-ndk26.patch
             if [ ${{ matrix.version }} = 'release' ]; then
@@ -345,7 +345,7 @@ jobs:
       fail-fast: false
       matrix:
         version: [release, devel, trunk]
-        ndk: [25c, 26c]
+        ndk: [25c, 26d]
     steps:
       - name: Download test directory tarfile
         uses: actions/download-artifact@v4
