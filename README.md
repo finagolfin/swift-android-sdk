@@ -14,12 +14,12 @@ I plan to distribute an Android SDK bundle for NDK 26 in the coming month.
 
 If you cannot build against NDK 26 because of the newly added nullability
 annotations, you can download a 5.10 SDK built against 25c from a recent run of
-the CI, eg `sdk-tests-release-aarch64-ndk25c` under `Artifacts`.
+the CI, eg `sdk-release-aarch64-ndk25c` under `Artifacts`.
 
 ## Cross-compiling and testing Swift packages with the Android SDK
 
 To build with the Swift 5.10 SDK, first download [the latest Android LTS NDK
-26c](https://developer.android.com/ndk/downloads) and [Swift 5.10
+26d](https://developer.android.com/ndk/downloads) and [Swift 5.10
 compiler](https://swift.org/download/#releases) (make sure to install the Swift
 compiler's dependencies linked there). Unpack these archives and the SDK.
 
@@ -34,8 +34,8 @@ swift-5.10-android-24-sdk/usr/lib/swift/clang
 Next, modify the cross-compilation JSON file `android-aarch64.json` in this repo
 similarly:
 
-1. All paths to the NDK should change from `/home/finagolfin/android-ndk-r26c`
-to the path to your NDK, `/home/yourname/android-ndk-r26c`.
+1. All paths to the NDK should change from `/home/finagolfin/android-ndk-r26d`
+to the path to your NDK, `/home/yourname/android-ndk-r26d`.
 
 2. The path to the compiler should change from `/home/finagolfin/swift-5.10-RELEASE-ubuntu22.04`
 to the path to your Swift compiler, `/home/yourname/swift-5.10-RELEASE-ubi9`.
@@ -145,7 +145,7 @@ dependencies and include them yourself.
 
 ## Building the Android SDKs from source
 
-Download the Swift 5.10 compiler and Android NDK 26c as above. Check out this
+Download the Swift 5.10 compiler and Android NDK 26d as above. Check out this
 repo and run
 `SWIFT_TAG=swift-5.10-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
 to get some prebuilt Android libraries and the Swift source to build the SDK. If
@@ -167,7 +167,7 @@ are installed, run the following `build-script` command with your local paths
 substituted instead:
 ```
 ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android
---android-ndk /home/finagolfin/android-ndk-r26c/ --android-arch aarch64 --android-api-level 24
+--android-ndk /home/finagolfin/android-ndk-r26d/ --android-arch aarch64 --android-api-level 24
 --build-swift-tools=0 --native-swift-tools-path=/home/finagolfin/swift-5.10-RELEASE-ubuntu22.04/usr/bin/
 --native-clang-tools-path=/home/finagolfin/swift-5.10-RELEASE-ubuntu22.04/usr/bin/
 --host-cc=/usr/bin/clang-13 --host-cxx=/usr/bin/clang++-13
@@ -187,7 +187,7 @@ Finally, copy `libc++_shared.so` from the NDK and modify the cross-compiled
 `libdispatch.so` and Swift corelibs to include `$ORIGIN` and other relative
 directories in their rpaths:
 ```
-cp /home/yourname/android-ndk-r26c/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so swift-release-android-aarch64-24-sdk/usr/lib
+cp /home/yourname/android-ndk-r26d/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so swift-release-android-aarch64-24-sdk/usr/lib
 patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN swift-release-android-aarch64-24-sdk/usr/lib/swift/android/lib*.so
 ```
 
