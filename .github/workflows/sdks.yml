@@ -145,6 +145,11 @@ jobs:
 
           tar cJf ~/${SDK_NAME/-sdk/-ndk${{ matrix.ndk }}-sdk}.tar.xz $SDK_NAME
           rm -rf $SDK_NAME
+      - name: Upload SDK
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdk-${{ matrix.version }}-${{ matrix.arch }}-ndk${{ matrix.ndk }}
+          path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-sdk.tar.xz
       - name: Unpack ${{ matrix.version }} toolchain and SDK
         id: sdk-unpack
         run: |
@@ -291,75 +296,54 @@ jobs:
       - name: Get Termux debug app if not cached
         if: ${{ matrix.arch == 'x86_64' && steps.cache-termux.outputs.cache-hit != 'true'}}
         run: wget -O ~/termux-debug.apk https://github.com/termux/termux-app/releases/download/v0.118.0/termux-app_v0.118.0+github-debug_x86_64.apk
-      - name: Put SDK and x86_64 tests in one directory to push to Android x86_64 emulator
+      - name: Put x86_64 tests in one directory to push to Android x86_64 emulator and set KVM perms
+        if: ${{ matrix.arch == 'x86_64' }}
         run: |
-          mkdir pack
-          cp ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-sdk.tar.xz pack
+          mkdir -p pack/lib/swift/android
+          TARGET="x86_64-unknown-linux-android$ANDROID_API_LEVEL"
+          cp swift-argument-parser/.build/$TARGET/debug/{generate-manual,math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
 
-          if [ ${{ matrix.arch }} = 'x86_64' ]; then
-            mkdir -p pack/lib/swift/android
-            TARGET="x86_64-unknown-linux-android$ANDROID_API_LEVEL"
-            cp swift-argument-parser/.build/$TARGET/debug/{generate-manual,math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
+          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v1.10/termux-elf-cleaner.cpp
+          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v1.10/elf.h
+          clang -D__ANDROID_API__=$ANDROID_API_LEVEL -o elf-cleaner termux-elf-cleaner.cpp
+          ./elf-cleaner pack/{generate-manual,math,repeat,roll} || true
 
-            wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v1.10/termux-elf-cleaner.cpp
-            wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v1.10/elf.h
-            clang -D__ANDROID_API__=$ANDROID_API_LEVEL -o elf-cleaner termux-elf-cleaner.cpp
-            ./elf-cleaner pack/{generate-manual,math,repeat,roll} || true
-
-            cp swift-crypto/.build/$TARGET/debug/swift-cryptoPackageTests.xctest pack
-            cp swift-nio/.build/$TARGET/debug/swift-nioPackageTests.xctest pack
-            if [ ${{ matrix.version }} != 'trunk' ]; then
-              cp swift-numerics/.build/$TARGET/debug/swift-numericsPackageTests.xctest pack
-            fi
-            cp swift-system/.build/$TARGET/debug/swift-systemPackageTests.xctest pack
-            if [ ${{ matrix.version }} != 'trunk' ]; then
-            cp swift-collections/.build/$TARGET/debug/swift-collectionsPackageTests.xctest pack
-            fi
-            cp sns/.build/$TARGET/debug/swift-nio-sshPackageTests.xctest pack
-            cp snl/.build/$TARGET/debug/swift-nio-sslPackageTests.xctest pack
-            cp yams/.build/$TARGET/debug/YamsPackageTests.xctest pack
-            cp snh/.build/$TARGET/debug/swift-nio-http2PackageTests.xctest pack
-            cp sa/.build/$TARGET/debug/swift-algorithmsPackageTests.xctest pack
-
-            mkdir pack/crypto-vectors pack/swift-crypto_CryptoTests.resources
-            cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/_CryptoExtrasVectors/* pack/crypto-vectors
-            cp swift-crypto/Tests/CryptoTests/HPKE/hpke-test-vectors.json pack/swift-crypto_CryptoTests.resources
-            rm swift-nio/Tests/NIOFileSystemIntegrationTests/Test\ Data/*symlink
-            cp -r swift-nio/Tests/NIOFileSystemIntegrationTests/Test\ Data/ swift-nio/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift pack
-            cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
-            cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/lib*so pack/lib
-            cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/swift/android/lib*so pack/lib/swift/android
-            mv pack/lib/libc++_shared.so pack/lib/swift/android
-            cp ~/termux-debug.apk pack
+          cp swift-crypto/.build/$TARGET/debug/swift-cryptoPackageTests.xctest pack
+          cp swift-nio/.build/$TARGET/debug/swift-nioPackageTests.xctest pack
+          if [ ${{ matrix.version }} != 'trunk' ]; then
+            cp swift-numerics/.build/$TARGET/debug/swift-numericsPackageTests.xctest pack
           fi
-          tar cvf pack.tar pack
-      - name: Upload test directory tarfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: sdk-tests-${{ matrix.version }}-${{ matrix.arch }}-ndk${{ matrix.ndk }}
-          path: pack.tar
-  run-tests-on-android-x86_64-emulator:
-    runs-on: macos-latest
-    needs: build-sdk-and-tests
-    strategy:
-      fail-fast: false
-      matrix:
-        version: [release, devel, trunk]
-        ndk: [25c, 26d]
-    steps:
-      - name: Download test directory tarfile
-        uses: actions/download-artifact@v4
-        with:
-          name: sdk-tests-${{ matrix.version }}-x86_64-ndk${{ matrix.ndk }}
+          cp swift-system/.build/$TARGET/debug/swift-systemPackageTests.xctest pack
+          if [ ${{ matrix.version }} != 'trunk' ]; then
+          cp swift-collections/.build/$TARGET/debug/swift-collectionsPackageTests.xctest pack
+          fi
+          cp sns/.build/$TARGET/debug/swift-nio-sshPackageTests.xctest pack
+          cp snl/.build/$TARGET/debug/swift-nio-sslPackageTests.xctest pack
+          cp yams/.build/$TARGET/debug/YamsPackageTests.xctest pack
+          cp snh/.build/$TARGET/debug/swift-nio-http2PackageTests.xctest pack
+          cp sa/.build/$TARGET/debug/swift-algorithmsPackageTests.xctest pack
+
+          mkdir pack/crypto-vectors pack/swift-crypto_CryptoTests.resources
+          cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/_CryptoExtrasVectors/* pack/crypto-vectors
+          cp swift-crypto/Tests/CryptoTests/HPKE/hpke-test-vectors.json pack/swift-crypto_CryptoTests.resources
+          rm swift-nio/Tests/NIOFileSystemIntegrationTests/Test\ Data/*symlink
+          cp -r swift-nio/Tests/NIOFileSystemIntegrationTests/Test\ Data/ swift-nio/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift pack
+          cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
+          cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/lib*so pack/lib
+          cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/swift/android/lib*so pack/lib/swift/android
+          mv pack/lib/libc++_shared.so pack/lib/swift/android
+
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
       - name: Run tests on Android x86_64 emulator
+        if: ${{ matrix.arch == 'x86_64' }}
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 24
           arch: x86_64
           script: |
-            tar xf pack.tar
-            adb install pack/termux-debug.apk
-            rm pack/termux-debug.apk pack/swift-${{ matrix.version }}-android-x86_64*-sdk.tar.xz
+            adb install ~/termux-debug.apk
             adb push pack /data/local/tmp
 
             adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest
