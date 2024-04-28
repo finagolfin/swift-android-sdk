@@ -149,7 +149,7 @@ jobs:
           patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN $SDK/usr/lib/swift/android/lib[FXs]*.so
 
           tar cJf ~/${SDK_NAME/-sdk/-ndk${{ matrix.ndk }}-sdk}.tar.xz $SDK_NAME
-          rm -rf $SDK_NAME
+          rm -rf build/ $SDK_NAME
       - name: Upload SDK
         uses: actions/upload-artifact@v4
         with:
@@ -297,7 +297,7 @@ jobs:
       - name: Get Termux debug app if not cached
         if: ${{ matrix.arch == 'x86_64' && steps.cache-termux.outputs.cache-hit != 'true'}}
         run: wget -O ~/termux-debug.apk https://github.com/termux/termux-app/releases/download/v0.118.0/termux-app_v0.118.0+github-debug_x86_64.apk
-      - name: Put x86_64 tests in one directory to push to Android x86_64 emulator
+      - name: Put x86_64 tests in one directory to push to Android x86_64 emulator and set KVM permissions
         if: ${{ matrix.arch == 'x86_64' }}
         run: |
           mkdir -p pack/lib/swift/android
@@ -329,9 +329,7 @@ jobs:
           cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/lib*so pack/lib
           cp sdk-config/swift-${{ matrix.version }}*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/swift/android/lib*so pack/lib/swift/android
           mv pack/lib/libc++_shared.so pack/lib/swift/android
-      - name: Set KVM perms
-        if: ${{ matrix.arch == 'x86_64' }}
-        run: |
+
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
