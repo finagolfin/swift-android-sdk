@@ -134,9 +134,7 @@ jobs:
             if [ ${{ matrix.version }} != 'release' ]; then
               git apply -R swift-android-stdlib-ndk26.patch
               sed -i "s%#include <time%#include <signal.h>\n#include <time%" indexstore-db/include/indexstore/indexstore_functions.h
-              if [ ${{ matrix.version }} = 'trunk' ]; then
-                sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" swift-syntax/Sources/_SwiftSyntaxCShims/include/swiftsyntax/_includes.h
-              fi
+              sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" swift-syntax/Sources/_SwiftSyntaxCShims/include/swiftsyntax/_includes.h
             fi
           fi
           sed -i "s%/data/data/com.termux/files%$SDK%" $SDK/usr/lib/pkgconfig/sqlite3.pc
