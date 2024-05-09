@@ -215,7 +215,6 @@ jobs:
       - name: Build Swift System package
         run: |
           cd swift-system
-          sed -i "s%/tmp%/data/local/tmp%" Tests/SystemTests/FileOperationsTest.swift
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-${{ matrix.version }}-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Collections package
         uses: actions/checkout@v4
@@ -351,7 +350,7 @@ jobs:
             adb shell "run-as com.termux ln -s Foo /data/data/com.termux/pack/Test\ Data/Foo.symlink"
             adb shell "run-as com.termux sh -c 'TMPDIR=/data/data/com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest'"
             adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest
-            adb shell /data/local/tmp/pack/swift-systemPackageTests.xctest
+            adb shell "TMPDIR=/data/local/tmp /data/local/tmp/pack/swift-systemPackageTests.xctest"
             adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-nio-sshPackageTests.xctest
             adb shell /data/local/tmp/pack/swift-nio-sslPackageTests.xctest
