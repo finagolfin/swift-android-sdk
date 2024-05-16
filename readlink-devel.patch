@@ -1,0 +1,24 @@
+commit 94b134818381e3fda628e11ae1f4f34287327cec
+Author: Alex Lorenz <arphaman@gmail.com>
+Date:   Wed May 8 20:16:15 2024 -0700
+
+    stdlib: fix android build
+    
+    the readlink addition in f4bf278 was introduced without a corresponding include.
+
+diff --git a/swift/stdlib/public/runtime/Paths.cpp b/swift/stdlib/public/runtime/Paths.cpp
+index 131a24ed405..174140238ba 100644
+--- a/swift/stdlib/public/runtime/Paths.cpp
++++ b/swift/stdlib/public/runtime/Paths.cpp
+@@ -49,6 +49,11 @@
+ #include <psapi.h>
+ #endif
+ 
++#ifdef __linux__
++// Needed for 'readlink'.
++#include <unistd.h>
++#endif
++
+ #include <cerrno>
+ #include <cstdlib>
+ #include <cstring>
