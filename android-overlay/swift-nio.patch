@@ -1,0 +1,876 @@
+diff --git a/Sources/NIOConcurrencyHelpers/NIOLock.swift b/Sources/NIOConcurrencyHelpers/NIOLock.swift
+index db1a8f98..ca7dcf7c 100644
+--- a/Sources/NIOConcurrencyHelpers/NIOLock.swift
++++ b/Sources/NIOConcurrencyHelpers/NIOLock.swift
+@@ -21,6 +21,8 @@ import WinSDK
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #else
+ #error("The concurrency NIOLock module was unable to identify your C library.")
+ #endif
+diff --git a/Sources/NIOConcurrencyHelpers/atomics.swift b/Sources/NIOConcurrencyHelpers/atomics.swift
+index 034747cf..2d87a784 100644
+--- a/Sources/NIOConcurrencyHelpers/atomics.swift
++++ b/Sources/NIOConcurrencyHelpers/atomics.swift
+@@ -30,6 +30,8 @@ fileprivate func sys_sched_yield() {
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #else
+ #error("The concurrency atomics module was unable to identify your C library.")
+ #endif
+diff --git a/Sources/NIOConcurrencyHelpers/lock.swift b/Sources/NIOConcurrencyHelpers/lock.swift
+index 5df4af7b..174ee8c9 100644
+--- a/Sources/NIOConcurrencyHelpers/lock.swift
++++ b/Sources/NIOConcurrencyHelpers/lock.swift
+@@ -21,6 +21,8 @@ import WinSDK
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #else
+ #error("The concurrency lock module was unable to identify your C library.")
+ #endif
+diff --git a/Sources/NIOCore/BSDSocketAPI.swift b/Sources/NIOCore/BSDSocketAPI.swift
+index 7b6627db..9734fec1 100644
+--- a/Sources/NIOCore/BSDSocketAPI.swift
++++ b/Sources/NIOCore/BSDSocketAPI.swift
+@@ -65,6 +65,8 @@ internal typealias socklen_t = ucrt.size_t
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #endif
+ import CNIOLinux
+ 
+@@ -85,9 +87,9 @@ private let sysInet_pton: @convention(c) (CInt, UnsafePointer<CChar>?, UnsafeMut
+ #endif
+ 
+ #if os(Android)
+-let IFF_BROADCAST: CUnsignedInt = numericCast(SwiftGlibc.IFF_BROADCAST.rawValue)
+-let IFF_POINTOPOINT: CUnsignedInt = numericCast(SwiftGlibc.IFF_POINTOPOINT.rawValue)
+-let IFF_MULTICAST: CUnsignedInt = numericCast(SwiftGlibc.IFF_MULTICAST.rawValue)
++let IFF_BROADCAST: CUnsignedInt = numericCast(Android.IFF_BROADCAST.rawValue)
++let IFF_POINTOPOINT: CUnsignedInt = numericCast(Android.IFF_POINTOPOINT.rawValue)
++let IFF_MULTICAST: CUnsignedInt = numericCast(Android.IFF_MULTICAST.rawValue)
+ #if arch(arm)
+ let SO_RCVTIMEO = SO_RCVTIMEO_OLD
+ let SO_TIMESTAMP = SO_TIMESTAMP_OLD
+diff --git a/Sources/NIOCore/ByteBuffer-core.swift b/Sources/NIOCore/ByteBuffer-core.swift
+index 96ad63c0..21e28255 100644
+--- a/Sources/NIOCore/ByteBuffer-core.swift
++++ b/Sources/NIOCore/ByteBuffer-core.swift
+@@ -20,6 +20,8 @@ import Darwin
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #else
+ #error("The Byte Buffer module was unable to identify your C library.")
+ #endif
+diff --git a/Sources/NIOCore/FileHandle.swift b/Sources/NIOCore/FileHandle.swift
+index b9de9517..7c85ab2a 100644
+--- a/Sources/NIOCore/FileHandle.swift
++++ b/Sources/NIOCore/FileHandle.swift
+@@ -19,6 +19,8 @@ import Darwin
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #else
+ #error("The File Handle module was unable to identify your C library.")
+ #endif
+diff --git a/Sources/NIOCore/FileRegion.swift b/Sources/NIOCore/FileRegion.swift
+index 72db1b13..6f2522ce 100644
+--- a/Sources/NIOCore/FileRegion.swift
++++ b/Sources/NIOCore/FileRegion.swift
+@@ -19,6 +19,8 @@ import Darwin
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #else
+ #error("The File Region module was unable to identify your C library.")
+ #endif
+diff --git a/Sources/NIOCore/GlobalSingletons.swift b/Sources/NIOCore/GlobalSingletons.swift
+index 79e752a7..1af16f0b 100644
+--- a/Sources/NIOCore/GlobalSingletons.swift
++++ b/Sources/NIOCore/GlobalSingletons.swift
+@@ -22,6 +22,8 @@ import WinSDK
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #else
+ #error("Unsupported C library")
+ #endif
+diff --git a/Sources/NIOCore/IO.swift b/Sources/NIOCore/IO.swift
+index 3fdd7a10..0513690f 100644
+--- a/Sources/NIOCore/IO.swift
++++ b/Sources/NIOCore/IO.swift
+@@ -32,6 +32,8 @@ internal func MAKELANGID(_ p: WORD, _ s: WORD) -> DWORD {
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #elseif canImport(Darwin)
+ import Darwin
+ #else
+diff --git a/Sources/NIOCore/Interfaces.swift b/Sources/NIOCore/Interfaces.swift
+index c4b6eb00..7d6895b0 100644
+--- a/Sources/NIOCore/Interfaces.swift
++++ b/Sources/NIOCore/Interfaces.swift
+@@ -16,6 +16,8 @@
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #endif
+ import CNIOLinux
+ #elseif canImport(Darwin)
+diff --git a/Sources/NIOCore/SocketAddresses.swift b/Sources/NIOCore/SocketAddresses.swift
+index a0cf8f0e..3d33a5a5 100644
+--- a/Sources/NIOCore/SocketAddresses.swift
++++ b/Sources/NIOCore/SocketAddresses.swift
+@@ -48,6 +48,8 @@ import Darwin
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #endif
+ import CNIOLinux
+ #else
+diff --git a/Sources/NIOCore/SystemCallHelpers.swift b/Sources/NIOCore/SystemCallHelpers.swift
+index b74092a1..752a8447 100644
+--- a/Sources/NIOCore/SystemCallHelpers.swift
++++ b/Sources/NIOCore/SystemCallHelpers.swift
+@@ -27,6 +27,8 @@ import Glibc
+ import Musl
+ #elseif os(Windows)
+ import CNIOWindows
++#elseif canImport(Android)
++import Android
+ #else
+ #error("The system call helpers module was unable to identify your C library.")
+ #endif
+diff --git a/Sources/NIOCore/Utilities.swift b/Sources/NIOCore/Utilities.swift
+index f00ae18e..fae5986f 100644
+--- a/Sources/NIOCore/Utilities.swift
++++ b/Sources/NIOCore/Utilities.swift
+@@ -17,6 +17,8 @@ import CNIOLinux
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #endif
+ #elseif os(Windows)
+ import let WinSDK.RelationProcessorCore
+diff --git a/Sources/NIOFileSystem/FileInfo.swift b/Sources/NIOFileSystem/FileInfo.swift
+index 7f174bf6..cc3ddb5d 100644
+--- a/Sources/NIOFileSystem/FileInfo.swift
++++ b/Sources/NIOFileSystem/FileInfo.swift
+@@ -21,6 +21,8 @@ import Darwin
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ /// Information about a file system object.
+@@ -83,7 +85,7 @@ public struct FileInfo: Hashable, Sendable {
+         self.lastAccessTime = Timespec(platformSpecificStatus.st_atimespec)
+         self.lastDataModificationTime = Timespec(platformSpecificStatus.st_mtimespec)
+         self.lastStatusChangeTime = Timespec(platformSpecificStatus.st_ctimespec)
+-        #elseif canImport(Glibc) || canImport(Musl)
++        #elseif canImport(Glibc) || canImport(Musl) || canImport(Android)
+         self.lastAccessTime = Timespec(platformSpecificStatus.st_atim)
+         self.lastDataModificationTime = Timespec(platformSpecificStatus.st_mtim)
+         self.lastStatusChangeTime = Timespec(platformSpecificStatus.st_ctim)
+@@ -193,7 +195,7 @@ private struct Stat: Hashable {
+         hasher.combine(FileInfo.Timespec(stat.st_birthtimespec))
+         hasher.combine(stat.st_flags)
+         hasher.combine(stat.st_gen)
+-        #elseif canImport(Glibc) || canImport(Musl)
++        #elseif canImport(Glibc) || canImport(Musl) || canImport(Android)
+         hasher.combine(FileInfo.Timespec(stat.st_atim))
+         hasher.combine(FileInfo.Timespec(stat.st_mtim))
+         hasher.combine(FileInfo.Timespec(stat.st_ctim))
+@@ -234,7 +236,7 @@ private struct Stat: Hashable {
+                 == FileInfo.Timespec(rStat.st_birthtimespec)
+         isEqual = isEqual && lStat.st_flags == rStat.st_flags
+         isEqual = isEqual && lStat.st_gen == rStat.st_gen
+-        #elseif canImport(Glibc) || canImport(Musl)
++        #elseif canImport(Glibc) || canImport(Musl) || canImport(Android)
+         isEqual = isEqual && FileInfo.Timespec(lStat.st_atim) == FileInfo.Timespec(rStat.st_atim)
+         isEqual = isEqual && FileInfo.Timespec(lStat.st_mtim) == FileInfo.Timespec(rStat.st_mtim)
+         isEqual = isEqual && FileInfo.Timespec(lStat.st_ctim) == FileInfo.Timespec(rStat.st_ctim)
+diff --git a/Sources/NIOFileSystem/FileSystem.swift b/Sources/NIOFileSystem/FileSystem.swift
+index 20c431a8..c1da7ce7 100644
+--- a/Sources/NIOFileSystem/FileSystem.swift
++++ b/Sources/NIOFileSystem/FileSystem.swift
+@@ -25,6 +25,8 @@ import Darwin
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ /// A file system which interacts with the local system. The file system uses a thread pool to
+@@ -1086,7 +1088,7 @@ extension FileSystem {
+                         location: .here()
+                     )
+                 }
+-                #elseif canImport(Glibc) || canImport(Musl)
++                #elseif canImport(Glibc) || canImport(Musl) || canImport(Android)
+                 var offset = 0
+ 
+                 while offset < sourceInfo.size {
+diff --git a/Sources/NIOFileSystem/FileType.swift b/Sources/NIOFileSystem/FileType.swift
+index a08ec374..10932a6c 100644
+--- a/Sources/NIOFileSystem/FileType.swift
++++ b/Sources/NIOFileSystem/FileType.swift
+@@ -21,6 +21,8 @@ import Darwin
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ /// The type of a file system object.
+diff --git a/Sources/NIOFileSystem/Internal/System Calls/CInterop.swift b/Sources/NIOFileSystem/Internal/System Calls/CInterop.swift
+index 61304e0b..2962128a 100644
+--- a/Sources/NIOFileSystem/Internal/System Calls/CInterop.swift	
++++ b/Sources/NIOFileSystem/Internal/System Calls/CInterop.swift	
+@@ -24,6 +24,9 @@ import CNIOLinux
+ #elseif canImport(Musl)
+ import Musl
+ import CNIOLinux
++#elseif canImport(Android)
++import Android
++import CNIOLinux
+ #endif
+ 
+ /// Aliases for platform-dependent types used for system calls.
+@@ -34,6 +37,8 @@ extension CInterop {
+     public typealias Stat = Glibc.stat
+     #elseif canImport(Musl)
+     public typealias Stat = Musl.stat
++    #elseif canImport(Android)
++    public typealias Stat = Android.stat
+     #endif
+ 
+     #if canImport(Darwin)
+@@ -45,11 +50,14 @@ extension CInterop {
+     #elseif canImport(Musl)
+     @_spi(Testing)
+     public static let maxPathLength = Musl.PATH_MAX
++    #elseif canImport(Android)
++    @_spi(Testing)
++    public static let maxPathLength = Android.PATH_MAX
+     #endif
+ 
+     #if canImport(Darwin)
+     typealias DirPointer = UnsafeMutablePointer<Darwin.DIR>
+-    #elseif canImport(Glibc) || canImport(Musl)
++    #elseif canImport(Glibc) || canImport(Musl) || canImport(Android)
+     typealias DirPointer = OpaquePointer
+     #endif
+ 
+@@ -59,12 +67,14 @@ extension CInterop {
+     typealias DirEnt = Glibc.dirent
+     #elseif canImport(Musl)
+     typealias DirEnt = Musl.dirent
++    #elseif canImport(Android)
++    typealias DirEnt = Android.dirent
+     #endif
+ 
+     #if canImport(Darwin)
+     typealias FTS = CNIODarwin.FTS
+     typealias FTSEnt = CNIODarwin.FTSENT
+-    #elseif canImport(Glibc) || canImport(Musl)
++    #elseif canImport(Glibc) || canImport(Musl) || canImport(Android)
+     typealias FTS = CNIOLinux.FTS
+     typealias FTSEnt = CNIOLinux.FTSENT
+     #endif
+diff --git a/Sources/NIOFileSystem/Internal/System Calls/Errno.swift b/Sources/NIOFileSystem/Internal/System Calls/Errno.swift
+index 3d0eb079..1527620e 100644
+--- a/Sources/NIOFileSystem/Internal/System Calls/Errno.swift	
++++ b/Sources/NIOFileSystem/Internal/System Calls/Errno.swift	
+@@ -21,6 +21,8 @@ import Darwin
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ extension Errno {
+@@ -33,6 +35,8 @@ extension Errno {
+             return Errno(rawValue: Glibc.errno)
+             #elseif canImport(Musl)
+             return Errno(rawValue: Musl.errno)
++            #elseif canImport(Android)
++            return Errno(rawValue: Android.errno)
+             #endif
+         }
+         set {
+@@ -42,6 +46,8 @@ extension Errno {
+             Glibc.errno = newValue.rawValue
+             #elseif canImport(Musl)
+             Musl.errno = newValue.rawValue
++            #elseif canImport(Android)
++            Android.errno = newValue.rawValue
+             #endif
+         }
+     }
+@@ -53,6 +59,8 @@ extension Errno {
+         Glibc.errno = 0
+         #elseif canImport(Musl)
+         Musl.errno = 0
++        #elseif canImport(Android)
++        Android.errno = 0
+         #endif
+     }
+ }
+diff --git a/Sources/NIOFileSystem/Internal/System Calls/FileDescriptor+Syscalls.swift b/Sources/NIOFileSystem/Internal/System Calls/FileDescriptor+Syscalls.swift
+index 307e1947..1e6fcc7c 100644
+--- a/Sources/NIOFileSystem/Internal/System Calls/FileDescriptor+Syscalls.swift	
++++ b/Sources/NIOFileSystem/Internal/System Calls/FileDescriptor+Syscalls.swift	
+@@ -24,6 +24,9 @@ import CNIOLinux
+ #elseif canImport(Musl)
+ import Musl
+ import CNIOLinux
++#elseif canImport(Android)
++import Android
++import CNIOLinux
+ #endif
+ 
+ extension FileDescriptor {
+@@ -309,7 +312,7 @@ extension FileDescriptor {
+     }
+ }
+ 
+-#if canImport(Glibc) || canImport(Musl)
++#if canImport(Glibc) || canImport(Musl) || canImport(Android)
+ extension FileDescriptor.OpenOptions {
+     static var temporaryFile: Self {
+         Self(rawValue: CNIOLinux_O_TMPFILE)
+diff --git a/Sources/NIOFileSystem/Internal/System Calls/Mocking.swift b/Sources/NIOFileSystem/Internal/System Calls/Mocking.swift
+index 264e4c92..0b2ec09f 100644
+--- a/Sources/NIOFileSystem/Internal/System Calls/Mocking.swift	
++++ b/Sources/NIOFileSystem/Internal/System Calls/Mocking.swift	
+@@ -32,6 +32,9 @@ import CNIOLinux
+ #elseif canImport(Musl)
+ import Musl
+ import CNIOLinux
++#elseif canImport(Android)
++import Android
++import CNIOLinux
+ #endif
+ 
+ // Syscall mocking support.
+@@ -288,6 +291,11 @@ internal var system_errno: CInt {
+     get { Musl.errno }
+     set { Musl.errno = newValue }
+ }
++#elseif canImport(Android)
++internal var system_errno: CInt {
++    get { Android.errno }
++    set { Android.errno = newValue }
++}
+ #endif
+ 
+ // MARK: C stdlib decls
+diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift
+index 06b26891..055fdcdd 100644
+--- a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift	
++++ b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift	
+@@ -24,6 +24,9 @@ import CNIOLinux
+ #elseif canImport(Musl)
+ import Musl
+ import CNIOLinux
++#elseif canImport(Android)
++import Android
++import CNIOLinux
+ #endif
+ 
+ @_spi(Testing)
+@@ -106,7 +109,7 @@ public enum Syscall {
+     }
+     #endif
+ 
+-    #if canImport(Glibc) || canImport(Musl)
++    #if canImport(Glibc) || canImport(Musl) || canImport(Android)
+     @_spi(Testing)
+     public static func rename(
+         from old: FilePath,
+@@ -148,7 +151,7 @@ public enum Syscall {
+     }
+     #endif
+ 
+-    #if canImport(Glibc) || canImport(Musl)
++    #if canImport(Glibc) || canImport(Musl) || canImport(Android)
+     @_spi(Testing)
+     public struct LinkAtFlags: OptionSet {
+         @_spi(Testing)
+@@ -253,7 +256,7 @@ public enum Syscall {
+         }
+     }
+ 
+-    #if canImport(Glibc) || canImport(Musl)
++    #if canImport(Glibc) || canImport(Musl) || canImport(Android)
+     @_spi(Testing)
+     public static func sendfile(
+         to output: FileDescriptor,
+diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift
+index 120500c2..9782bed1 100644
+--- a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift	
++++ b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift	
+@@ -24,6 +24,9 @@ import CNIOLinux
+ #elseif canImport(Musl)
+ import Musl
+ import CNIOLinux
++#elseif canImport(Android)
++import Android
++import CNIOLinux
+ #endif
+ 
+ // MARK: - system
+@@ -175,7 +178,7 @@ internal func system_flistxattr(
+     #if canImport(Darwin)
+     // The final parameter is 'options'; there is no equivalent on Linux.
+     return flistxattr(fd, namebuf, size, 0)
+-    #elseif canImport(Glibc) || canImport(Musl)
++    #elseif canImport(Glibc) || canImport(Musl) || canImport(Android)
+     return flistxattr(fd, namebuf, size)
+     #endif
+ }
+@@ -197,7 +200,7 @@ internal func system_fgetxattr(
+     // Penultimate parameter is position which is reserved and should be zero.
+     // The final parameter is 'options'; there is no equivalent on Linux.
+     return fgetxattr(fd, name, value, size, 0, 0)
+-    #elseif canImport(Glibc) || canImport(Musl)
++    #elseif canImport(Glibc) || canImport(Musl) || canImport(Android)
+     return fgetxattr(fd, name, value, size)
+     #endif
+ }
+@@ -219,7 +222,7 @@ internal func system_fsetxattr(
+     #if canImport(Darwin)
+     // Penultimate parameter is position which is reserved and should be zero.
+     return fsetxattr(fd, name, value, size, 0, 0)
+-    #elseif canImport(Glibc) || canImport(Musl)
++    #elseif canImport(Glibc) || canImport(Musl) || canImport(Android)
+     return fsetxattr(fd, name, value, size, 0)
+     #endif
+ }
+@@ -238,7 +241,7 @@ internal func system_fremovexattr(
+     #if canImport(Darwin)
+     // The final parameter is 'options'; there is no equivalent on Linux.
+     return fremovexattr(fd, name, 0)
+-    #elseif canImport(Glibc) || canImport(Musl)
++    #elseif canImport(Glibc) || canImport(Musl) || canImport(Android)
+     return fremovexattr(fd, name)
+     #endif
+ }
+@@ -271,7 +274,7 @@ internal func system_renamex_np(
+ }
+ #endif
+ 
+-#if canImport(Glibc) || canImport(Musl)
++#if canImport(Glibc) || canImport(Musl) || canImport(Android)
+ internal func system_renameat2(
+     _ oldFD: FileDescriptor.RawValue,
+     _ old: UnsafePointer<CInterop.PlatformChar>,
+@@ -289,7 +292,7 @@ internal func system_renameat2(
+ #endif
+ 
+ /// link(2): Creates a new link for a file.
+-#if canImport(Glibc) || canImport(Musl)
++#if canImport(Glibc) || canImport(Musl) || canImport(Android)
+ internal func system_linkat(
+     _ oldFD: FileDescriptor.RawValue,
+     _ old: UnsafePointer<CInterop.PlatformChar>,
+@@ -331,7 +334,7 @@ internal func system_unlink(
+     return unlink(path)
+ }
+ 
+-#if canImport(Glibc) || canImport(Musl)
++#if canImport(Glibc) || canImport(Musl) || canImport(Android)
+ /// sendfile(2): Transfer data between descriptors
+ internal func system_sendfile(
+     _ outFD: CInt,
+diff --git a/Sources/NIOFileSystem/Internal/SystemFileHandle.swift b/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
+index 54496673..d40b4559 100644
+--- a/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
++++ b/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
+@@ -24,6 +24,8 @@ import Darwin
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ /// An implementation of ``FileHandleProtocol`` which is backed by system calls and a file
+@@ -53,7 +55,7 @@ public final class SystemFileHandle {
+         enum Mode {
+             /// Rename the created file to become the desired file.
+             case rename
+-            #if canImport(Glibc) || canImport(Musl)
++            #if canImport(Glibc) || canImport(Musl) || canImport(Android)
+             /// Link the unnamed file to the desired file using 'linkat(2)'.
+             case link
+             #endif
+@@ -287,7 +289,7 @@ extension SystemFileHandle: FileHandleProtocol {
+                 }
+ 
+                 switch materialization.mode {
+-                #if canImport(Glibc) || canImport(Musl)
++                #if canImport(Glibc) || canImport(Musl) || canImport(Android)
+                 case .link:
+                     let result = self.sendableView._materializeLink(
+                         descriptor: descriptor,
+@@ -677,7 +679,7 @@ extension SystemFileHandle.SendableView {
+         }
+     }
+ 
+-    #if canImport(Glibc) || canImport(Musl)
++    #if canImport(Glibc) || canImport(Musl) || canImport(Android)
+     fileprivate func _materializeLink(
+         descriptor: FileDescriptor,
+         from createdPath: FilePath,
+@@ -788,7 +790,7 @@ extension SystemFileHandle.SendableView {
+ 
+         let result: Result<Void, FileSystemError>
+         switch materialization.mode {
+-        #if canImport(Glibc) || canImport(Musl)
++        #if canImport(Glibc) || canImport(Musl) || canImport(Android)
+         case .link:
+             if materialize {
+                 result = self._materializeLink(
+@@ -813,7 +815,7 @@ extension SystemFileHandle.SendableView {
+                     to: desiredPath,
+                     options: materialization.exclusive ? [.exclusive] : []
+                 )
+-                #elseif canImport(Glibc) || canImport(Musl)
++                #elseif canImport(Glibc) || canImport(Musl) || canImport(Android)
+                 // The created and desired paths are absolute, so the relative descriptors are
+                 // ignored. However, they must still be provided to 'rename' in order to pass
+                 // flags.
+@@ -842,7 +844,7 @@ extension SystemFileHandle.SendableView {
+                         // If 'renameat2' failed on Linux with EINVAL then in all likelihood the
+                         // 'RENAME_NOREPLACE' option isn't supported. As we're doing an exclusive
+                         // create, check the desired path doesn't exist then do a regular rename.
+-                        #if canImport(Glibc) || canImport(Musl)
++                        #if canImport(Glibc) || canImport(Musl) || canImport(Android)
+                         switch Syscall.stat(path: desiredPath) {
+                         case .failure(.noSuchFileOrDirectory):
+                             // File doesn't exist, do a 'regular' rename.
+@@ -1354,7 +1356,7 @@ extension SystemFileHandle {
+             }
+ 
+             func makePath() -> FilePath {
+-                #if canImport(Glibc) || canImport(Musl)
++                #if canImport(Glibc) || canImport(Musl) || canImport(Android)
+                 if useTemporaryFileIfPossible {
+                     return currentWorkingDirectory.appending(path.components.dropLast())
+                 }
+@@ -1367,7 +1369,7 @@ extension SystemFileHandle {
+             desiredPath = currentWorkingDirectory.appending(path.components)
+         } else {
+             func makePath() -> FilePath {
+-                #if canImport(Glibc) || canImport(Musl)
++                #if canImport(Glibc) || canImport(Musl) || canImport(Android)
+                 if useTemporaryFileIfPossible {
+                     return path.removingLastComponent()
+                 }
+@@ -1383,7 +1385,7 @@ extension SystemFileHandle {
+         let materializationMode: Materialization.Mode
+         let options: FileDescriptor.OpenOptions
+ 
+-        #if canImport(Glibc) || canImport(Musl)
++        #if canImport(Glibc) || canImport(Musl) || canImport(Android)
+         if useTemporaryFileIfPossible {
+             options = [.temporaryFile]
+             materializationMode = .link
+@@ -1420,7 +1422,7 @@ extension SystemFileHandle {
+ 
+             return .success(handle)
+         } catch {
+-          #if canImport(Glibc) || canImport(Musl)
++          #if canImport(Glibc) || canImport(Musl) || canImport(Android)
+             // 'O_TMPFILE' isn't supported for the current file system, try again but using
+             // rename instead.
+             if useTemporaryFileIfPossible, let errno = error as? Errno, errno == .notSupported {
+diff --git a/Sources/NIOPosix/Linux.swift b/Sources/NIOPosix/Linux.swift
+index d5f25f76..80002c42 100644
+--- a/Sources/NIOPosix/Linux.swift
++++ b/Sources/NIOPosix/Linux.swift
+@@ -75,20 +75,14 @@ internal enum Epoll {
+     internal static let EPOLL_CTL_MOD: CInt = numericCast(CNIOLinux.EPOLL_CTL_MOD)
+     internal static let EPOLL_CTL_DEL: CInt = numericCast(CNIOLinux.EPOLL_CTL_DEL)
+ 
+-    #if os(Android)
+-    internal static let EPOLLIN: CUnsignedInt = 1 //numericCast(CNIOLinux.EPOLLIN)
+-    internal static let EPOLLOUT: CUnsignedInt = 4 //numericCast(CNIOLinux.EPOLLOUT)
+-    internal static let EPOLLERR: CUnsignedInt = 8 // numericCast(CNIOLinux.EPOLLERR)
+-    internal static let EPOLLRDHUP: CUnsignedInt = 8192 //numericCast(CNIOLinux.EPOLLRDHUP)
+-    internal static let EPOLLHUP: CUnsignedInt = 16 //numericCast(CNIOLinux.EPOLLHUP)
+-    internal static let EPOLLET: CUnsignedInt = 2147483648 //numericCast(CNIOLinux.EPOLLET)
+-    #elseif canImport(Musl)
++    #if canImport(Android) || canImport(Musl)
+     internal static let EPOLLIN: CUnsignedInt = numericCast(CNIOLinux.EPOLLIN)
+     internal static let EPOLLOUT: CUnsignedInt = numericCast(CNIOLinux.EPOLLOUT)
+     internal static let EPOLLERR: CUnsignedInt = numericCast(CNIOLinux.EPOLLERR)
+     internal static let EPOLLRDHUP: CUnsignedInt = numericCast(CNIOLinux.EPOLLRDHUP)
+     internal static let EPOLLHUP: CUnsignedInt = numericCast(CNIOLinux.EPOLLHUP)
+-    internal static let EPOLLET: CUnsignedInt = numericCast(CNIOLinux.EPOLLET)
++    //internal static let EPOLLET: CUnsignedInt = numericCast(CNIOLinux.EPOLLET)
++    internal static let EPOLLET: CUnsignedInt = 2147483648
+     #else
+     internal static let EPOLLIN: CUnsignedInt = numericCast(CNIOLinux.EPOLLIN.rawValue)
+     internal static let EPOLLOUT: CUnsignedInt = numericCast(CNIOLinux.EPOLLOUT.rawValue)
+@@ -126,8 +120,8 @@ internal enum Epoll {
+ 
+ internal enum Linux {
+ #if os(Android)
+-    static let SOCK_CLOEXEC = Glibc.SOCK_CLOEXEC
+-    static let SOCK_NONBLOCK = Glibc.SOCK_NONBLOCK
++    static let SOCK_CLOEXEC = Android.SOCK_CLOEXEC
++    static let SOCK_NONBLOCK = Android.SOCK_NONBLOCK
+ #elseif canImport(Musl)
+     static let SOCK_CLOEXEC = Musl.SOCK_CLOEXEC
+     static let SOCK_NONBLOCK = Musl.SOCK_NONBLOCK
+diff --git a/Sources/NIOPosix/SocketProtocols.swift b/Sources/NIOPosix/SocketProtocols.swift
+index 90cca51f..50f8c051 100644
+--- a/Sources/NIOPosix/SocketProtocols.swift
++++ b/Sources/NIOPosix/SocketProtocols.swift
+@@ -77,6 +77,8 @@ private let globallyIgnoredSIGPIPE: Bool = {
+     _ = Glibc.signal(SIGPIPE, SIG_IGN)
+     #elseif canImport(Musl)
+     _ = Musl.signal(SIGPIPE, SIG_IGN)
++    #elseif canImport(Android)
++    _ = Android.signal(SIGPIPE, SIG_IGN)
+     #else
+     #error("Don't know which stdlib to use")
+     #endif
+diff --git a/Sources/NIOPosix/System.swift b/Sources/NIOPosix/System.swift
+index 6fea9a56..71ce2d2a 100644
+--- a/Sources/NIOPosix/System.swift
++++ b/Sources/NIOPosix/System.swift
+@@ -26,6 +26,8 @@ internal typealias MMsgHdr = CNIODarwin_mmsghdr
+ @_exported import Glibc
+ #elseif canImport(Musl)
+ @_exported import Musl
++#elseif canImport(Android)
++@_exported import Android
+ #endif
+ import CNIOLinux
+ internal typealias MMsgHdr = CNIOLinux_mmsghdr
+@@ -42,9 +44,9 @@ internal typealias MMsgHdr = CNIOWindows_mmsghdr
+ 
+ #if os(Android)
+ let INADDR_ANY = UInt32(0) // #define INADDR_ANY ((unsigned long int) 0x00000000)
+-let IFF_BROADCAST: CUnsignedInt = numericCast(SwiftGlibc.IFF_BROADCAST.rawValue)
+-let IFF_POINTOPOINT: CUnsignedInt = numericCast(SwiftGlibc.IFF_POINTOPOINT.rawValue)
+-let IFF_MULTICAST: CUnsignedInt = numericCast(SwiftGlibc.IFF_MULTICAST.rawValue)
++let IFF_BROADCAST: CUnsignedInt = numericCast(Android.IFF_BROADCAST.rawValue)
++let IFF_POINTOPOINT: CUnsignedInt = numericCast(Android.IFF_POINTOPOINT.rawValue)
++let IFF_MULTICAST: CUnsignedInt = numericCast(Android.IFF_MULTICAST.rawValue)
+ internal typealias in_port_t = UInt16
+ extension ipv6_mreq { // http://lkml.iu.edu/hypermail/linux/kernel/0106.1/0080.html
+     init (ipv6mr_multiaddr: in6_addr, ipv6mr_interface: UInt32) {
+@@ -53,12 +55,12 @@ extension ipv6_mreq { // http://lkml.iu.edu/hypermail/linux/kernel/0106.1/0080.h
+     }
+ }
+ #if arch(arm)
+-let S_IFSOCK = UInt32(SwiftGlibc.S_IFSOCK)
+-let S_IFMT = UInt32(SwiftGlibc.S_IFMT)
+-let S_IFREG = UInt32(SwiftGlibc.S_IFREG)
+-let S_IFDIR = UInt32(SwiftGlibc.S_IFDIR)
+-let S_IFLNK = UInt32(SwiftGlibc.S_IFLNK)
+-let S_IFBLK = UInt32(SwiftGlibc.S_IFBLK)
++let S_IFSOCK = UInt32(Android.S_IFSOCK)
++let S_IFMT = UInt32(Android.S_IFMT)
++let S_IFREG = UInt32(Android.S_IFREG)
++let S_IFDIR = UInt32(Android.S_IFDIR)
++let S_IFLNK = UInt32(Android.S_IFLNK)
++let S_IFBLK = UInt32(Android.S_IFBLK)
+ #endif
+ #endif
+ 
+@@ -386,6 +388,11 @@ internal enum Posix {
+     static let SHUT_RD: CInt = CInt(Musl.SHUT_RD)
+     static let SHUT_WR: CInt = CInt(Musl.SHUT_WR)
+     static let SHUT_RDWR: CInt = CInt(Musl.SHUT_RDWR)
++    #elseif canImport(Android)
++    static let UIO_MAXIOV: Int = Int(Android.UIO_MAXIOV)
++    static let SHUT_RD: CInt = CInt(Android.SHUT_RD)
++    static let SHUT_WR: CInt = CInt(Android.SHUT_WR)
++    static let SHUT_RDWR: CInt = CInt(Android.SHUT_RDWR)
+     #endif
+ #else
+     static var UIO_MAXIOV: Int {
+@@ -661,6 +668,8 @@ internal enum Posix {
+                     let result: ssize_t = Glibc.sendfile(descriptor, fd, &off, count)
+                     #elseif canImport(Musl)
+                     let result: ssize_t = Musl.sendfile(descriptor, fd, &off, count)
++                    #elseif canImport(Android)
++                    let result: ssize_t = Android.sendfile(descriptor, fd, &off, count)
+                     #endif
+                     if result >= 0 {
+                         written = off_t(result)
+diff --git a/Sources/NIOPosix/VsockAddress.swift b/Sources/NIOPosix/VsockAddress.swift
+index 8e15e893..45dc274b 100644
+--- a/Sources/NIOPosix/VsockAddress.swift
++++ b/Sources/NIOPosix/VsockAddress.swift
+@@ -20,6 +20,8 @@ import CNIODarwin
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #endif
+ import CNIOLinux
+ #endif
+diff --git a/Sources/_NIODataStructures/Heap.swift b/Sources/_NIODataStructures/Heap.swift
+index 15a2a32b..9b6ab027 100644
+--- a/Sources/_NIODataStructures/Heap.swift
++++ b/Sources/_NIODataStructures/Heap.swift
+@@ -19,6 +19,8 @@ import Glibc
+ import Musl
+ #elseif os(Windows)
+ import ucrt
++#elseif canImport(Android)
++import Android
+ #else
+ #error("The Heap module was unable to identify your C library.")
+ #endif
+diff --git a/Tests/NIOConcurrencyHelpersTests/NIOConcurrencyHelpersTests.swift b/Tests/NIOConcurrencyHelpersTests/NIOConcurrencyHelpersTests.swift
+index ae11f3eb..e51d369f 100644
+--- a/Tests/NIOConcurrencyHelpersTests/NIOConcurrencyHelpersTests.swift
++++ b/Tests/NIOConcurrencyHelpersTests/NIOConcurrencyHelpersTests.swift
+@@ -15,6 +15,8 @@
+ import Darwin
+ #elseif canImport(Glibc)
+ import Glibc
++#elseif canImport(Android)
++import Android
+ #else
+ #error("The Concurrency helpers test module was unable to identify your C library.")
+ #endif
+diff --git a/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift b/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift
+index 7356a9f1..4e769b81 100644
+--- a/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift
++++ b/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift
+@@ -1020,7 +1020,7 @@ final class FileHandleTests: XCTestCase {
+         // creating a temporary file and then renaming it using 'renameat2' and then takes a further
+         // fallback path where 'renameat2' returns EINVAL so the 'rename' is used in combination
+         // with 'stat'. This path is only reachable on Linux.
+-        #if canImport(Glibc) || canImport(Musl)
++        #if canImport(Glibc) || canImport(Musl) || canImport(Android)
+         let temporaryDirectory = try await FileSystem.shared.temporaryDirectory
+         let path = temporaryDirectory.appending(Self.temporaryFileName().components)
+         let handle = try SystemFileHandle.syncOpenWithMaterialization(
+diff --git a/Tests/NIOFileSystemTests/FileInfoTests.swift b/Tests/NIOFileSystemTests/FileInfoTests.swift
+index 59a7e656..43164d4f 100644
+--- a/Tests/NIOFileSystemTests/FileInfoTests.swift
++++ b/Tests/NIOFileSystemTests/FileInfoTests.swift
+@@ -20,6 +20,8 @@ import XCTest
+ import Darwin
+ #elseif canImport(Glibc)
+ import Glibc
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ final class FileInfoTests: XCTestCase {
+@@ -43,7 +45,7 @@ final class FileInfoTests: XCTestCase {
+         status.st_birthtimespec = timespec(tv_sec: 3, tv_nsec: 0)
+         status.st_flags = 11
+         status.st_gen = 12
+-        #elseif canImport(Glibc)
++        #elseif canImport(Glibc) || canImport(Android)
+         status.st_atim = timespec(tv_sec: 0, tv_nsec: 0)
+         status.st_mtim = timespec(tv_sec: 1, tv_nsec: 0)
+         status.st_ctim = timespec(tv_sec: 2, tv_nsec: 0)
+@@ -97,7 +99,7 @@ final class FileInfoTests: XCTestCase {
+         assertNotEqualAfterMutation { $0.platformSpecificStatus!.st_birthtimespec.tv_sec += 1 }
+         assertNotEqualAfterMutation { $0.platformSpecificStatus!.st_flags += 1 }
+         assertNotEqualAfterMutation { $0.platformSpecificStatus!.st_gen += 1 }
+-        #elseif canImport(Glibc)
++        #elseif canImport(Glibc) || canImport(Android)
+         assertNotEqualAfterMutation { $0.platformSpecificStatus!.st_atim.tv_sec += 1 }
+         assertNotEqualAfterMutation { $0.platformSpecificStatus!.st_mtim.tv_sec += 1 }
+         assertNotEqualAfterMutation { $0.platformSpecificStatus!.st_ctim.tv_sec += 1 }
+@@ -150,7 +152,7 @@ final class FileInfoTests: XCTestCase {
+         }
+         assertDifferentHashValueAfterMutation { $0.platformSpecificStatus!.st_flags += 1 }
+         assertDifferentHashValueAfterMutation { $0.platformSpecificStatus!.st_gen += 1 }
+-        #elseif canImport(Glibc)
++        #elseif canImport(Glibc) || canImport(Android)
+         assertDifferentHashValueAfterMutation { $0.platformSpecificStatus!.st_atim.tv_sec += 1 }
+         assertDifferentHashValueAfterMutation { $0.platformSpecificStatus!.st_mtim.tv_sec += 1 }
+         assertDifferentHashValueAfterMutation { $0.platformSpecificStatus!.st_ctim.tv_sec += 1 }
+diff --git a/Tests/NIOFileSystemTests/Internal/SyscallTests.swift b/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
+index 2c22d87a..7b3f5db7 100644
+--- a/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
++++ b/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
+@@ -132,7 +132,7 @@ final class SyscallTests: XCTestCase {
+     }
+ 
+     func test_linkat() throws {
+-        #if canImport(Glibc)
++        #if canImport(Glibc) || canImport(Android)
+         let fd1 = FileDescriptor(rawValue: 13)
+         let fd2 = FileDescriptor(rawValue: 42)
+ 
+@@ -306,7 +306,7 @@ final class SyscallTests: XCTestCase {
+     }
+ 
+     func test_renameat2() throws {
+-        #if canImport(Glibc)
++        #if canImport(Glibc) || canImport(Android)
+         let fd1 = FileDescriptor(rawValue: 13)
+         let fd2 = FileDescriptor(rawValue: 42)
+ 
+@@ -355,7 +355,7 @@ final class SyscallTests: XCTestCase {
+     }
+ 
+     func test_sendfile() throws {
+-        #if canImport(Glibc)
++        #if canImport(Glibc) || canImport(Android)
+         let input = FileDescriptor(rawValue: 42)
+         let output = FileDescriptor(rawValue: 1)
+ 
+diff --git a/Tests/NIOPosixTests/HappyEyeballsTest.swift b/Tests/NIOPosixTests/HappyEyeballsTest.swift
+index 88709d10..66a3af18 100644
+--- a/Tests/NIOPosixTests/HappyEyeballsTest.swift
++++ b/Tests/NIOPosixTests/HappyEyeballsTest.swift
+@@ -16,6 +16,8 @@
+     import Darwin
+ #elseif canImport(Glibc)
+     import Glibc
++#elseif canImport(Android)
++    import Android
+ #else
+     #error("The Happy Eyeballs test module was unable to identify your C library.")
+ #endif

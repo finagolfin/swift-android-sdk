@@ -1,0 +1,66 @@
+diff --git a/Sources/System/Internals/CInterop.swift b/Sources/System/Internals/CInterop.swift
+index 13abc75..2ad551a 100644
+--- a/Sources/System/Internals/CInterop.swift
++++ b/Sources/System/Internals/CInterop.swift
+@@ -25,6 +25,9 @@ import Glibc
+ #elseif canImport(Musl)
+ @_implementationOnly import CSystem
+ import Musl
++#elseif canImport(Android)
++@_implementationOnly import CSystem
++import Android
+ #else
+ #error("Unsupported Platform")
+ #endif
+diff --git a/Sources/System/Internals/Constants.swift b/Sources/System/Internals/Constants.swift
+index 53e215f..27039de 100644
+--- a/Sources/System/Internals/Constants.swift
++++ b/Sources/System/Internals/Constants.swift
+@@ -18,6 +18,8 @@ import CSystem
+ import ucrt
+ #elseif canImport(Glibc)
+ import Glibc
++#elseif canImport(Android)
++import Android
+ #elseif canImport(Musl)
+ import CSystem
+ import Musl
+diff --git a/Sources/System/Internals/Exports.swift b/Sources/System/Internals/Exports.swift
+index 5b08725..899be25 100644
+--- a/Sources/System/Internals/Exports.swift
++++ b/Sources/System/Internals/Exports.swift
+@@ -23,6 +23,9 @@ import Glibc
+ #elseif canImport(Musl)
+ @_implementationOnly import CSystem
+ import Musl
++#elseif canImport(Android)
++@_implementationOnly import CSystem
++import Android
+ #else
+ #error("Unsupported Platform")
+ #endif
+@@ -58,6 +61,11 @@ internal var system_errno: CInt {
+   get { Musl.errno }
+   set { Musl.errno = newValue }
+ }
++#elseif canImport(Android)
++internal var system_errno: CInt {
++  get { Android.errno }
++  set { Android.errno = newValue }
++}
+ #endif
+ 
+ // MARK: C stdlib decls
+diff --git a/Sources/System/Internals/Syscalls.swift b/Sources/System/Internals/Syscalls.swift
+index 555f63b..f0db35f 100644
+--- a/Sources/System/Internals/Syscalls.swift
++++ b/Sources/System/Internals/Syscalls.swift
+@@ -15,6 +15,8 @@ import Glibc
+ import Musl
+ #elseif os(Windows)
+ import ucrt
++#elseif canImport(Android)
++import Android
+ #else
+ #error("Unsupported Platform")
+ #endif
