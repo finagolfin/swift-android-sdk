@@ -1,0 +1,18 @@
+diff --git a/Sources/NIOSSH/Keys And Signatures/NIOSSHCertifiedPublicKey.swift b/Sources/NIOSSH/Keys And Signatures/NIOSSHCertifiedPublicKey.swift
+index 0ca6158..7764459 100644
+--- a/Sources/NIOSSH/Keys And Signatures/NIOSSHCertifiedPublicKey.swift	
++++ b/Sources/NIOSSH/Keys And Signatures/NIOSSHCertifiedPublicKey.swift	
+@@ -17,9 +17,11 @@ import Dispatch
+ import NIOCore
+ #if canImport(Darwin)
+ import Darwin
+-#else
++#elseif canImport(Glibc)
+ import Glibc
+-#endif // canImport(Darwin)
++#elseif canImport(Android)
++import Android
++#endif
+ 
+ /// A ``NIOSSHCertifiedPublicKey`` is an SSH public key combined with an SSH certificate.
+ ///
