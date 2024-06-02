@@ -14,7 +14,7 @@ I plan to distribute an Android SDK bundle for NDK 26 in the coming month.
 
 If you cannot build against NDK 26 because of the newly added nullability
 annotations, you can download a 5.10 SDK built against 25c from a recent run of
-the CI, eg `sdk-release-aarch64-ndk25c` under `Artifacts`.
+the CI, eg `sdk-release-25c-aarch64` under `Artifacts`.
 
 ## Cross-compiling and testing Swift packages with the Android SDK
 
