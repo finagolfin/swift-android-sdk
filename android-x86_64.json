@@ -1,7 +1,7 @@
 {
     "version": 1,
     "target": "x86_64-unknown-linux-android24",
-    "toolchain-bin-dir": "/home/finagolfin/swift-5.10-RELEASE-ubuntu22.04/usr/bin",
+    "toolchain-bin-dir": "/home/finagolfin/swift-5.10.1-RELEASE-ubuntu22.04/usr/bin",
     "sdk": "/home/finagolfin/android-ndk-r26d/toolchains/llvm/prebuilt/linux-x86_64/sysroot",
     "extra-cc-flags": [
         "-fPIC"
