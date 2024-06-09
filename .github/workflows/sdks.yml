@@ -113,9 +113,12 @@ jobs:
             git apply swift-android-stdlib-except-trunk.patch
             STUPID_FILE_RENAMING=Tool
           else
+            git apply sourcekit-lsp-setpriority.patch
             sed -i "s%r26%ndk/26%" swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
             if [ ${{ matrix.version }} = 'devel' ]; then
               git apply -C1 libdispatch-alloc.patch readlink-devel.patch
+            elif [ ${{ matrix.arch }} = 'armv7' ]; then
+              git apply -R swift-android-armv7-trunk-revert-mutex.patch
             fi
             STUPID_FILE_RENAMING=Command
           fi
