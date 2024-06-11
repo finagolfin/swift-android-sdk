@@ -181,19 +181,20 @@ index f00ae18e..fae5986f 100644
  #elseif os(Windows)
  import let WinSDK.RelationProcessorCore
 diff --git a/Sources/NIOFileSystem/FileInfo.swift b/Sources/NIOFileSystem/FileInfo.swift
-index 7f174bf6..cc3ddb5d 100644
+index 3df14db1..9c33fcc3 100644
 --- a/Sources/NIOFileSystem/FileInfo.swift
 +++ b/Sources/NIOFileSystem/FileInfo.swift
-@@ -21,6 +21,8 @@ import Darwin
- import Glibc
+@@ -23,6 +23,9 @@ import CNIOLinux
  #elseif canImport(Musl)
  import Musl
+ import CNIOLinux
 +#elseif canImport(Android)
 +import Android
++import CNIOLinux
  #endif
  
  /// Information about a file system object.
-@@ -83,7 +85,7 @@ public struct FileInfo: Hashable, Sendable {
+@@ -85,7 +88,7 @@ public struct FileInfo: Hashable, Sendable {
          self.lastAccessTime = Timespec(platformSpecificStatus.st_atimespec)
          self.lastDataModificationTime = Timespec(platformSpecificStatus.st_mtimespec)
          self.lastStatusChangeTime = Timespec(platformSpecificStatus.st_ctimespec)
@@ -202,7 +203,16 @@ index 7f174bf6..cc3ddb5d 100644
          self.lastAccessTime = Timespec(platformSpecificStatus.st_atim)
          self.lastDataModificationTime = Timespec(platformSpecificStatus.st_mtim)
          self.lastStatusChangeTime = Timespec(platformSpecificStatus.st_ctim)
-@@ -193,7 +195,7 @@ private struct Stat: Hashable {
+@@ -150,7 +153,7 @@ extension FileInfo {
+         #if canImport(Darwin)
+         private static let utimeOmit = Int(UTIME_OMIT)
+         private static let utimeNow = Int(UTIME_NOW)
+-        #elseif canImport(Glibc) || canImport(Musl)
++        #elseif canImport(Glibc) || canImport(Musl) || canImport(Android)
+         private static let utimeOmit = Int(CNIOLinux_UTIME_OMIT)
+         private static let utimeNow = Int(CNIOLinux_UTIME_NOW)
+         #endif
+@@ -218,7 +221,7 @@ private struct Stat: Hashable {
          hasher.combine(FileInfo.Timespec(stat.st_birthtimespec))
          hasher.combine(stat.st_flags)
          hasher.combine(stat.st_gen)
@@ -211,7 +221,7 @@ index 7f174bf6..cc3ddb5d 100644
          hasher.combine(FileInfo.Timespec(stat.st_atim))
          hasher.combine(FileInfo.Timespec(stat.st_mtim))
          hasher.combine(FileInfo.Timespec(stat.st_ctim))
-@@ -234,7 +236,7 @@ private struct Stat: Hashable {
+@@ -259,7 +262,7 @@ private struct Stat: Hashable {
                  == FileInfo.Timespec(rStat.st_birthtimespec)
          isEqual = isEqual && lStat.st_flags == rStat.st_flags
          isEqual = isEqual && lStat.st_gen == rStat.st_gen
@@ -221,10 +231,10 @@ index 7f174bf6..cc3ddb5d 100644
          isEqual = isEqual && FileInfo.Timespec(lStat.st_mtim) == FileInfo.Timespec(rStat.st_mtim)
          isEqual = isEqual && FileInfo.Timespec(lStat.st_ctim) == FileInfo.Timespec(rStat.st_ctim)
 diff --git a/Sources/NIOFileSystem/FileSystem.swift b/Sources/NIOFileSystem/FileSystem.swift
-index 20c431a8..c1da7ce7 100644
+index e02232df..58b1d6f8 100644
 --- a/Sources/NIOFileSystem/FileSystem.swift
 +++ b/Sources/NIOFileSystem/FileSystem.swift
-@@ -25,6 +25,8 @@ import Darwin
+@@ -26,6 +26,8 @@ import Darwin
  import Glibc
  #elseif canImport(Musl)
  import Musl
@@ -233,7 +243,7 @@ index 20c431a8..c1da7ce7 100644
  #endif
  
  /// A file system which interacts with the local system. The file system uses a thread pool to
-@@ -1086,7 +1088,7 @@ extension FileSystem {
+@@ -1088,7 +1090,7 @@ extension FileSystem {
                          location: .here()
                      )
                  }
@@ -400,7 +410,7 @@ index 264e4c92..0b2ec09f 100644
  
  // MARK: C stdlib decls
 diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift
-index 06b26891..055fdcdd 100644
+index 308c239c..fe313225 100644
 --- a/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift	
 +++ b/Sources/NIOFileSystem/Internal/System Calls/Syscall.swift	
 @@ -24,6 +24,9 @@ import CNIOLinux
@@ -441,7 +451,7 @@ index 06b26891..055fdcdd 100644
      public static func sendfile(
          to output: FileDescriptor,
 diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift
-index 120500c2..9782bed1 100644
+index 284d59d7..3c319b8a 100644
 --- a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift	
 +++ b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift	
 @@ -24,6 +24,9 @@ import CNIOLinux
@@ -518,19 +528,19 @@ index 120500c2..9782bed1 100644
  internal func system_sendfile(
      _ outFD: CInt,
 diff --git a/Sources/NIOFileSystem/Internal/SystemFileHandle.swift b/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
-index 54496673..d40b4559 100644
+index 34c8f623..7bd64127 100644
 --- a/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
 +++ b/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
-@@ -24,6 +24,8 @@ import Darwin
- import Glibc
+@@ -26,6 +26,8 @@ import CNIOLinux
  #elseif canImport(Musl)
  import Musl
+ import CNIOLinux
 +#elseif canImport(Android)
 +import Android
  #endif
  
  /// An implementation of ``FileHandleProtocol`` which is backed by system calls and a file
-@@ -53,7 +55,7 @@ public final class SystemFileHandle {
+@@ -55,7 +57,7 @@ public final class SystemFileHandle {
          enum Mode {
              /// Rename the created file to become the desired file.
              case rename
@@ -539,7 +549,7 @@ index 54496673..d40b4559 100644
              /// Link the unnamed file to the desired file using 'linkat(2)'.
              case link
              #endif
-@@ -287,7 +289,7 @@ extension SystemFileHandle: FileHandleProtocol {
+@@ -289,7 +291,7 @@ extension SystemFileHandle: FileHandleProtocol {
                  }
  
                  switch materialization.mode {
@@ -548,7 +558,7 @@ index 54496673..d40b4559 100644
                  case .link:
                      let result = self.sendableView._materializeLink(
                          descriptor: descriptor,
-@@ -677,7 +679,7 @@ extension SystemFileHandle.SendableView {
+@@ -691,7 +693,7 @@ extension SystemFileHandle.SendableView {
          }
      }
  
@@ -557,7 +567,7 @@ index 54496673..d40b4559 100644
      fileprivate func _materializeLink(
          descriptor: FileDescriptor,
          from createdPath: FilePath,
-@@ -788,7 +790,7 @@ extension SystemFileHandle.SendableView {
+@@ -802,7 +804,7 @@ extension SystemFileHandle.SendableView {
  
          let result: Result<Void, FileSystemError>
          switch materialization.mode {
@@ -566,7 +576,7 @@ index 54496673..d40b4559 100644
          case .link:
              if materialize {
                  result = self._materializeLink(
-@@ -813,7 +815,7 @@ extension SystemFileHandle.SendableView {
+@@ -827,7 +829,7 @@ extension SystemFileHandle.SendableView {
                      to: desiredPath,
                      options: materialization.exclusive ? [.exclusive] : []
                  )
@@ -575,7 +585,7 @@ index 54496673..d40b4559 100644
                  // The created and desired paths are absolute, so the relative descriptors are
                  // ignored. However, they must still be provided to 'rename' in order to pass
                  // flags.
-@@ -842,7 +844,7 @@ extension SystemFileHandle.SendableView {
+@@ -856,7 +858,7 @@ extension SystemFileHandle.SendableView {
                          // If 'renameat2' failed on Linux with EINVAL then in all likelihood the
                          // 'RENAME_NOREPLACE' option isn't supported. As we're doing an exclusive
                          // create, check the desired path doesn't exist then do a regular rename.
@@ -584,7 +594,7 @@ index 54496673..d40b4559 100644
                          switch Syscall.stat(path: desiredPath) {
                          case .failure(.noSuchFileOrDirectory):
                              // File doesn't exist, do a 'regular' rename.
-@@ -1354,7 +1356,7 @@ extension SystemFileHandle {
+@@ -1446,7 +1448,7 @@ extension SystemFileHandle {
              }
  
              func makePath() -> FilePath {
@@ -593,7 +603,7 @@ index 54496673..d40b4559 100644
                  if useTemporaryFileIfPossible {
                      return currentWorkingDirectory.appending(path.components.dropLast())
                  }
-@@ -1367,7 +1369,7 @@ extension SystemFileHandle {
+@@ -1459,7 +1461,7 @@ extension SystemFileHandle {
              desiredPath = currentWorkingDirectory.appending(path.components)
          } else {
              func makePath() -> FilePath {
@@ -602,7 +612,7 @@ index 54496673..d40b4559 100644
                  if useTemporaryFileIfPossible {
                      return path.removingLastComponent()
                  }
-@@ -1383,7 +1385,7 @@ extension SystemFileHandle {
+@@ -1475,7 +1477,7 @@ extension SystemFileHandle {
          let materializationMode: Materialization.Mode
          let options: FileDescriptor.OpenOptions
  
@@ -611,7 +621,7 @@ index 54496673..d40b4559 100644
          if useTemporaryFileIfPossible {
              options = [.temporaryFile]
              materializationMode = .link
-@@ -1420,7 +1422,7 @@ extension SystemFileHandle {
+@@ -1512,7 +1514,7 @@ extension SystemFileHandle {
  
              return .success(handle)
          } catch {
@@ -621,10 +631,10 @@ index 54496673..d40b4559 100644
              // rename instead.
              if useTemporaryFileIfPossible, let errno = error as? Errno, errno == .notSupported {
 diff --git a/Sources/NIOPosix/Linux.swift b/Sources/NIOPosix/Linux.swift
-index d5f25f76..80002c42 100644
+index d5f25f76..74d883ee 100644
 --- a/Sources/NIOPosix/Linux.swift
 +++ b/Sources/NIOPosix/Linux.swift
-@@ -75,20 +75,14 @@ internal enum Epoll {
+@@ -75,20 +75,17 @@ internal enum Epoll {
      internal static let EPOLL_CTL_MOD: CInt = numericCast(CNIOLinux.EPOLL_CTL_MOD)
      internal static let EPOLL_CTL_DEL: CInt = numericCast(CNIOLinux.EPOLL_CTL_DEL)
  
@@ -642,13 +652,15 @@ index d5f25f76..80002c42 100644
      internal static let EPOLLERR: CUnsignedInt = numericCast(CNIOLinux.EPOLLERR)
      internal static let EPOLLRDHUP: CUnsignedInt = numericCast(CNIOLinux.EPOLLRDHUP)
      internal static let EPOLLHUP: CUnsignedInt = numericCast(CNIOLinux.EPOLLHUP)
--    internal static let EPOLLET: CUnsignedInt = numericCast(CNIOLinux.EPOLLET)
-+    //internal static let EPOLLET: CUnsignedInt = numericCast(CNIOLinux.EPOLLET)
++    #if canImport(Android)
 +    internal static let EPOLLET: CUnsignedInt = 2147483648
++    #else
+     internal static let EPOLLET: CUnsignedInt = numericCast(CNIOLinux.EPOLLET)
++    #endif
      #else
      internal static let EPOLLIN: CUnsignedInt = numericCast(CNIOLinux.EPOLLIN.rawValue)
      internal static let EPOLLOUT: CUnsignedInt = numericCast(CNIOLinux.EPOLLOUT.rawValue)
-@@ -126,8 +120,8 @@ internal enum Epoll {
+@@ -126,8 +123,8 @@ internal enum Epoll {
  
  internal enum Linux {
  #if os(Android)
@@ -778,7 +790,7 @@ index ae11f3eb..e51d369f 100644
  #error("The Concurrency helpers test module was unable to identify your C library.")
  #endif
 diff --git a/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift b/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift
-index 7356a9f1..4e769b81 100644
+index ffcd85af..17e21803 100644
 --- a/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift
 +++ b/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift
 @@ -1020,7 +1020,7 @@ final class FileHandleTests: XCTestCase {
@@ -831,7 +843,7 @@ index 59a7e656..43164d4f 100644
          assertDifferentHashValueAfterMutation { $0.platformSpecificStatus!.st_mtim.tv_sec += 1 }
          assertDifferentHashValueAfterMutation { $0.platformSpecificStatus!.st_ctim.tv_sec += 1 }
 diff --git a/Tests/NIOFileSystemTests/Internal/SyscallTests.swift b/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
-index 2c22d87a..7b3f5db7 100644
+index abd7209c..2a93096d 100644
 --- a/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
 +++ b/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
 @@ -132,7 +132,7 @@ final class SyscallTests: XCTestCase {
