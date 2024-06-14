@@ -115,7 +115,7 @@ jobs:
           else
             sed -i "s%r26%ndk/26%" swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
             if [ ${{ matrix.version }} = 'devel' ]; then
-              git apply -C1 libdispatch-alloc.patch readlink-devel.patch sourcekit-lsp-setpriority.patch
+              git apply -C1 readlink-devel.patch sourcekit-lsp-setpriority.patch
             fi
             STUPID_FILE_RENAMING=Command
           fi
