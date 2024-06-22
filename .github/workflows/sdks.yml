@@ -115,7 +115,7 @@ jobs:
           else
             sed -i "s%r26%ndk/26%" swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
             if [ ${{ matrix.version }} = 'devel' ]; then
-              git apply -C1 readlink-devel.patch sourcekit-lsp-setpriority.patch
+              git apply -C1 readlink-devel.patch
             fi
             STUPID_FILE_RENAMING=Command
           fi
@@ -157,6 +157,11 @@ jobs:
 
           if [ ! -d ${{ steps.version.outputs.tag }}-ubuntu22.04 ]; then
             tar xf ~/${{ steps.version.outputs.tag }}-ubuntu22.04.tar.gz
+          fi
+          if [ ${{ matrix.version }} = 'trunk' ]; then
+            sed -i "s%canImport(Glibc%canImport(Android%" ${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift-package
+            sed -i "s%import Glibc%import Android%" ${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift-package
+            sed -i "s%TSCBasic, would be nice%TSCBasic, would be %" ${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift-package
           fi
           ./${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift --version
 
