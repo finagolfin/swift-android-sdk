@@ -115,6 +115,7 @@ jobs:
           else
             sed -i "s%r26%ndk/26%" swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
             if [ ${{ matrix.version }} = 'devel' ]; then
+              sed -i "s%canImport(Android%os(Android%" sourcekit-lsp/Sources/SKSupport/Process+Run.swift
               git apply -C1 readlink-devel.patch
             fi
             STUPID_FILE_RENAMING=Command
