@@ -102,10 +102,10 @@ index e9967f64..0630fe53 100644
  // This is a lazily initialised global variable that when read for the first time, will ignore SIGPIPE.
  private let globallyIgnoredSIGPIPE: Bool = {
    /* no F_SETNOSIGPIPE on Linux :( */
-diff --git a/sourcekit-lsp/Sources/SKSupport/dlopen.swift b/sourcekit-lsp/Sources/SKSupport/dlopen.swift
+diff --git a/sourcekit-lsp/Sources/SourceKitD/dlopen.swift b/sourcekit-lsp/Sources/SourceKitD/dlopen.swift
 index 4adf5b44..07573da1 100644
---- a/sourcekit-lsp/Sources/SKSupport/dlopen.swift
-+++ b/sourcekit-lsp/Sources/SKSupport/dlopen.swift
+--- a/sourcekit-lsp/Sources/SourceKitD/dlopen.swift
++++ b/sourcekit-lsp/Sources/SourceKitD/dlopen.swift
 @@ -19,6 +19,8 @@ import Darwin
  import Glibc
  #elseif canImport(Musl)
@@ -114,7 +114,7 @@ index 4adf5b44..07573da1 100644
 +import Android
  #endif
  
- public final class DLHandle {
+ public final class DLHandle: Sendable {
 diff --git a/sourcekit-lsp/Sources/SourceKitD/SKDRequestArray.swift b/sourcekit-lsp/Sources/SourceKitD/SKDRequestArray.swift
 index a68c4ae3..f8aed9d7 100644
 --- a/sourcekit-lsp/Sources/SourceKitD/SKDRequestArray.swift
@@ -315,29 +315,16 @@ index c32d6a5..b53d26c 100644
      public init(
          cat: String,
          name: String,
-diff --git a/swiftpm/Sources/Build/TestObservation.swift b/swiftpm/Sources/Build/TestObservation.swift
-index 98a8f5f8e..a86ff4675 100644
---- a/swiftpm/Sources/Build/TestObservation.swift
-+++ b/swiftpm/Sources/Build/TestObservation.swift
-@@ -132,6 +132,8 @@ public func generateTestObservationCode(buildParameters: BuildParameters) -> Str
-         @_exported import WinSDK
-         #elseif os(WASI)
-         @_exported import WASILibc
-+        #elseif canImport(Android)
-+        @_exported import Android
-         #else
-         @_exported import Darwin.C
-         #endif
-diff --git a/swiftpm/Sources/CoreCommands/SwiftCommandState.swift b/swiftpm/Sources/CoreCommands/SwiftCommandState.swift
-index 38c190ec3..27d0762cf 100644
---- a/swiftpm/Sources/CoreCommands/SwiftCommandState.swift
-+++ b/swiftpm/Sources/CoreCommands/SwiftCommandState.swift
-@@ -39,6 +39,8 @@ import Darwin
- import Glibc
- #elseif canImport(Musl)
- import Musl
+diff --git a/swiftpm/Sources/Basics/Environment/Environment.swift b/swiftpm/Sources/Basics/Environment/Environment.swift
+index 7d065982b..2d076362e 100644
+--- a/swiftpm/Sources/Basics/Environment/Environment.swift
++++ b/swiftpm/Sources/Basics/Environment/Environment.swift
+@@ -19,6 +19,8 @@ import Musl
+ #elseif os(Windows)
+ import CRT
+ import WinSDK
 +#elseif canImport(Android)
 +import Android
+ #else
+ import Darwin.C
  #endif
- 
- import func TSCBasic.exec
