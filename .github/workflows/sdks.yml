@@ -159,11 +159,6 @@ jobs:
           if [ ! -d ${{ steps.version.outputs.tag }}-ubuntu22.04 ]; then
             tar xf ~/${{ steps.version.outputs.tag }}-ubuntu22.04.tar.gz
           fi
-          if [ ${{ matrix.version }} = 'trunk' ]; then
-            sed -i "s%canImport(Glibc%canImport(Android%" ${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift-package
-            sed -i "s%import Glibc%import Android%" ${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift-package
-            sed -i "s%TSCBasic, would be nice%TSCBasic, would be %" ${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift-package
-          fi
           ./${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift --version
 
           tar xf ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-sdk.tar.xz
