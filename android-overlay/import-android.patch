@@ -102,19 +102,6 @@ index e9967f64..0630fe53 100644
  // This is a lazily initialised global variable that when read for the first time, will ignore SIGPIPE.
  private let globallyIgnoredSIGPIPE: Bool = {
    /* no F_SETNOSIGPIPE on Linux :( */
-diff --git a/sourcekit-lsp/Sources/SourceKitD/dlopen.swift b/sourcekit-lsp/Sources/SourceKitD/dlopen.swift
-index 4adf5b44..07573da1 100644
---- a/sourcekit-lsp/Sources/SourceKitD/dlopen.swift
-+++ b/sourcekit-lsp/Sources/SourceKitD/dlopen.swift
-@@ -19,6 +19,8 @@ import Darwin
- import Glibc
- #elseif canImport(Musl)
- import Musl
-+#elseif canImport(Android)
-+import Android
- #endif
- 
- public final class DLHandle: Sendable {
 diff --git a/sourcekit-lsp/Sources/SourceKitD/SKDRequestArray.swift b/sourcekit-lsp/Sources/SourceKitD/SKDRequestArray.swift
 index a68c4ae3..f8aed9d7 100644
 --- a/sourcekit-lsp/Sources/SourceKitD/SKDRequestArray.swift
