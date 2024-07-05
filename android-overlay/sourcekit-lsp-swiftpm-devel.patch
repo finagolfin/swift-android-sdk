@@ -1,0 +1,39 @@
+diff --git a/sourcekit-lsp/Sources/SKSupport/dlopen.swift b/sourcekit-lsp/Sources/SKSupport/dlopen.swift
+index 4adf5b44..07573da1 100644
+--- a/sourcekit-lsp/Sources/SKSupport/dlopen.swift
++++ b/sourcekit-lsp/Sources/SKSupport/dlopen.swift
+@@ -19,6 +19,8 @@ import Darwin
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ public final class DLHandle {
+diff --git a/swiftpm/Sources/Build/TestObservation.swift b/swiftpm/Sources/Build/TestObservation.swift
+index 98a8f5f8e..a86ff4675 100644
+--- a/swiftpm/Sources/Build/TestObservation.swift
++++ b/swiftpm/Sources/Build/TestObservation.swift
+@@ -132,6 +132,8 @@ public func generateTestObservationCode(buildParameters: BuildParameters) -> Str
+         @_exported import WinSDK
+         #elseif os(WASI)
+         @_exported import WASILibc
++        #elseif canImport(Android)
++        @_exported import Android
+         #else
+         @_exported import Darwin.C
+         #endif
+diff --git a/swiftpm/Sources/CoreCommands/SwiftCommandState.swift b/swiftpm/Sources/CoreCommands/SwiftCommandState.swift
+index 38c190ec3..27d0762cf 100644
+--- a/swiftpm/Sources/CoreCommands/SwiftCommandState.swift
++++ b/swiftpm/Sources/CoreCommands/SwiftCommandState.swift
+@@ -39,6 +39,8 @@ import Darwin
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ import func TSCBasic.exec

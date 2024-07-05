@@ -114,10 +114,6 @@ jobs:
             STUPID_FILE_RENAMING=Tool
           else
             sed -i "s%r26%ndk/26%" swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
-            if [ ${{ matrix.version }} = 'devel' ]; then
-              sed -i "s%canImport(Android%os(Android%" sourcekit-lsp/Sources/SKSupport/Process+Run.swift
-              git apply -C1 readlink-devel.patch
-            fi
             STUPID_FILE_RENAMING=Command
           fi
           if [ ${{ matrix.version }} = 'release-25c' ]; then
@@ -131,8 +127,13 @@ jobs:
             git apply -C0 swift-android-foundation-ndk26.patch
             if [ ${{ matrix.version }} = 'release-26d' ]; then
               git apply swift-android-stdlib-ndk26.patch
-            elif [ ${{ matrix.version }} = 'trunk' ]; then
+            else
               git apply android-overlay/foundation-fixes.patch android-overlay/import-android.patch android-overlay/swift-argument-parser.patch android-overlay/swift-system-tag.patch android-overlay/yams.patch
+              if [ ${{ matrix.version }} = 'devel' ]; then
+                git apply android-overlay/sourcekit-lsp-swiftpm-devel.patch
+              else
+                git apply android-overlay/sourcekit-lsp-trunk.patch
+              fi
             fi
           fi
           sed -i "s%/data/data/com.termux/files%$SDK%" $SDK/usr/lib/pkgconfig/sqlite3.pc
@@ -159,6 +160,11 @@ jobs:
           if [ ! -d ${{ steps.version.outputs.tag }}-ubuntu22.04 ]; then
             tar xf ~/${{ steps.version.outputs.tag }}-ubuntu22.04.tar.gz
           fi
+          if [ ${{ matrix.version }} = 'devel' ]; then
+            sed -i "s%canImport(Glibc%canImport(Android%" ${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift-package
+            sed -i "s%import Glibc%import Android%" ${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift-package
+            sed -i "s%TSCBasic, would be nice%TSCBasic, would be %" ${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift-package
+          fi
           ./${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift --version
 
           tar xf ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-sdk.tar.xz
@@ -169,7 +175,7 @@ jobs:
           path: swift-argument-parser
       - name: Build Swift Argument Parser package
         run: |
-          if [ ${{ matrix.version }} = 'trunk' ]; then
+          if [[ ${{ matrix.version }} != 'release'* ]]; then
             git apply sdk-config/android-overlay/swift-argument-parser.patch
           fi
           cd swift-argument-parser
@@ -199,7 +205,7 @@ jobs:
           git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem-both-ndks.patch
           if [ ${{ matrix.version }} = 'release-25c' ]; then
             git apply -R ../sdk-config/swift-nio-ndk26.patch
-          elif [ ${{ matrix.version }} = 'trunk' ]; then
+          elif [[ ${{ matrix.version }} != 'release-26d' ]]; then
             ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift package update
             cd .build/checkouts/swift-system/
             git apply ../../../../sdk-config/android-overlay/swift-system-checkout.patch
@@ -224,7 +230,7 @@ jobs:
       - name: Build Swift System package
         run: |
           cd swift-system
-          if [ ${{ matrix.version }} = 'trunk' ]; then
+          if [[ ${{ matrix.version }} != 'release'* ]]; then
             git apply ../sdk-config/android-overlay/swift-system.patch
           fi
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
@@ -251,7 +257,7 @@ jobs:
       - name: Build Swift NIO SSH package
         run: |
           cd sns
-          if [ ${{ matrix.version }} = 'trunk' ]; then
+          if [[ ${{ matrix.version }} != 'release'* ]]; then
             git apply ../sdk-config/android-overlay/swift-nio-ssh.patch
           fi
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
@@ -266,7 +272,7 @@ jobs:
           cd snl
           if [ ${{ matrix.version }} = 'release-25c' ]; then
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" Sources/CNIOBoringSSL/include/CNIOBoringSSL_asn1.h
-          elif [ ${{ matrix.version }} = 'trunk' ]; then
+          elif [ ${{ matrix.version }} != 'release-26d' ]; then
             git apply ../sdk-config/android-overlay/swift-nio-ssl.patch
           fi
           SWIFTCI_USE_LOCAL_DEPS=1 ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
@@ -277,7 +283,7 @@ jobs:
           path: yams
       - name: Build Yams package
         run: |
-          if [ ${{ matrix.version }} = 'trunk' ]; then
+          if [[ ${{ matrix.version }} != 'release'* ]]; then
             git apply sdk-config/android-overlay/yams.patch
           fi
           cd yams
@@ -292,7 +298,7 @@ jobs:
         if: ${{ matrix.arch != 'armv7' }}
         run: |
           cd snh
-          if [ ${{ matrix.version }} = 'trunk' ]; then
+          if [[ ${{ matrix.version }} != 'release'* ]]; then
             git apply ../sdk-config/android-overlay/swift-nio-http2.patch
           fi
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
