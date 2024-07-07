@@ -130,7 +130,7 @@ jobs:
             else
               git apply android-overlay/foundation-fixes.patch android-overlay/import-android.patch android-overlay/swift-argument-parser.patch android-overlay/swift-system-tag.patch android-overlay/yams.patch
               if [ ${{ matrix.version }} = 'devel' ]; then
-                git apply android-overlay/sourcekit-lsp-swiftpm-devel.patch
+                git apply android-overlay/sourcekit-lsp-swiftpm-devel.patch android-overlay/import-android-devel.patch
               else
                 git apply android-overlay/sourcekit-lsp-trunk.patch
               fi
