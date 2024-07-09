@@ -13,9 +13,9 @@ index cb84a59..d426924 100644
  #elseif os(Windows)
  import CSystem
  import ucrt
-+#elseif canImport(Android)
++#elseif canImport(Bionic)
 +@_implementationOnly import CSystem
-+import Android
++import Bionic
  #else
  #error("Unsupported Platform")
  #endif

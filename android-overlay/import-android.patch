@@ -6,8 +6,8 @@ index 4d6577d0..0eef6e57 100644
  import Glibc
  #elseif canImport(Musl)
  import Musl
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #else
  #error("Missing libc or equivalent")
  #endif
@@ -32,8 +32,8 @@ index fcad533d..8d924dbd 100644
  import Glibc
  #elseif canImport(Musl)
  import Musl
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #endif
  
  /// Represents a time point value with nanosecond precision.
@@ -58,8 +58,8 @@ index 07eced80..a12a594a 100644
  import Glibc
  #elseif canImport(Musl)
  import Musl
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #endif
  
  import class TSCBasic.DiagnosticsEngine
@@ -76,16 +76,3 @@ index 8126b659..e1f2f56f 100644
  #endif
  
  import Dispatch
-diff --git a/swiftpm/Sources/Basics/Environment/Environment.swift b/swiftpm/Sources/Basics/Environment/Environment.swift
-index 7d065982b..2d076362e 100644
---- a/swiftpm/Sources/Basics/Environment/Environment.swift
-+++ b/swiftpm/Sources/Basics/Environment/Environment.swift
-@@ -19,6 +19,8 @@ import Musl
- #elseif os(Windows)
- import CRT
- import WinSDK
-+#elseif canImport(Android)
-+import Android
- #else
- import Darwin.C
- #endif

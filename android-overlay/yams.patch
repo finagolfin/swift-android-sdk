@@ -6,10 +6,10 @@ index a749c52..b74ef8e 100644
  #elseif os(Windows)
  import ucrt
  private let cpow: (_: Double, _: Double) -> Double = ucrt.pow
-+#elseif canImport(Android)
++#elseif canImport(Bionic)
 +import CoreFoundation
-+import Android
-+private let cpow: (_: Double, _: Double) -> Double = Android.pow
++import Bionic
++private let cpow: (_: Double, _: Double) -> Double = Bionic.pow
  #else
  import CoreFoundation
  import Glibc
