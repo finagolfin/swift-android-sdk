@@ -6,9 +6,9 @@ index 13abc75..2ad551a 100644
  #elseif canImport(Musl)
  @_implementationOnly import CSystem
  import Musl
-+#elseif canImport(Android)
++#elseif canImport(Bionic)
 +@_implementationOnly import CSystem
-+import Android
++import Bionic
  #else
  #error("Unsupported Platform")
  #endif

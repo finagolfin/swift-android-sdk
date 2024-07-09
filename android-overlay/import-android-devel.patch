@@ -6,8 +6,8 @@ index 7005561..ebb2e1d 100644
  import Glibc
  #elseif os(Windows)
  import ucrt
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #else
  import Darwin.POSIX
  #endif
@@ -19,8 +19,8 @@ index db8a9b72..78652cc7 100644
  import Glibc
  #elseif canImport(Musl)
  import Musl
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #else
  #error("Missing libc or equivalent")
  #endif
@@ -32,8 +32,8 @@ index 1d89c534..a59e895a 100644
  import Glibc
  #elseif canImport(Musl)
  import Musl
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #else
  #error("Missing libc or equivalent")
  #endif
@@ -45,8 +45,8 @@ index 85c8fe24..9566f66b 100644
  import Glibc
  #elseif canImport(Musl)
  import Musl
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #else
  #error("Missing libc or equivalent")
  #endif
@@ -55,7 +55,7 @@ index 85c8fe24..9566f66b 100644
          info.pointee.mod_time.seconds = UInt64(s.st_mtime)
          info.pointee.mod_time.nanoseconds = 0
 -        #elseif canImport(Glibc) || canImport(Musl)
-+        #elseif canImport(Glibc) || canImport(Musl) || canImport(Android)
++        #elseif canImport(Glibc) || canImport(Musl) || canImport(Bionic)
          info.pointee.mod_time.seconds = UInt64(s.st_mtim.tv_sec)
          info.pointee.mod_time.nanoseconds = UInt64(s.st_mtim.tv_nsec)
          #else
@@ -67,8 +67,8 @@ index 2caa5947..b2af480f 100644
  import Glibc
  #elseif canImport(Musl)
  import Musl
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #else
  #error("Missing libc or equivalent")
  #endif
@@ -80,8 +80,8 @@ index 4e134288..3f5c4fe4 100644
  import Glibc
  #elseif canImport(Musl)
  import Musl
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #else
  #error("Missing libc or equivalent")
  #endif
@@ -110,8 +110,8 @@ index a68c4ae3..f8aed9d7 100644
  import Musl
  #elseif canImport(CRT)
  import CRT
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #endif
  
  extension SourceKitD {
@@ -123,8 +123,8 @@ index 99e02502..7ff965bc 100644
  import Musl
  #elseif canImport(CRT)
  import CRT
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #endif
  
  /// Values that can be stored in a `SKDRequestDictionary`.
@@ -136,8 +136,8 @@ index 6f7ec1ba..a48af403 100644
  import Musl
  #elseif canImport(CRT)
  import CRT
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #endif
  
  public final class SKDResponse: Sendable {
@@ -149,8 +149,8 @@ index c2d4da58..79c32ee5 100644
  import Musl
  #elseif canImport(CRT)
  import CRT
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #endif
  
  public final class SKDResponseArray: Sendable {
@@ -162,11 +162,24 @@ index efb5d761..e8b8d250 100644
  import Musl
  #elseif canImport(CRT)
  import CRT
++#elseif canImport(Bionic)
++import Bionic
+ #endif
+ 
+ public final class SKDResponseDictionary: Sendable {
+diff --git a/sourcekit-lsp/Sources/SKSupport/dlopen.swift b/sourcekit-lsp/Sources/SKSupport/dlopen.swift
+index 4adf5b44..07573da1 100644
+--- a/sourcekit-lsp/Sources/SKSupport/dlopen.swift
++++ b/sourcekit-lsp/Sources/SKSupport/dlopen.swift
+@@ -19,6 +19,8 @@ import Darwin
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
 +#elseif canImport(Android)
 +import Android
  #endif
  
- public final class SKDResponseDictionary: Sendable {
+ public final class DLHandle {
 diff --git a/swift-tools-support-core/Sources/TSCLibc/libc.swift b/swift-tools-support-core/Sources/TSCLibc/libc.swift
 index 8c5c898..5c29f97 100644
 --- a/swift-tools-support-core/Sources/TSCLibc/libc.swift
@@ -224,3 +237,42 @@ index c32d6a5..b53d26c 100644
      public init(
          cat: String,
          name: String,
+diff --git a/swiftpm/Sources/Basics/Environment/Environment.swift b/swiftpm/Sources/Basics/Environment/Environment.swift
+index 7d065982bdd..4fe22853e7c 100644
+--- a/swiftpm/Sources/Basics/Environment/Environment.swift
++++ b/swiftpm/Sources/Basics/Environment/Environment.swift
+@@ -19,6 +19,8 @@ import Musl
+ #elseif os(Windows)
+ import CRT
+ import WinSDK
++#elseif canImport(Bionic)
++import Bionic
+ #else
+ import Darwin.C
+ #endif
+diff --git a/swiftpm/Sources/Build/TestObservation.swift b/swiftpm/Sources/Build/TestObservation.swift
+index 98a8f5f8e1e..e707910e6f0 100644
+--- a/swiftpm/Sources/Build/TestObservation.swift
++++ b/swiftpm/Sources/Build/TestObservation.swift
+@@ -132,6 +132,8 @@ public func generateTestObservationCode(buildParameters: BuildParameters) -> Str
+         @_exported import WinSDK
+         #elseif os(WASI)
+         @_exported import WASILibc
++        #elseif canImport(Bionic)
++        @_exported import Bionic
+         #else
+         @_exported import Darwin.C
+         #endif
+diff --git a/swiftpm/Sources/CoreCommands/SwiftCommandState.swift b/swiftpm/Sources/CoreCommands/SwiftCommandState.swift
+index 4b5bb530025..8a58a060a1d 100644
+--- a/swiftpm/Sources/CoreCommands/SwiftCommandState.swift
++++ b/swiftpm/Sources/CoreCommands/SwiftCommandState.swift
+@@ -39,6 +39,8 @@ import Darwin
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Bionic)
++import Bionic
+ #endif
+ 
+ import func TSCBasic.exec
