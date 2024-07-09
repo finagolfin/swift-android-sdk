@@ -228,9 +228,6 @@ jobs:
       - name: Build Swift System package
         run: |
           cd swift-system
-          if [[ ${{ matrix.version }} != 'release'* ]]; then
-            git apply ../sdk-config/android-overlay/swift-system.patch
-          fi
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Collections package
         uses: actions/checkout@v4
