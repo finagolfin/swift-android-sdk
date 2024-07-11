@@ -278,9 +278,6 @@ jobs:
           path: yams
       - name: Build Yams package
         run: |
-          if [[ ${{ matrix.version }} != 'release'* ]]; then
-            git apply sdk-config/android-overlay/yams.patch
-          fi
           cd yams
           sed -i "s% fixturesDirectory + \"/SourceKitten#289% \"/data/local/tmp/pack%" Tests/YamsTests/PerformanceTests.swift
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android

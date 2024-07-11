@@ -167,6 +167,19 @@ index 4adf5b44..07573da1 100644
  #endif
  
  public final class DLHandle {
+diff --git a/swiftpm/Sources/Basics/Environment/Environment.swift b/swiftpm/Sources/Basics/Environment/Environment.swift
+index 7d065982bdd..4fe22853e7c 100644
+--- a/swiftpm/Sources/Basics/Environment/Environment.swift
++++ b/swiftpm/Sources/Basics/Environment/Environment.swift
+@@ -19,6 +19,8 @@ import Musl
+ #elseif os(Windows)
+ import CRT
+ import WinSDK
++#elseif canImport(Bionic)
++import Bionic
+ #else
+ import Darwin.C
+ #endif
 diff --git a/swiftpm/Sources/Build/TestObservation.swift b/swiftpm/Sources/Build/TestObservation.swift
 index 98a8f5f8e1e..e707910e6f0 100644
 --- a/swiftpm/Sources/Build/TestObservation.swift
