@@ -7,11 +7,11 @@ index 2cd6c11..699d5a1 100644
  #if canImport(Darwin)
  import Darwin.C
 -#elseif os(Linux) || os(FreeBSD) || os(Android)
-+#elseif os(Linux) || os(FreeBSD)
++#elseif canImport(Glibc)
  import Glibc
 -#else
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #endif
  
  import XCTest
