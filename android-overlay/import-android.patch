@@ -76,3 +76,16 @@ index 8126b659..e1f2f56f 100644
  #endif
  
  import Dispatch
+diff --git a/swiftpm/Sources/Basics/Environment/Environment.swift b/swiftpm/Sources/Basics/Environment/Environment.swift
+index 7d065982bdd..4fe22853e7c 100644
+--- a/swiftpm/Sources/Basics/Environment/Environment.swift
++++ b/swiftpm/Sources/Basics/Environment/Environment.swift
+@@ -19,6 +19,8 @@ import Musl
+ #elseif os(Windows)
+ import CRT
+ import WinSDK
++#elseif canImport(Bionic)
++import Bionic
+ #else
+ import Darwin.C
+ #endif
