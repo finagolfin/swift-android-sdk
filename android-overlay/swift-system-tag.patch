@@ -7,7 +7,7 @@ index cb84a59..d426924 100644
  #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
  import Darwin
 -#elseif os(Linux) || os(FreeBSD) || os(Android)
-+#elseif os(Linux) || os(FreeBSD)
++#elseif canImport(Glibc)
  @_implementationOnly import CSystem
  import Glibc
  #elseif os(Windows)
@@ -28,7 +28,7 @@ index 5489a55..29324ae 100644
  #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
  import Darwin
 -#elseif os(Linux) || os(FreeBSD) || os(Android)
-+#elseif os(Linux) || os(FreeBSD)
++#elseif canImport(Glibc)
  import Glibc
  #elseif os(Windows)
  import CSystem
@@ -47,7 +47,7 @@ index 5c0a58a..b62eb81 100644
  #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
  import Darwin
 -#elseif os(Linux) || os(FreeBSD) || os(Android)
-+#elseif os(Linux) || os(FreeBSD)
++#elseif canImport(Glibc)
  @_implementationOnly import CSystem
  import Glibc
  #elseif os(Windows)
@@ -80,7 +80,7 @@ index b22d6a3..a929844 100644
  #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
  import Darwin
 -#elseif os(Linux) || os(FreeBSD) || os(Android)
-+#elseif os(Linux) || os(FreeBSD)
++#elseif canImport(Glibc)
  import Glibc
  #elseif os(Windows)
  import ucrt

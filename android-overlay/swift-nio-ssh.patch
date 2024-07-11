@@ -10,8 +10,8 @@ index 0ca6158..7764459 100644
 +#elseif canImport(Glibc)
  import Glibc
 -#endif // canImport(Darwin)
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
 +#endif
  
  /// A ``NIOSSHCertifiedPublicKey`` is an SSH public key combined with an SSH certificate.

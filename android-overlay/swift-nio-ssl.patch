@@ -1,5 +1,5 @@
 diff --git a/Sources/NIOSSL/ByteBufferBIO.swift b/Sources/NIOSSL/ByteBufferBIO.swift
-index 5264ff5..4f04080 100644
+index 5264ff5..1a8144f 100644
 --- a/Sources/NIOSSL/ByteBufferBIO.swift
 +++ b/Sources/NIOSSL/ByteBufferBIO.swift
 @@ -19,8 +19,10 @@ import NIOCore
@@ -9,8 +9,8 @@ index 5264ff5..4f04080 100644
 -#elseif os(Linux) || os(FreeBSD) || os(Android)
 +#elseif canImport(Glibc)
  import Glibc
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #else
  #error("unsupported os")
  #endif
@@ -63,7 +63,7 @@ index 80533de..2000a80 100644
  #error("unsupported os")
  #endif
 diff --git a/Sources/NIOSSL/SSLCallbacks.swift b/Sources/NIOSSL/SSLCallbacks.swift
-index 0b34c18..2a1e11d 100644
+index 0b34c18..bff71d5 100644
 --- a/Sources/NIOSSL/SSLCallbacks.swift
 +++ b/Sources/NIOSSL/SSLCallbacks.swift
 @@ -19,8 +19,10 @@ import NIOCore
@@ -73,13 +73,13 @@ index 0b34c18..2a1e11d 100644
 -#elseif os(Linux) || os(FreeBSD) || os(Android)
 +#elseif canImport(Glibc)
  import Glibc
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #else
  #error("unsupported os")
  #endif
 diff --git a/Sources/NIOSSL/SSLCertificate.swift b/Sources/NIOSSL/SSLCertificate.swift
-index 38e153d..b2b3c50 100644
+index 38e153d..cfa37bb 100644
 --- a/Sources/NIOSSL/SSLCertificate.swift
 +++ b/Sources/NIOSSL/SSLCertificate.swift
 @@ -20,8 +20,10 @@ import NIOCore
@@ -89,13 +89,13 @@ index 38e153d..b2b3c50 100644
 -#elseif os(Linux) || os(FreeBSD) || os(Android)
 +#elseif canImport(Glibc)
  import Glibc
-+#elseif canImport(Android)
-+import Android
++#elseif canImport(Bionic)
++import Bionic
  #else
  #error("unsupported os")
  #endif
 diff --git a/Sources/NIOSSL/SSLContext.swift b/Sources/NIOSSL/SSLContext.swift
-index afd2539..4a91ca7 100644
+index afd2539..158a458 100644
 --- a/Sources/NIOSSL/SSLContext.swift
 +++ b/Sources/NIOSSL/SSLContext.swift
 @@ -20,8 +20,10 @@ import NIOCore
@@ -115,7 +115,7 @@ index afd2539..4a91ca7 100644
  
  #if os(Android) && arch(arm)
 -        return (statObj.st_mode & UInt32(Glibc.S_IFDIR)) != 0 ? .directory : .file
-+        return (statObj.st_mode & UInt32(Android.S_IFDIR)) != 0 ? .directory : .file
++        return (statObj.st_mode & UInt32(S_IFDIR)) != 0 ? .directory : .file
  #else
          return (statObj.st_mode & S_IFDIR) != 0 ? .directory : .file
  #endif
@@ -124,7 +124,7 @@ index afd2539..4a91ca7 100644
          // Check the mode to make sure this is a symlink
  #if os(Android) && arch(arm)
 -        if (buffer.st_mode & UInt32(Glibc.S_IFMT)) != UInt32(Glibc.S_IFLNK) { return false }
-+        if (buffer.st_mode & UInt32(Android.S_IFMT)) != UInt32(Android.S_IFLNK) { return false }
++        if (buffer.st_mode & UInt32(S_IFMT)) != UInt32(S_IFLNK) { return false }
  #else
          if (buffer.st_mode & S_IFMT) != S_IFLNK { return false }
  #endif

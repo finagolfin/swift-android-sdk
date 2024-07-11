@@ -203,13 +203,12 @@ jobs:
           git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem-both-ndks.patch
           if [ ${{ matrix.version }} = 'release-25c' ]; then
             git apply -R ../sdk-config/swift-nio-ndk26.patch
-          elif [[ ${{ matrix.version }} != 'release-26d' ]]; then
-            ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift package update
-            cd .build/checkouts/swift-system/
-            git apply ../../../../sdk-config/android-overlay/swift-system-checkout.patch
-            cd ../../..
-            git apply ../sdk-config/android-overlay/swift-nio.patch
           fi
+          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift package update
+          cd .build/checkouts/swift-system/
+          git apply ../../../../sdk-config/android-overlay/swift-system-checkout.patch
+          cd ../../..
+          git apply ../sdk-config/android-overlay/swift-nio.patch
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Numerics package
         uses: actions/checkout@v4
@@ -252,9 +251,7 @@ jobs:
       - name: Build Swift NIO SSH package
         run: |
           cd sns
-          if [[ ${{ matrix.version }} != 'release'* ]]; then
-            git apply ../sdk-config/android-overlay/swift-nio-ssh.patch
-          fi
+          git apply ../sdk-config/android-overlay/swift-nio-ssh.patch
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO SSL package
@@ -267,9 +264,8 @@ jobs:
           cd snl
           if [ ${{ matrix.version }} = 'release-25c' ]; then
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" Sources/CNIOBoringSSL/include/CNIOBoringSSL_asn1.h
-          elif [ ${{ matrix.version }} != 'release-26d' ]; then
-            git apply ../sdk-config/android-overlay/swift-nio-ssl.patch
           fi
+          git apply ../sdk-config/android-overlay/swift-nio-ssl.patch
           SWIFTCI_USE_LOCAL_DEPS=1 ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
         uses: actions/checkout@v4
@@ -290,9 +286,7 @@ jobs:
         if: ${{ matrix.arch != 'armv7' }}
         run: |
           cd snh
-          if [[ ${{ matrix.version }} != 'release'* ]]; then
-            git apply ../sdk-config/android-overlay/swift-nio-http2.patch
-          fi
+          git apply ../sdk-config/android-overlay/swift-nio-http2.patch
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Algorithms package
