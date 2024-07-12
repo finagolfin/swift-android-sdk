@@ -128,7 +128,7 @@ jobs:
             if [ ${{ matrix.version }} = 'release-26d' ]; then
               git apply swift-android-stdlib-ndk26.patch
             else
-              git apply android-overlay/foundation-fixes.patch android-overlay/import-android.patch android-overlay/swift-argument-parser.patch android-overlay/swift-system-tag.patch android-overlay/yams.patch
+              git apply android-overlay/foundation-fixes.patch android-overlay/swift-argument-parser.patch android-overlay/swift-system-tag.patch android-overlay/yams.patch
               if [ ${{ matrix.version }} = 'devel' ]; then
                 git apply android-overlay/import-android-devel.patch
               fi
