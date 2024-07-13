@@ -1,18 +1,11 @@
 diff --git a/swift-system/Sources/System/Internals/CInterop.swift b/swift-system/Sources/System/Internals/CInterop.swift
-index cb84a59..d426924 100644
+index 13abc75..2ad551a 100644
 --- a/swift-system/Sources/System/Internals/CInterop.swift
 +++ b/swift-system/Sources/System/Internals/CInterop.swift
-@@ -16,12 +16,15 @@ public typealias CModeT =  CInterop.Mode
- 
- #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
- import Darwin
--#elseif os(Linux) || os(FreeBSD) || os(Android)
-+#elseif canImport(Glibc)
+@@ -25,6 +25,9 @@ import Glibc
+ #elseif canImport(Musl)
  @_implementationOnly import CSystem
- import Glibc
- #elseif os(Windows)
- import CSystem
- import ucrt
+ import Musl
 +#elseif canImport(Bionic)
 +@_implementationOnly import CSystem
 +import Bionic
@@ -20,68 +13,50 @@ index cb84a59..d426924 100644
  #error("Unsupported Platform")
  #endif
 diff --git a/swift-system/Sources/System/Internals/Constants.swift b/swift-system/Sources/System/Internals/Constants.swift
-index 5489a55..29324ae 100644
+index 53e215f..27039de 100644
 --- a/swift-system/Sources/System/Internals/Constants.swift
 +++ b/swift-system/Sources/System/Internals/Constants.swift
-@@ -13,11 +13,13 @@
- 
- #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
- import Darwin
--#elseif os(Linux) || os(FreeBSD) || os(Android)
-+#elseif canImport(Glibc)
- import Glibc
- #elseif os(Windows)
- import CSystem
+@@ -18,6 +18,8 @@ import CSystem
  import ucrt
+ #elseif canImport(Glibc)
+ import Glibc
 +#elseif canImport(Android)
 +import Android
- #else
- #error("Unsupported Platform")
- #endif
+ #elseif canImport(Musl)
+ import CSystem
+ import Musl
 diff --git a/swift-system/Sources/System/Internals/Exports.swift b/swift-system/Sources/System/Internals/Exports.swift
-index 5c0a58a..b62eb81 100644
+index 5b08725..899be25 100644
 --- a/swift-system/Sources/System/Internals/Exports.swift
 +++ b/swift-system/Sources/System/Internals/Exports.swift
-@@ -14,12 +14,15 @@
- 
- #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
- import Darwin
--#elseif os(Linux) || os(FreeBSD) || os(Android)
-+#elseif canImport(Glibc)
+@@ -23,6 +23,9 @@ import Glibc
+ #elseif canImport(Musl)
  @_implementationOnly import CSystem
- import Glibc
- #elseif os(Windows)
- import CSystem
- import ucrt
+ import Musl
 +#elseif canImport(Android)
 +@_implementationOnly import CSystem
 +import Android
  #else
  #error("Unsupported Platform")
  #endif
-@@ -45,6 +48,11 @@ internal var system_errno: CInt {
-     _ = ucrt._set_errno(newValue)
-   }
+@@ -58,6 +61,11 @@ internal var system_errno: CInt {
+   get { Musl.errno }
+   set { Musl.errno = newValue }
  }
 +#elseif canImport(Android)
 +internal var system_errno: CInt {
 +  get { Android.errno }
 +  set { Android.errno = newValue }
 +}
- #else
- internal var system_errno: CInt {
-   get { Glibc.errno }
+ #endif
+ 
+ // MARK: C stdlib decls
 diff --git a/swift-system/Sources/System/Internals/Syscalls.swift b/swift-system/Sources/System/Internals/Syscalls.swift
-index b22d6a3..a929844 100644
+index 555f63b..f0db35f 100644
 --- a/swift-system/Sources/System/Internals/Syscalls.swift
 +++ b/swift-system/Sources/System/Internals/Syscalls.swift
-@@ -9,10 +9,12 @@
- 
- #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
- import Darwin
--#elseif os(Linux) || os(FreeBSD) || os(Android)
-+#elseif canImport(Glibc)
- import Glibc
+@@ -15,6 +15,8 @@ import Glibc
+ import Musl
  #elseif os(Windows)
  import ucrt
 +#elseif canImport(Android)

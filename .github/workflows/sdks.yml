@@ -110,6 +110,7 @@ jobs:
           git apply swift-android-ci.patch
           git apply -C1 swift-android.patch swift-android-both-ndks.patch
           if [[ ${{ matrix.version }} = 'release'* ]]; then
+            sed -i "s%strsignal(signal).map%String(cString: strsignal(signal)) //%" swift-driver/Sources/SwiftDriver/Driver/ToolExecutionDelegate.swift
             git apply swift-android-stdlib-except-trunk.patch
             STUPID_FILE_RENAMING=Tool
           else
@@ -128,7 +129,7 @@ jobs:
             if [ ${{ matrix.version }} = 'release-26d' ]; then
               git apply swift-android-stdlib-ndk26.patch
             else
-              git apply android-overlay/foundation-fixes.patch android-overlay/swift-argument-parser.patch android-overlay/swift-system-tag.patch android-overlay/yams.patch
+              git apply android-overlay/foundation-fixes.patch android-overlay/swift-argument-parser.patch android-overlay/swift-system.patch android-overlay/yams.patch
               if [ ${{ matrix.version }} = 'devel' ]; then
                 git apply android-overlay/import-android-devel.patch
               fi
@@ -157,11 +158,6 @@ jobs:
 
           if [ ! -d ${{ steps.version.outputs.tag }}-ubuntu22.04 ]; then
             tar xf ~/${{ steps.version.outputs.tag }}-ubuntu22.04.tar.gz
-          fi
-          if [ ${{ matrix.version }} = 'devel' ]; then
-            sed -i "s%canImport(Glibc%canImport(Android%" ${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift-package
-            sed -i "s%import Glibc%import Android%" ${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift-package
-            sed -i "s%TSCBasic, would be nice%TSCBasic, would be %" ${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift-package
           fi
           ./${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift --version
 
@@ -205,9 +201,9 @@ jobs:
             git apply -R ../sdk-config/swift-nio-ndk26.patch
           fi
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift package update
-          cd .build/checkouts/swift-system/
-          git apply ../../../../sdk-config/android-overlay/swift-system-checkout.patch
-          cd ../../..
+          cd .build/checkouts/
+          patch -p1 < ../../../sdk-config/android-overlay/swift-system.patch
+          cd ../..
           git apply ../sdk-config/android-overlay/swift-nio.patch
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Numerics package

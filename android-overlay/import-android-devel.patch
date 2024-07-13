@@ -106,6 +106,15 @@ index 4d6577d0..0eef6e57 100644
  #else
  #error("Missing libc or equivalent")
  #endif
+@@ -136,7 +136,7 @@ import var TSCBasic.stdoutStream
+         }
+ #else
+       case .signalled(let signal):
+-        let errorMessage = strsignal(signal).map { String(cString: $0) } ?? ""
++        let errorMessage = String(cString: strsignal(signal))
+         messages = constructJobSignalledMessages(job: job, error: errorMessage, output: output,
+                                                  signal: signal, pid: pid).map {
+           ParsableMessage(name: job.kind.rawValue, kind: .signalled($0))
 diff --git a/swift-driver/Sources/SwiftDriver/SwiftScan/Loader.swift b/swift-driver/Sources/SwiftDriver/SwiftScan/Loader.swift
 index 92ec883f..2ab4e6fd 100644
 --- a/swift-driver/Sources/SwiftDriver/SwiftScan/Loader.swift
