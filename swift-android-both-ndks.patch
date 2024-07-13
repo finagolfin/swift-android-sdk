@@ -117,16 +117,3 @@ index 5fe7b29c..ce571abe 100644
      }
  
      // getifaddrs and freeifaddrs are not available in Android 6.0 or earlier, so call these functions dynamically.
-diff --git a/swift-driver/Sources/SwiftDriver/Driver/ToolExecutionDelegate.swift b/swift-driver/Sources/SwiftDriver/Driver/ToolExecutionDelegate.swift
-index 4d6577d0..aa22dade 100644
---- a/swift-driver/Sources/SwiftDriver/Driver/ToolExecutionDelegate.swift
-+++ b/swift-driver/Sources/SwiftDriver/Driver/ToolExecutionDelegate.swift
-@@ -136,7 +136,7 @@ import var TSCBasic.stdoutStream
-         }
- #else
-       case .signalled(let signal):
--        let errorMessage = strsignal(signal).map { String(cString: $0) } ?? ""
-+        let errorMessage = String(cString: strsignal(signal))
-         messages = constructJobSignalledMessages(job: job, error: errorMessage, output: output,
-                                                  signal: signal, pid: pid).map {
-           ParsableMessage(name: job.kind.rawValue, kind: .signalled($0))
