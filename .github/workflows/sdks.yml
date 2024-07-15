@@ -169,9 +169,7 @@ jobs:
           path: swift-argument-parser
       - name: Build Swift Argument Parser package
         run: |
-          if [[ ${{ matrix.version }} != 'release'* ]]; then
-            git apply sdk-config/android-overlay/swift-argument-parser.patch
-          fi
+          git apply sdk-config/android-overlay/swift-argument-parser.patch
           cd swift-argument-parser
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift crypto package
@@ -247,7 +245,6 @@ jobs:
       - name: Build Swift NIO SSH package
         run: |
           cd sns
-          git apply ../sdk-config/android-overlay/swift-nio-ssh.patch
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO SSL package
@@ -261,7 +258,6 @@ jobs:
           if [ ${{ matrix.version }} = 'release-25c' ]; then
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" Sources/CNIOBoringSSL/include/CNIOBoringSSL_asn1.h
           fi
-          git apply ../sdk-config/android-overlay/swift-nio-ssl.patch
           SWIFTCI_USE_LOCAL_DEPS=1 ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
         uses: actions/checkout@v4
@@ -282,7 +278,6 @@ jobs:
         if: ${{ matrix.arch != 'armv7' }}
         run: |
           cd snh
-          git apply ../sdk-config/android-overlay/swift-nio-http2.patch
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Algorithms package
