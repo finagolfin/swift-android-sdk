@@ -1,17 +1,17 @@
 diff --git a/swift-argument-parser/Sources/ArgumentParser/Utilities/Platform.swift b/swift-argument-parser/Sources/ArgumentParser/Utilities/Platform.swift
-index b7fa046..a94e3b8 100644
+index a3593cc..97629e3 100644
 --- a/swift-argument-parser/Sources/ArgumentParser/Utilities/Platform.swift
 +++ b/swift-argument-parser/Sources/ArgumentParser/Utilities/Platform.swift
-@@ -19,6 +19,8 @@ import Darwin
- import CRT
+@@ -26,6 +26,8 @@ import Darwin
+ @preconcurrency import CRT
  #elseif canImport(WASILibc)
- import WASILibc
+ @preconcurrency import WASILibc
 +#elseif canImport(Android)
-+import Android
++@preconcurrency import Android
  #endif
  
  enum Platform {}
-@@ -88,6 +90,8 @@ extension Platform {
+@@ -95,6 +97,8 @@ extension Platform {
      ucrt._exit(code)
  #elseif canImport(WASILibc)
      WASILibc.exit(code)
@@ -20,7 +20,7 @@ index b7fa046..a94e3b8 100644
  #endif
    }
  }
-@@ -108,7 +112,7 @@ extension Platform {
+@@ -117,7 +121,7 @@ extension Platform {
  
  // MARK: Terminal size
  
