@@ -169,7 +169,6 @@ jobs:
           path: swift-argument-parser
       - name: Build Swift Argument Parser package
         run: |
-          git apply sdk-config/android-overlay/swift-argument-parser-trunk.patch
           cd swift-argument-parser
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift crypto package
