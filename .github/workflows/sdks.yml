@@ -201,7 +201,6 @@ jobs:
           cd .build/checkouts/
           patch -p1 < ../../../sdk-config/android-overlay/swift-system.patch
           cd ../..
-          git apply ../sdk-config/android-overlay/swift-nio.patch
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Numerics package
         uses: actions/checkout@v4
