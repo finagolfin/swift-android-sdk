@@ -7,7 +7,7 @@ index 61447d50f08..b533b9291af 100644
      list(APPEND result "-lm")
      if(NOT "${SWIFT_ANDROID_NDK_PATH}" STREQUAL "")
 -      file(GLOB RESOURCE_DIR ${SWIFT_SDK_ANDROID_ARCH_${LFLAGS_ARCH}_PATH}/../lib64/clang/*)
-+      if("${SWIFT_ANDROID_NDK_PATH}" MATCHES "ndk/26")
++      if("${SWIFT_ANDROID_NDK_PATH}" MATCHES "ndk-r27")
 +        file(GLOB RESOURCE_DIR ${SWIFT_SDK_ANDROID_ARCH_${LFLAGS_ARCH}_PATH}/../lib/clang/*)
 +      else()
 +        file(GLOB RESOURCE_DIR ${SWIFT_SDK_ANDROID_ARCH_${LFLAGS_ARCH}_PATH}/../lib64/clang/*)
