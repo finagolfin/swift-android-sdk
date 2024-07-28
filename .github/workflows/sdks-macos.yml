@@ -19,8 +19,7 @@ jobs:
         run: git clone https://github.com/swiftlang/swift.git --branch ${{ matrix.swift_branch }} --single-branch
       - name: Update Checkout
         run: swift/utils/update-checkout --clone --scheme ${{ matrix.swift_branch }}
-      - name: Build Swift
-        run: |
+
         #--build-subdir=#{build} \
         #--host-cc=#{which(ENV.cc)} \
         #--host-cxx=#{which(ENV.cxx)} \
@@ -36,6 +35,8 @@ jobs:
         #--darwin-deployment-version-osx=#{MacOS.version} \
         #--swift-darwin-supported-archs=#{Hardware::CPU.arch} \
         #--swift-darwin-module-archs=#{Hardware::CPU.arch} \
+      - name: Build Swift
+        run: |
         swift/utils/build-script \
           --release --no-assertions \
           --no-swift-stdlib-assertions \
