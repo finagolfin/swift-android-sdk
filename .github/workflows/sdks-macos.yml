@@ -1,0 +1,64 @@
+name: SDKs (macOS)
+on:
+  pull_request:
+  schedule:
+    - cron: '0 21 * * *'
+  push:
+    branches: '*'
+jobs:
+  build-toolchain:
+    runs-on: macos-14
+    strategy:
+      matrix:
+        swift_branch: ['release/5.10', 'release/6.0', 'main']
+      fail-fast: false
+    steps:
+      - name: Install Build Tools
+        run: brew install cmake ninja autoconf automake libtool pkg-config git-lfs
+      - name: Clone Swift
+        run: git clone https://github.com/swiftlang/swift.git --branch ${{ matrix.swift_branch }} --single-branch
+      - name: Update Checkout
+        run: swift/utils/update-checkout --clone --scheme ${{ matrix.swift_branch }}
+      - name: Build Swift
+        run: |
+        #--build-subdir=#{build} \
+        #--host-cc=#{which(ENV.cc)} \
+        #--host-cxx=#{which(ENV.cxx)} \
+        #--jobs=#{ENV.make_jobs} \
+        #--workspace=#{workspace} \
+        #--install-destdir=#{prefix} \
+        #--toolchain-prefix=#{toolchain_prefix} \
+        #--install-prefix=#{install_prefix} \
+        #--lldb-extra-cmake-args=-DPython3_EXECUTABLE=#{which("python3.11")} \
+        #--swift-install-components=#{swift_components.join(";")} \
+        #--llvm-install-components=#{llvm_components.join(";")} \
+        #--host-target=macosx-#{Hardware::CPU.arch} \
+        #--darwin-deployment-version-osx=#{MacOS.version} \
+        #--swift-darwin-supported-archs=#{Hardware::CPU.arch} \
+        #--swift-darwin-module-archs=#{Hardware::CPU.arch} \
+        swift/utils/build-script \
+          --release --no-assertions \
+          --no-swift-stdlib-assertions \
+          --lldb --llbuild --swiftpm --swift-driver \
+          --swiftdocc --indexstore-db --sourcekit-lsp \
+          --verbose-build \
+          --swift-include-tests=0 \
+          --llvm-include-tests=0 \
+          --lldb-configure-tests=0 \
+          --skip-build-benchmarks \
+          --build-swift-private-stdlib=0 \
+          --install-swift \
+          --install-llvm \
+          --install-lldb \
+          --install-llbuild \
+          --install-swiftpm \
+          --install-swift-driver \
+          --install-swiftsyntax \
+          --install-swiftdocc \
+          --install-sourcekit-lsp \
+          --build-swift-dynamic-stdlib=0 \
+          --build-swift-dynamic-sdk-overlay=0 \
+          --swift-enable-backtracing=0 \
+          --stdlib-deployment-targets= \
+          --lldb-use-system-debugserver
+
