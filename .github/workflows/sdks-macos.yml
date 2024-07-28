@@ -37,7 +37,7 @@ jobs:
         #--swift-darwin-module-archs=#{Hardware::CPU.arch} \
       - name: Build Swift
         run: |
-        swift/utils/build-script \
+          swift/utils/build-script \
           --release --no-assertions \
           --no-swift-stdlib-assertions \
           --lldb --llbuild --swiftpm --swift-driver \
