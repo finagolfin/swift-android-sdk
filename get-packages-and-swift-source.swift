@@ -236,10 +236,6 @@ _ = runCommand("patchelf", with: ["--set-rpath", "$ORIGIN",
           "\(sdkPath.appendingPathComponent("usr/lib/libcurl.so"))",
           "\(sdkPath.appendingPathComponent("usr/lib/libxml2.so"))"])
 
-if !fmd.fileExists(atPath: cwd.appendingPathComponent("cmark")) {
-  try fmd.createDirectory(atPath: cwd.appendingPathComponent("cmark"), withIntermediateDirectories: false)
-}
-
 for repo in swiftRepos {
   print("Checking for \(repo) source")
   if !fmd.fileExists(atPath: cwd.appendingPathComponent(repo)) {

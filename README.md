@@ -240,4 +240,4 @@ Finally, it gets [the 5.10.1 source](https://github.com/apple/swift/releases/tag
 tarballs for seven Swift repos and renames them to `llvm-project/`, `swift/`,
 `swift-syntax`, `swift-experimental-string-processing`, `swift-corelibs-libdispatch`,
 `swift-corelibs-foundation`, and `swift-corelibs-xctest`, as required by the Swift
-`build-script`, and creates an empty directory, `mkdir cmark`.
+`build-script`.
