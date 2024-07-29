@@ -7,7 +7,8 @@ on:
     branches: '*'
 jobs:
   build-toolchain:
-    runs-on: macos-14
+    # The macos-14 GH Runner is ARM, which cannot run the Android emulator
+    runs-on: macos-13
     strategy:
       matrix:
         swift_branch: ['release/5.10', 'release/6.0', 'main']
