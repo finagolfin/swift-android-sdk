@@ -100,7 +100,7 @@ jobs:
           PRESET_FILE_FLAGS="${PRESET_FILE_FLAGS}"
           SCCACHE_FLAG="${SCCACHE_FLAG}"
 
-          swift/utils/build-script --preset="buildbot_osx_package"
+          swift/utils/build-script --preset="buildbot_osx_package" \
             install_destdir="${SWIFT_INSTALL_DIR}" \
             installable_package="${SWIFT_INSTALLABLE_PACKAGE}" \
             install_toolchain_dir="${SWIFT_TOOLCHAIN_DIR}" \
