@@ -41,6 +41,7 @@ jobs:
         #--install-lldb \
 
       - name: Build Swift
+        if: false
         run: |
           swift/utils/build-script \
           --release --no-assertions \
@@ -67,3 +68,54 @@ jobs:
           --stdlib-deployment-targets= \
           --lldb-use-system-debugserver
 
+      # based on https://github.com/swiftlang/swift/blob/main/utils/build-toolchain
+      - name: Build Toolchain
+        run: |
+          RESULT_DIR=$PWD
+          SWIFT_PACKAGE=buildbot_osx_package
+          OS_SUFFIX=osx
+
+          BUNDLE_PREFIX="swift-android"
+          BRANCH_NAME=${{ matrix.swift_branch }}
+          BUILD_NAME=${BRANCH_NAME/\//-}
+
+          YEAR=$(date +"%Y")
+          MONTH=$(date +"%m")
+          DAY=$(date +"%d")
+          TOOLCHAIN_VERSION="${BUILD_NAME}"
+          TOOLCHAIN_NAME="swift-android-${YEAR}-${MONTH}-${DAY}-a"
+          ARCHIVE="${TOOLCHAIN_NAME}-${OS_SUFFIX}.tar.gz"
+          SYM_ARCHIVE="${TOOLCHAIN_NAME}-${OS_SUFFIX}-symbols.tar.gz"
+          BUNDLE_IDENTIFIER="${BUNDLE_PREFIX}.${YEAR}${MONTH}${DAY}"
+          DISPLAY_NAME_SHORT="Swift Toolchain"
+          DISPLAY_NAME="${DISPLAY_NAME_SHORT} ${YEAR}-${MONTH}-${DAY}"
+
+          SWIFT_INSTALLABLE_PACKAGE="${RESULT_DIR}/${ARCHIVE}"
+          SWIFT_INSTALL_DIR="${RESULT_DIR}/swift-nightly-install"
+          SWIFT_INSTALL_SYMROOT="${RESULT_DIR}/swift-nightly-symroot"
+          SWIFT_TOOLCHAIN_DIR="/Library/Developer/Toolchains/${TOOLCHAIN_NAME}.xctoolchain"
+          SYMBOLS_PACKAGE="${RESULT_DIR}/${SYM_ARCHIVE}"
+          DRY_RUN="${DRY_RUN}"
+          DISTCC_FLAG="${DISTCC_FLAG}"
+          PRESET_FILE_FLAGS="${PRESET_FILE_FLAGS}"
+          SCCACHE_FLAG="${SCCACHE_FLAG}"
+
+          swift/utils/build-script --preset="buildbot_osx_package"
+            install_destdir="${SWIFT_INSTALL_DIR}" \
+            installable_package="${SWIFT_INSTALLABLE_PACKAGE}" \
+            install_toolchain_dir="${SWIFT_TOOLCHAIN_DIR}" \
+            install_symroot="${SWIFT_INSTALL_SYMROOT}" \
+            symbols_package="${SYMBOLS_PACKAGE}" \
+            darwin_toolchain_bundle_identifier="${BUNDLE_IDENTIFIER}" \
+            darwin_toolchain_display_name="${DISPLAY_NAME}" \
+            darwin_toolchain_display_name_short="${DISPLAY_NAME_SHORT}" \
+            darwin_toolchain_xctoolchain_name="${TOOLCHAIN_NAME}" \
+            darwin_toolchain_version="${TOOLCHAIN_VERSION}" \
+            darwin_toolchain_alias="Local" \
+            darwin_toolchain_require_use_os_runtime="${REQUIRE_USE_OS_RUNTIME}"
+
+      - name: Archive Toolchain
+        if: false
+        run: |
+          cd build/Ninja-Release/toolchain-macosx-arm64/Applications/Xcode.app/Contents/Developer/Toolchains
+          zip XcodeDefault.xctoolchain
