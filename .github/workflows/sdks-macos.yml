@@ -35,6 +35,11 @@ jobs:
         #--darwin-deployment-version-osx=#{MacOS.version} \
         #--swift-darwin-supported-archs=#{Hardware::CPU.arch} \
         #--swift-darwin-module-archs=#{Hardware::CPU.arch} \
+
+        # install-lldb excluded; works in 5.10, but fails in 6.0 and main
+        # with error: 2024-07-28T23:01:02.0005710Z Error copying directory from "/Users/runner/work/swift-android-sdk/swift-android-sdk/build/Ninja-Release/swift-macosx-arm64/lib/swift/embedded/" to "/Users/runner/work/swift-android-sdk/swift-android-sdk/build/Ninja-Release/lldb-macosx-arm64/bin/LLDB.framework/Versions/A/Resources/Swift/embedded".
+        #--install-lldb \
+
       - name: Build Swift
         run: |
           swift/utils/build-script \
@@ -50,7 +55,6 @@ jobs:
           --build-swift-private-stdlib=0 \
           --install-swift \
           --install-llvm \
-          --install-lldb \
           --install-llbuild \
           --install-swiftpm \
           --install-swift-driver \
