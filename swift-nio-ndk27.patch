@@ -1,0 +1,42 @@
+diff --git a/Sources/NIOPosix/System.swift b/Sources/NIOPosix/System.swift
+index 33b3be73..b97fa645 100644
+--- a/Sources/NIOPosix/System.swift
++++ b/Sources/NIOPosix/System.swift
+@@ -125,15 +125,15 @@ private let sysWritev = sysWritev_wrapper
+ private let sysWritev: @convention(c) (Int32, UnsafePointer<iovec>?, CInt) -> CLong = writev
+ #endif
+ #if !os(Windows)
+-private let sysRecvMsg: @convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t = recvmsg
+-private let sysSendMsg: @convention(c) (CInt, UnsafePointer<msghdr>?, CInt) -> ssize_t = sendmsg
++private let sysRecvMsg: @convention(c) (CInt, UnsafeMutablePointer<msghdr>, CInt) -> ssize_t = recvmsg
++private let sysSendMsg: @convention(c) (CInt, UnsafePointer<msghdr>, CInt) -> ssize_t = sendmsg
+ #endif
+ private let sysDup: @convention(c) (CInt) -> CInt = dup
+ #if !os(Windows)
+ private let sysGetpeername:
+-    @convention(c) (CInt, UnsafeMutablePointer<sockaddr>?, UnsafeMutablePointer<socklen_t>?) -> CInt = getpeername
++    @convention(c) (CInt, UnsafeMutablePointer<sockaddr>, UnsafeMutablePointer<socklen_t>) -> CInt = getpeername
+ private let sysGetsockname:
+-    @convention(c) (CInt, UnsafeMutablePointer<sockaddr>?, UnsafeMutablePointer<socklen_t>?) -> CInt = getsockname
++    @convention(c) (CInt, UnsafeMutablePointer<sockaddr>, UnsafeMutablePointer<socklen_t>) -> CInt = getsockname
+ #endif
+ 
+ #if os(Android)
+@@ -142,7 +142,7 @@ private let sysIfNameToIndex: @convention(c) (UnsafePointer<CChar>) -> CUnsigned
+ private let sysIfNameToIndex: @convention(c) (UnsafePointer<CChar>?) -> CUnsignedInt = if_nametoindex
+ #endif
+ #if !os(Windows)
+-private let sysSocketpair: @convention(c) (CInt, CInt, CInt, UnsafeMutablePointer<CInt>?) -> CInt = socketpair
++private let sysSocketpair: @convention(c) (CInt, CInt, CInt, UnsafeMutablePointer<CInt>) -> CInt = socketpair
+ #endif
+ 
+ #if os(Linux) || os(Android) || canImport(Darwin)
+@@ -966,7 +966,7 @@ internal enum Posix {
+         socketVector: UnsafeMutablePointer<CInt>?
+     ) throws {
+         _ = try syscall(blocking: false) {
+-            sysSocketpair(domain.rawValue, type.rawValue, protocolSubtype.rawValue, socketVector)
++            sysSocketpair(domain.rawValue, type.rawValue, protocolSubtype.rawValue, socketVector!)
+         }
+     }
+     #endif

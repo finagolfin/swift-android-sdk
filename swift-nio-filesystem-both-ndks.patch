@@ -94,7 +94,7 @@ index f24736a7..310d9691 100644
 --- a/Tests/NIOFileSystemIntegrationTests/FileSystemTests.swift
 +++ b/Tests/NIOFileSystemIntegrationTests/FileSystemTests.swift
 @@ -19,8 +19,8 @@ import NIOCore
- import XCTest
+ import NIOConcurrencyHelpers
  
  extension FilePath {
 -    static let testData = FilePath(#filePath)
