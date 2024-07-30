@@ -357,6 +357,7 @@ jobs:
           cp sdk-config/swift-*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/lib*so pack/lib
           cp sdk-config/swift-*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/swift/android/lib*so pack/lib/swift/android
           mv pack/lib/libc++_shared.so pack/lib/swift/android
+          rm -rf sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04
 
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
