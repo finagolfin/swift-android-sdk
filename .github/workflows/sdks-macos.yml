@@ -9,7 +9,7 @@ jobs:
   build-toolchain:
     # The macos-14 GH Runner is ARM, which cannot run the Android emulator
     runs-on: macos-13
-    timeout-minutes: 600
+    timeout-minutes: 1000
     strategy:
       matrix:
         swift_branch: ['release/5.10', 'release/6.0', 'main']
