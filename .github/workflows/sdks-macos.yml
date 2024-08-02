@@ -28,12 +28,13 @@ jobs:
 
       - name: Set NDK
         run: |
-          echo "ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
+          echo "NDK=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
 
       - name: Check NDK
         run: |
-          echo "NDK: ${ANDROID_NDK_HOME}"
-          ls ${ANDROID_NDK_HOME}
+          # /Users/runner/hostedtoolcache/ndk/r27/x64
+          echo "NDK: ${NDK}"
+          ls ${NDK}
 
       - name: Install Toolchain
         uses: swift-actions/setup-swift@v2
@@ -48,13 +49,109 @@ jobs:
 
       - name: Check Swift Toolchain
         run: |
+          # /Users/runner/hostedtoolcache/swift-macOS/5.10.1/x64/usr
           echo "TOOLCHAIN: ${TOOLCHAIN}"
           ${TOOLCHAIN}/bin/swift --version
 
       - name: Fetch Android SDK
         run: |
-          wget https://github.com/finagolfin/swift-android-sdk/releases/download/5.10/swift-5.10-android-24-sdk.tar.xz
-          tar xf swift-5.10-android-24-sdk.tar.xz
-          ls swift-5.10-android-24-sdk
+          SDK_VERSION="swift-5.10-android-24-sdk"
+          wget -q https://github.com/finagolfin/swift-android-sdk/releases/download/5.10/${SDK_VERSION}.tar.xz
+          tar xf ${SDK_VERSION}.tar.xz
+          ls ${SDK_VERSION}
+          echo "SDK=${PWD}/${SDK_VERSION}" >> $GITHUB_ENV
 
+      - name: Setup SDK
+        run: |
+          rm -vf ${SDK}/usr/lib/swift/clang
+          ln -sf ${TOOLCHAIN}/lib/clang/15.0.0 ${SDK}/usr/lib/swift/clang
+
+      - name: Build Android Sample 
+        run: |
+          ARCH=aarch64
+          NDK_ARCH="${ARCH}-linux-android"
+          # NDK_ARCH="arm-linux-androideabi"
+
+          cat > android-${ARCH}.json << EOF
+          {
+              "version": 1,
+              "target": "${ARCH}-unknown-linux-android24",
+              "toolchain-bin-dir": "${TOOLCHAIN}/bin",
+              "sdk": "${NDK}/sysroot",
+              "extra-cc-flags": [
+                  "-fPIC"
+              ],
+              "extra-swiftc-flags": [
+                  "-resource-dir", "${SDK}/usr/lib/swift",
+                  "-tools-directory", "${NDK}/bin",
+                  "-L", "${SDK}/usr/lib/${NDK_ARCH}"
+              ],
+              "extra-cpp-flags": [
+                  "-lstdc++"
+              ]
+          }
+          EOF
+
+          cat android-${ARCH}.json
+
+          # create a simple "Hello World" sample
+          rm -rf swift-demo
+          mkdir swift-demo
+          cd swift-demo
+          ${TOOLCHAIN}/bin/swift package init --type=executable
+
+          # this works with 5.10, but fails with various compile errors like "error: could not build C module 'SwiftAndroid'" for Swift 6
+
+          cat >> Sources/main.swift << EOF
+          import Foundation
+
+          print("Current Date: \(Date())")
+
+          #if swift(>=6.0)
+          print("Hello, Swift 6!")
+          #elseif swift(>=5.0)
+          print("Hello, Swift 5!")
+          #endif
+          EOF
+
+          ${TOOLCHAIN}/bin/swift build --verbose --destination ../android-${ARCH}.json
+
+      - name: Cache Android emulator snapshot
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-24-aosp-atd
+
+      - name: Generate Android emulator snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          #working-directory: .build/android-tests
+          target: aosp_atd
+          api-level: 24
+          arch: x86
+          channel: canary
+          profile: pixel
+          avd-name: Pixel_3a_API_24
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "Generated AVD snapshot for caching"
+
+      - name: Test Android (connected)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          working-directory: .build/android-tests
+          target: aosp_atd
+          api-level: 24
+          arch: x86
+          channel: canary
+          profile: pixel
+          avd-name: Pixel_3a_API_24
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: |
+            ls
 
