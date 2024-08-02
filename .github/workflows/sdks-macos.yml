@@ -53,7 +53,7 @@ jobs:
           echo "TOOLCHAIN: ${TOOLCHAIN}"
           ${TOOLCHAIN}/bin/swift --version
 
-      - name: Fetch Android SDK
+      - name: Fetch Swift Android SDK
         run: |
           SDK_DIR="swift-5.10-android-24-sdk"
           wget -q https://github.com/finagolfin/swift-android-sdk/releases/download/5.10/${SDK_DIR}.tar.xz
@@ -61,12 +61,13 @@ jobs:
           ls ${SDK_DIR}
           echo "SDK=${PWD}/${SDK_DIR}" >> $GITHUB_ENV
 
-      - name: Setup SDK
+      - name: Setup Swift Android SDK
         run: |
           ls -la ${SDK}/usr/lib/swift/clang
           rm -vf ${SDK}/usr/lib/swift/clang
           ln -sf ${TOOLCHAIN}/lib/clang/15.0.0 ${SDK}/usr/lib/swift/clang
           ls -la ${SDK}/usr/lib/swift/clang
+          ls ${SDK}/usr/lib/swift/clang/include
 
       - name: Build Android Sample 
         run: |
