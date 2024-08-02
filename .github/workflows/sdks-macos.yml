@@ -25,15 +25,14 @@ jobs:
           swift-version: "5.10.1"
 
       - name: Check Swift
-        run: swift --version
-
-      - name: Check Toolchain
-        run: which swift
-
-      - name: Check Toolchain
-        run: | 
+        run: |
+          swift --version
+          which swift
           ls ${HOME}/hostedtoolcache/swift-macOS/5.10.1/x64/usr
           tree ${HOME}/hostedtoolcache/swift-macOS/5.10.1/x64
+          echo "TOOLCHAIN=$(dirname $(dirname $(which swift)))" >> $GITHUB_ENV
+          echo "TOOLCHAIN: ${TOOLCHAIN}"
+          ${TOOLCHAIN}/bin/swift --version
 
       - name: Fetch Android SDK
         run: |
