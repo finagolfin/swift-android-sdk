@@ -25,5 +25,8 @@ jobs:
         run: swift --version
 
       - name: Check Toolchain
-        run: ls /Library/Developer/Toolchains
+        run: which swift
+
+      - name: Check Toolchain
+        run: ls ~/Library/Developer/Toolchains
 
