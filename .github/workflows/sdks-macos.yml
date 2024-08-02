@@ -19,18 +19,35 @@ jobs:
       - name: Install Tools
         run: brew install tree
 
+      - name: "Install NDK"
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27
+          add-to-path: false
+
+      - name: Set NDK
+        run: |
+          echo "ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
+
+      - name: Check NDK
+        run: |
+          echo "NDK: ${ANDROID_NDK_HOME}"
+          ls ${ANDROID_NDK_HOME}
+
       - name: Install Toolchain
         uses: swift-actions/setup-swift@v2
         with:
           swift-version: "5.10.1"
 
-      - name: Check Swift
+      - name: Set Swift Toolchain
         run: |
           swift --version
           which swift
-          ls ${HOME}/hostedtoolcache/swift-macOS/5.10.1/x64/usr
-          tree ${HOME}/hostedtoolcache/swift-macOS/5.10.1/x64
           echo "TOOLCHAIN=$(dirname $(dirname $(which swift)))" >> $GITHUB_ENV
+
+      - name: Check Swift Toolchain
+        run: |
           echo "TOOLCHAIN: ${TOOLCHAIN}"
           ${TOOLCHAIN}/bin/swift --version
 
