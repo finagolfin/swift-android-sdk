@@ -73,16 +73,14 @@ jobs:
         run: |
           #ARCH=aarch64
           ARCH=x86_64
-          NDK=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-${ARCH}/bin
+          NDK_ARCH="${ARCH}-linux-android"
+          #NDK_ARCH="arm-linux-androideabi"
 
           echo "NDK_PATH: ${NDK_PATH}"
           ls ${NDK_PATH}
-
+          NDK=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-x86_64/bin
           echo "NDK: ${NDK}"
           ls ${NDK}
-
-          NDK_ARCH="${ARCH}-linux-android"
-          # NDK_ARCH="arm-linux-androideabi"
 
           cat > android-${ARCH}.json << EOF
           {
