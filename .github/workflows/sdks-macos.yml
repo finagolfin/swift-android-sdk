@@ -101,7 +101,8 @@ jobs:
           # create a simple "Hello World" sample
           rm -rf swift-demo
           mkdir swift-demo
-          cd swift-demo
+          pushd swift-demo
+
           ${TOOLCHAIN}/bin/swift package init --type=executable
 
           # this works with 5.10, but fails with various compile errors like "error: could not build C module 'SwiftAndroid'" for Swift 6
@@ -118,7 +119,9 @@ jobs:
           #endif
           EOF
 
-          ${TOOLCHAIN}/bin/swift build --verbose --destination ../android-${ARCH}.json
+          popd
+
+          ${TOOLCHAIN}/bin/swift build --verbose --package-path swift-demo --destination android-${ARCH}.json -Xlinker -rpath -Xlinker \$ORIGIN/$SDK_NAME/usr/lib/$NDK_ARCH
 
       - name: Cache Android emulator snapshot
         uses: actions/cache@v4
