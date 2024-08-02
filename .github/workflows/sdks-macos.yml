@@ -16,11 +16,8 @@ jobs:
         #swift_branch: ['release/5.10', 'release/6.0', 'main']
       fail-fast: false
     steps:
-      - name: Check Toolchain
-        run: ls /Library/Developer/Toolchains
-
       - name: Install Toolchain
-        uses: vapor/swiftly-action@v0.1
+        uses: vapor/swiftly-action@v0.1.2
         with:
           toolchain: 5.10
 
