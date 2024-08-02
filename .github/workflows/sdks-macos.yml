@@ -17,9 +17,12 @@ jobs:
       fail-fast: false
     steps:
       - name: Install Toolchain
-        uses: vapor/swiftly-action@v0.1.2
+        uses: swift-actions/setup-swift@v2
         with:
-          toolchain: 5.10
+          swift-version: "5.10.1"
+
+      - name: Check Swift
+        run: swift --version
 
       - name: Check Toolchain
         run: ls /Library/Developer/Toolchains
