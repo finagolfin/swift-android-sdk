@@ -55,20 +55,23 @@ jobs:
 
       - name: Fetch Android SDK
         run: |
-          SDK_VERSION="swift-5.10-android-24-sdk"
-          wget -q https://github.com/finagolfin/swift-android-sdk/releases/download/5.10/${SDK_VERSION}.tar.xz
-          tar xf ${SDK_VERSION}.tar.xz
-          ls ${SDK_VERSION}
-          echo "SDK=${PWD}/${SDK_VERSION}" >> $GITHUB_ENV
+          SDK_DIR="swift-5.10-android-24-sdk"
+          wget -q https://github.com/finagolfin/swift-android-sdk/releases/download/5.10/${SDK_DIR}.tar.xz
+          tar xf ${SDK_DIR}.tar.xz
+          ls ${SDK_DIR}
+          echo "SDK=${PWD}/${SDK_DIR}" >> $GITHUB_ENV
 
       - name: Setup SDK
         run: |
+          ls -la ${SDK}/usr/lib/swift/clang
           rm -vf ${SDK}/usr/lib/swift/clang
           ln -sf ${TOOLCHAIN}/lib/clang/15.0.0 ${SDK}/usr/lib/swift/clang
+          ls -la ${SDK}/usr/lib/swift/clang
 
       - name: Build Android Sample 
         run: |
-          ARCH=aarch64
+          #ARCH=aarch64
+          ARCH=x86_64
           NDK_ARCH="${ARCH}-linux-android"
           # NDK_ARCH="arm-linux-androideabi"
 
