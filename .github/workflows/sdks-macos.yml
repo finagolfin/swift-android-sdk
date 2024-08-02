@@ -28,13 +28,13 @@ jobs:
 
       - name: Set NDK
         run: |
-          echo "NDK=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
+          echo "NDK_PATH=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
 
       - name: Check NDK
         run: |
           # /Users/runner/hostedtoolcache/ndk/r27/x64
-          echo "NDK: ${NDK}"
-          ls ${NDK}
+          echo "NDK_PATH: ${NDK_PATH}"
+          ls ${NDK_PATH}
 
       - name: Install Toolchain
         uses: swift-actions/setup-swift@v2
@@ -73,6 +73,14 @@ jobs:
         run: |
           #ARCH=aarch64
           ARCH=x86_64
+          NDK=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-${ARCH}/bin
+
+          echo "NDK_PATH: ${NDK_PATH}"
+          ls ${NDK_PATH}
+
+          echo "NDK: ${NDK}"
+          ls ${NDK}
+
           NDK_ARCH="${ARCH}-linux-android"
           # NDK_ARCH="arm-linux-androideabi"
 
