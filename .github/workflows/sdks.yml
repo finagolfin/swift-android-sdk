@@ -367,7 +367,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Run tests on Android x86_64 emulator
-        # temporarily disabled to speed up testing on macos
+        ### temporarily disabled to speed up testing on macos
         if: false
         #if: ${{ matrix.arch == 'x86_64' }}
         uses: reactivecircus/android-emulator-runner@v2
@@ -402,10 +402,9 @@ jobs:
     needs: [get-latest-toolchain, build-sdk-and-tests]
     strategy:
       matrix:
-        #arch: [aarch64, x86_64, armv7]
+        ###arch: [aarch64, x86_64, armv7]
         arch: [x86_64]
-        #version: [release-25c, release-26d, devel, trunk]
-        version: [release-25c]
+        version: [release-25c, release-26d, devel, trunk]
       fail-fast: false
     steps:
       - name: Install Swift Host Toolchain
@@ -414,7 +413,9 @@ jobs:
           pushd swift-toolchain
           if [[ ${{ matrix.version }} = 'release'* ]]; then
             TAG="${{ needs.get-latest-toolchain.outputs.release-version }}"
-            wget -q "https://download.swift.org/swift-5.10.1-release/xcode/${TAG}/${TAG}-osx.pkg"
+            # convert "swift-5.10.1-RELEASE" to "swift-5.10.1-release"
+            BASE=$(echo "$TAG" | tr '[:upper:]' '[:lower:]')
+            wget -q "https://download.swift.org/${BASE}/xcode/${TAG}/${TAG}-osx.pkg"
           elif [ ${{ matrix.version }} = 'devel' ]; then
             TAG="${{ needs.get-latest-toolchain.outputs.devel-version }}"
             wget -q "https://download.swift.org/swift-6.0-branch/xcode/${TAG}/${TAG}-osx.pkg"
@@ -441,15 +442,15 @@ jobs:
           tar xf *.tar.xz
           cd *-sdk
           file usr/bin/swift-build-tool
-          echo "SDK=${PWD}" >> $GITHUB_ENV
+          echo "SDK_ROOT=${PWD}" >> $GITHUB_ENV
       - name: Setup Swift Android SDK
         run: |
-          ls -la ${SDK}/usr/lib/swift/clang
-          rm -vf ${SDK}/usr/lib/swift/clang
+          ls -la ${SDK_ROOT}/usr/lib/swift/clang
+          rm -vf ${SDK_ROOT}/usr/lib/swift/clang
           # Swift 5.10: usr/lib/clang/15.0.0 Trunk and Devel: usr/lib/clang/17
           ${TOOLCHAIN}/bin/clang --version
-          ln -sfv ${TOOLCHAIN}/lib/clang/* ${SDK}/usr/lib/swift/clang
-          ls -d ${SDK}/usr/lib/swift/clang/include
+          ln -sfv ${TOOLCHAIN}/lib/clang/* ${SDK_ROOT}/usr/lib/swift/clang
+          ls -d ${SDK_ROOT}/usr/lib/swift/clang/include
       - name: "Install Android NDK"
         id: setup-ndk
         uses: nttld/setup-ndk@v1
@@ -461,7 +462,7 @@ jobs:
           echo "NDK_PATH=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
       - name: Build Android Sample 
         run: |
-          NDK=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-x86_64
+          NDK_PREBUILT=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-x86_64
           ARCH=${{ matrix.arch }}
           ARCH_TARGET="${ARCH}-unknown-linux-android24"
           ARCHID="${ARCH}-linux-android"
@@ -469,29 +470,28 @@ jobs:
               ARCHID="arm-linux-androideabi"
           fi
 
-          cat > android-${ARCH}.json << EOF
-          {
-              "version": 1,
-              "target": "${ARCH_TARGET}",
-              "toolchain-bin-dir": "${TOOLCHAIN}/bin",
-              "sdk": "${NDK}/sysroot",
-              "extra-cc-flags": [ "-fPIC" ],
-              "extra-cpp-flags": [ "-lstdc++" ],
-              "extra-swiftc-flags": [
-                  "-resource-dir", "${SDK}/usr/lib/swift",
-                  "-tools-directory", "${NDK}/bin",
-                  "-L", "${SDK}/usr/lib",
-                  "-L", "${SDK}/usr/lib/swift/android",
-                  "-L", "${SDK}/usr/lib/${ARCHID}"
-              ]
-          }
-          EOF
-
           # With the full SDK, the libs are all located in:
           #"-L", "${SDK}/usr/lib/${ARCHID}"
           # But with the partial SDK, they are divided between:
           #"-L", "${SDK}/usr/lib",
           #"-L", "${SDK}/usr/lib/swift/android",
+          cat > android-${ARCH}.json << EOF
+          {
+              "version": 1,
+              "target": "${ARCH_TARGET}",
+              "toolchain-bin-dir": "${TOOLCHAIN}/bin",
+              "sdk": "${NDK_PREBUILT}/sysroot",
+              "extra-cc-flags": [ "-fPIC" ],
+              "extra-cpp-flags": [ "-lstdc++" ],
+              "extra-swiftc-flags": [
+                  "-resource-dir", "${SDK_ROOT}/usr/lib/swift",
+                  "-tools-directory", "${NDK_PREBUILT}/bin",
+                  "-L", "${SDK_ROOT}/usr/lib",
+                  "-L", "${SDK_ROOT}/usr/lib/swift/android",
+                  "-L", "${SDK_ROOT}/usr/lib/${ARCHID}"
+              ]
+          }
+          EOF
 
           cat android-${ARCH}.json
 
@@ -520,9 +520,9 @@ jobs:
               print("DispatchQueue.concurrentPerform: \(i)")
           }
 
-          import FoundationNetworking
-          let url = URL(string: "https://example.org")
-          // TODO: networking
+          // TODO: Networking (CANNOT LINK EXECUTABLE "/data/local/tmp/android-swift-test/swift-demo": library "libnghttp3.so" not found)
+          //import FoundationNetworking
+          //let url = URL(string: "https://example.org")
           //let data = try await URLSession.shared.data(for: url)
           EOF
 
@@ -534,15 +534,14 @@ jobs:
           mkdir android-swift-test
           pushd android-swift-test
 
-          cp ${NDK}/sysroot/usr/lib/${ARCHID}/libc++_shared.so .
+          cp ${NDK_PREBUILT}/sysroot/usr/lib/${ARCHID}/libc++_shared.so .
           # this is the path in the full SDK distribution
           #cp ${SDK}/usr/lib/${ARCHID}/*.so .
-          cp ${SDK}/usr/lib/swift/android/*.so .
-          cp ${SDK}/usr/lib/*.so .
+          # these are the paths in the partial SDKs
+          cp ${SDK_ROOT}/usr/lib/swift/android/*.so .
+          cp ${SDK_ROOT}/usr/lib/*.so .
 
-          # finally, copy the executable itself
           cp ../swift-demo/.build/${ARCH_TARGET}/release/swift-demo .
-
           du -skhc *
           popd
       - name: Test Swift Android Executable (x86_64)
@@ -554,7 +553,7 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 24
-          arch: x86_64
+          arch: ${{ matrix.arch }}
           script: |
             adb shell mkdir -p /data/local/tmp/android-swift-test
             adb push android-swift-test/* /data/local/tmp/android-swift-test
