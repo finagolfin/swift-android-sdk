@@ -186,7 +186,6 @@ jobs:
           cp ../android-libs/*/usr/lib/${ARCHID}/libicui18n.so .
           cp ../android-libs/*/usr/lib/${ARCHID}/libicuuc.so .
           cp ../android-libs/*/usr/lib/${ARCHID}/libcurses.so .
-          cp ../android-libs/*/usr/lib/${ARCHID}/libncursesw.so .
           cp ../android-libs/*/usr/lib/${ARCHID}/libsqlite3.so .
           cp ../android-libs/*/usr/lib/${ARCHID}/libcurl.so .
           cp ../android-libs/*/usr/lib/${ARCHID}/libxml2.so .
@@ -197,6 +196,9 @@ jobs:
 
           # finally, copy the executable itself
           cp ../swift-demo/.build/${{ matrix.arch }}-unknown-linux-android24/release/swift-demo .
+
+          # "modify the cross-compiled libdispatch.so and Swift corelibs to include $ORIGIN and other relative directories in their rpaths"
+          patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN *.so
 
           du -skhc *
           popd
