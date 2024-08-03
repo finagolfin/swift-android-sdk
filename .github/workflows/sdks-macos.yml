@@ -20,18 +20,7 @@ jobs:
       - name: Install Tools
         run: brew install tree
 
-      - name: "Install NDK"
-        id: setup-ndk
-        uses: nttld/setup-ndk@v1
-        with:
-          ndk-version: r27
-          add-to-path: false
-
-      - name: Set NDK
-        run: |
-          echo "NDK_PATH=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
-
-      - name: Install Toolchain
+      - name: Install Swift Host Toolchain
         run: |
           mkdir swift-toolchain
           pushd swift-toolchain
@@ -54,10 +43,21 @@ jobs:
           tar xz -C . -f swift-*-osx-package.pkg/Payload
           echo "TOOLCHAIN=${PWD}/usr" >> $GITHUB_ENV
 
-      - name: Check Swift Toolchain
+      - name: Check Swift Host Toolchain
         run: |
           echo "TOOLCHAIN: ${TOOLCHAIN}"
           ${TOOLCHAIN}/bin/swift --version
+
+      - name: "Install Android NDK"
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27
+          add-to-path: false
+
+      - name: Set Android NDK
+        run: |
+          echo "NDK_PATH=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
 
       - name: Fetch Swift Android SDK
         run: |
@@ -73,9 +73,10 @@ jobs:
         run: |
           ls -la ${SDK}/usr/lib/swift/clang
           rm -vf ${SDK}/usr/lib/swift/clang
-          ln -sf ${TOOLCHAIN}/lib/clang/15.0.0 ${SDK}/usr/lib/swift/clang
-          ls -la ${SDK}/usr/lib/swift/clang
-          ls ${SDK}/usr/lib/swift/clang/include
+          # Swift 5.10: usr/lib/clang/15.0.0 Trunk and Devel: usr/lib/clang/17
+          ${TOOLCHAIN}/bin/clang --version
+          ln -sfv ${TOOLCHAIN}/lib/clang/* ${SDK}/usr/lib/swift/clang
+          ls -d ${SDK}/usr/lib/swift/clang/include
 
       - name: Build Android Sample 
         run: |
