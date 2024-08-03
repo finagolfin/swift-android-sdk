@@ -71,8 +71,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        #version: [release-25c, release-26d, devel, trunk]
-        version: [release-25c]
+        version: [release-25c, release-26d, devel, trunk]
         arch: [aarch64, x86_64, armv7]
     env:
       ANDROID_API_LEVEL: 24
