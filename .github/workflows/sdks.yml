@@ -378,8 +378,8 @@ jobs:
     needs: [get-latest-toolchain, build-sdk-and-tests]
     strategy:
       matrix:
+        version: [release-25c, release-27, devel, trunk]
         arch: [aarch64, x86_64, armv7]
-        version: [release-25c, release-26d, devel, trunk]
       fail-fast: false
     steps:
       - name: Install Swift Host Toolchain
