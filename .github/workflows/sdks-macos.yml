@@ -164,6 +164,10 @@ jobs:
           import Foundation
           print("Current Date: \(Date())")
 
+          import Dispatch
+          DispatchQueue.concurrentPerform(iterations: 10) { i in
+              print("DispatchQueue.concurrentPerform: \(i)")
+          }
           EOF
 
           popd
@@ -175,15 +179,13 @@ jobs:
           pushd android-swift-test
 
           cp ${NDK}/sysroot/usr/lib/${ARCHID}/libc++_shared.so .
+          # this is the path in the full SDK distribution
           #cp ${SDK}/usr/lib/${ARCHID}/*.so .
           cp ${SDK}/usr/lib/swift/android/*.so .
           cp ${SDK}/usr/lib/*.so .
 
           # finally, copy the executable itself
           cp ../swift-demo/.build/${{ matrix.arch }}-unknown-linux-android24/release/swift-demo .
-
-          # "modify the cross-compiled libdispatch.so and Swift corelibs to include $ORIGIN and other relative directories in their rpaths"
-          patchelf --set-rpath \$ORIGIN/../..:\$ORIGIN *.so
 
           du -skhc *
           popd
