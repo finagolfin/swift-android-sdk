@@ -157,15 +157,19 @@ jobs:
           ${TOOLCHAIN}/bin/swift package init --type=executable
 
           cat >> Sources/main.swift << EOF
-          import Foundation
+          #if swift(>=6.1)
+          print("Swift version: 6.1+")
+          #elseif swift(>=6.0)
+          print("Swift version: 6.0+")
+          #elseif swift(>=5.10)
+          print("Swift version: 5.10+")
+          #elseif swift(>=5.0)
+          print("Swift version: 5.0+")
+          #endif
 
+          import Foundation
           print("Current Date: \(Date())")
 
-          #if swift(>=6.0)
-          print("Hello, Swift 6!")
-          #elseif swift(>=5.0)
-          print("Hello, Swift 5!")
-          #endif
           EOF
 
           popd
@@ -183,9 +187,13 @@ jobs:
 
           # copy extra libs
           cp ../android-libs/*/usr/lib/${ARCHID}/libandroid-spawn.so .
+          cp ../android-libs/*/usr/lib/${ARCHID}/libswiftGlibc.so .
           cp ../android-libs/*/usr/lib/${ARCHID}/libicudata.so .
           cp ../android-libs/*/usr/lib/${ARCHID}/libicui18n.so .
           cp ../android-libs/*/usr/lib/${ARCHID}/libicuuc.so .
+          cp ../android-libs/*/usr/lib/${ARCHID}/libcurses.so .
+          cp ../android-libs/*/usr/lib/${ARCHID}/libncursesw.so .
+          cp ../android-libs/*/usr/lib/${ARCHID}/libsqlite3.so .
           cp ../android-libs/*/usr/lib/${ARCHID}/libcurl.so .
           cp ../android-libs/*/usr/lib/${ARCHID}/libxml2.so .
 
