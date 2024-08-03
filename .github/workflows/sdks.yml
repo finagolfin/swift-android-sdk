@@ -367,9 +367,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Run tests on Android x86_64 emulator
-        ### temporarily disabled to speed up testing on macos
-        if: false
-        #if: ${{ matrix.arch == 'x86_64' }}
+        if: ${{ matrix.arch == 'x86_64' }}
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 24
@@ -402,8 +400,7 @@ jobs:
     needs: [get-latest-toolchain, build-sdk-and-tests]
     strategy:
       matrix:
-        ###arch: [aarch64, x86_64, armv7]
-        arch: [x86_64]
+        arch: [aarch64, x86_64, armv7]
         version: [release-25c, release-26d, devel, trunk]
       fail-fast: false
     steps:
