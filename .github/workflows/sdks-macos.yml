@@ -8,7 +8,7 @@ on:
 jobs:
   build-toolchain:
     # The macos-14 GH Runner is ARM, which cannot run the Android emulator
-    runs-on: macos-14
+    runs-on: macos-13
     timeout-minutes: 1000
     strategy:
       matrix:
@@ -72,12 +72,7 @@ jobs:
 
       - name: Build Android Sample 
         run: |
-          #ARCH=aarch64
-          #ARCH=x86_64
           ARCH=${{ matrix.arch }}
-
-          #NDK_ARCH="${ARCH}-linux-android"
-          #NDK_ARCH="arm-linux-androideabi"
           case $ARCH in
             "aarch64"|"x86_64")
               NDK_ARCH="${ARCH}-linux-android"
@@ -153,22 +148,15 @@ jobs:
           popd
 
       - name: Test Swift Android Executable (x86_64)
+        # Can only run x86_64; attempting arm64-v8a on Intel yields:
+        # PANIC: Avd's CPU Architecture 'arm64' is not supported by the QEMU2 emulator on x86_64 host
+        # And trying to run emulator on ARM macOS (e.g., macos-14) yields:
+        # HVF error: HV_UNSUPPORTED
         if: ${{ matrix.arch == 'x86_64' }}
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 24
           arch: x86_64
-          script: |
-            adb shell mkdir -p /data/local/tmp/android-swift-test
-            adb push android-swift-test/* /data/local/tmp/android-swift-test
-            adb shell LD_LIBRARY_PATH=/data/local/tmp/android-swift-test /data/local/tmp/android-swift-test/swift-demo
-
-      - name: Test Swift Android Executable (arm64-v8)
-        if: ${{ matrix.arch == 'aarch64' }}
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 30
-          arch: arm64-v8a
           script: |
             adb shell mkdir -p /data/local/tmp/android-swift-test
             adb push android-swift-test/* /data/local/tmp/android-swift-test
