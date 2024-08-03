@@ -104,6 +104,12 @@ jobs:
 
           cat android-${ARCH}.json
 
+          ls -d ${TOOLCHAIN}/bin
+          ls -d ${NDK}/sysroot
+          ls -d ${SDK}/usr/lib/swift
+          ls -d ${NDK}/bin
+          ls -d ${SDK}/usr/lib/${NDK_ARCH}
+
           # create a simple "Hello World" sample
           rm -rf swift-demo
           mkdir swift-demo
