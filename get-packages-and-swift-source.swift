@@ -166,7 +166,7 @@ for termuxPackage in termuxPackages {
   print("Checking for \(packageName)")
   if !fmd.fileExists(atPath: termuxArchive.appendingPathComponent(String(packageName))) {
     print("Downloading \(packageName)")
-    _ = runCommand("curl", with: ["-o", "termux/\(packageName)",
+    _ = runCommand("curl", with: ["-f", "-o", "termux/\(packageName)",
         "\(termuxURL)/\(packagePath)"])
   }
 
@@ -242,7 +242,7 @@ for repo in swiftRepos {
   print("Checking for \(repo) source")
   if !fmd.fileExists(atPath: cwd.appendingPathComponent(repo)) {
     print("Downloading and extracting \(repo) source")
-    _ = runCommand("curl", with: ["-L", "-O",
+    _ = runCommand("curl", with: ["-f", "-L", "-O",
               "https://github.com/swiftlang/\(repo)/archive/refs/tags/\(SWIFT_TAG).tar.gz"])
     _ = runCommand("tar", with: ["xf", "\(SWIFT_TAG).tar.gz"])
     try fmd.moveItem(atPath: cwd.appendingPathComponent("\(repo)-\(SWIFT_TAG)"),
@@ -254,7 +254,7 @@ for repo in swiftRepos {
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
   for repo in extraSwiftRepos {
     let tag = repoTags[repo] ?? SWIFT_TAG
-    _ = runCommand("curl", with: ["-L", "-O",
+    _ = runCommand("curl", with: ["-f", "-L", "-O",
               "https://github.com/\(repo == "Yams" ? "jpsim" : "swiftlang")/\(repo)/archive/refs/tags/\(tag).tar.gz"])
     _ = runCommand("tar", with: ["xf", "\(tag).tar.gz"])
     try fmd.moveItem(atPath: cwd.appendingPathComponent("\(repo)-\(tag)"),
