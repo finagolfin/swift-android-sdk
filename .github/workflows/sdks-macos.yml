@@ -12,9 +12,9 @@ jobs:
     timeout-minutes: 1000
     strategy:
       matrix:
-        arch: [aarch64, x86_64, armv7]
-        swift_branch: ['release/5.10']
-        #swift_branch: ['release/5.10', 'release/6.0', 'main']
+        #arch: [aarch64, x86_64, armv7]
+        arch: [x86_64]
+        version: [release, devel, trunk]
       fail-fast: false
     steps:
       - name: Install Tools
@@ -33,23 +33,36 @@ jobs:
 
       - name: Install Toolchain
         run: |
-          mkdir tc
-          pushd tc
-          wget -q https://download.swift.org/swift-5.10.1-release/xcode/swift-5.10.1-RELEASE/swift-5.10.1-RELEASE-osx.pkg
-          xar -x -C . -f swift-5.10.1-RELEASE-osx.pkg
-          tar xz -C . -f swift-5.10.1-RELEASE-osx-package.pkg/Payload
+          mkdir swift-toolchain
+          pushd swift-toolchain
+          case ${{ matrix.version }} in
+            "release")
+              wget -q https://download.swift.org/swift-5.10.1-release/xcode/swift-5.10.1-RELEASE/swift-5.10.1-RELEASE-osx.pkg
+              ;;
+            "devel")
+              wget -q https://download.swift.org/swift-6.0-branch/xcode/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-07-19-a/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-07-19-a-osx.pkg
+              ;;
+            "trunk")
+              wget -q https://download.swift.org/development/xcode/swift-DEVELOPMENT-SNAPSHOT-2024-07-15-a/swift-DEVELOPMENT-SNAPSHOT-2024-07-15-a-osx.pkg
+              ;;
+            *)
+              echo "Unsupported version: ${{ matrix.version }}"
+              exit 1
+              ;;
+          esac
+          xar -x -C . -f swift-*-osx.pkg
+          tar xz -C . -f swift-*-osx-package.pkg/Payload
           echo "TOOLCHAIN=${PWD}/usr" >> $GITHUB_ENV
 
       - name: Check Swift Toolchain
         run: |
-          # When installed with swift-actions/setup-swift@v2:
-          # /Users/runner/hostedtoolcache/swift-macOS/5.10.1/x64/usr
-          # When installed with manual unpack:
           echo "TOOLCHAIN: ${TOOLCHAIN}"
           ${TOOLCHAIN}/bin/swift --version
 
       - name: Fetch Swift Android SDK
         run: |
+          mkdir swift-android-sdk
+          pushd swift-android-sdk
           SDK_DIR="swift-5.10-android-24-sdk"
           wget -q https://github.com/finagolfin/swift-android-sdk/releases/download/5.10/${SDK_DIR}.tar.xz
           tar xf ${SDK_DIR}.tar.xz
@@ -75,7 +88,7 @@ jobs:
               NDK_ARCH="arm-linux-androideabi"
               ;;
             *)
-              echo "Unsupported architcture: ${ARCH}"
+              echo "Unsupported architecture: ${ARCH}"
               exit 1
               ;;
           esac
