@@ -243,7 +243,7 @@ for repo in swiftRepos {
   if !fmd.fileExists(atPath: cwd.appendingPathComponent(repo)) {
     print("Downloading and extracting \(repo) source")
     _ = runCommand("curl", with: ["-f", "-L", "-O",
-              "https://github.com/swiftlang/\(repo)/archive/refs/tags/\(SWIFT_TAG).tar.gz"])
+              "https://github.com/apple/\(repo)/archive/refs/tags/\(SWIFT_TAG).tar.gz"])
     _ = runCommand("tar", with: ["xf", "\(SWIFT_TAG).tar.gz"])
     try fmd.moveItem(atPath: cwd.appendingPathComponent("\(repo)-\(SWIFT_TAG)"),
                      toPath: cwd.appendingPathComponent(repo))
@@ -255,7 +255,7 @@ if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
   for repo in extraSwiftRepos {
     let tag = repoTags[repo] ?? SWIFT_TAG
     _ = runCommand("curl", with: ["-f", "-L", "-O",
-              "https://github.com/\(repo == "Yams" ? "jpsim" : "swiftlang")/\(repo)/archive/refs/tags/\(tag).tar.gz"])
+              "https://github.com/\(repo == "Yams" ? "jpsim" : "apple")/\(repo)/archive/refs/tags/\(tag).tar.gz"])
     _ = runCommand("tar", with: ["xf", "\(tag).tar.gz"])
     try fmd.moveItem(atPath: cwd.appendingPathComponent("\(repo)-\(tag)"),
                      toPath: cwd.appendingPathComponent(renameRepos[repo] ?? repo))
