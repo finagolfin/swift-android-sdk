@@ -379,7 +379,7 @@ jobs:
     needs: [get-latest-toolchain, build-sdk-and-tests]
     strategy:
       matrix:
-        version: [release, devel, trunk]
+        version: [release-27, devel, trunk]
         arch: [aarch64, x86_64, armv7]
       fail-fast: false
     steps:
@@ -387,7 +387,7 @@ jobs:
         run: |
           if [[ ${{ matrix.version }} = 'release'* ]]; then
             TAG="${{ needs.get-latest-toolchain.outputs.release-version }}"
-            # convert "swift-5.10.1-RELEASE" to "swift-5.10.1-release"
+            # downcase "swift-5.10.1-RELEASE" to "swift-5.10.1-release"
             BRANCH=$(echo "$TAG" | tr '[:upper:]' '[:lower:]')
           elif [ ${{ matrix.version }} = 'devel' ]; then
             TAG="${{ needs.get-latest-toolchain.outputs.devel-version }}"
