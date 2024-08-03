@@ -79,10 +79,7 @@ jobs:
           #NDK_ARCH="${ARCH}-linux-android"
           #NDK_ARCH="arm-linux-androideabi"
           case $ARCH in
-            "aarch64")
-              NDK_ARCH="${ARCH}-linux-android"
-              ;;
-            "x86_64")
+            "aarch64"|"x86_64")
               NDK_ARCH="${ARCH}-linux-android"
               ;;
             "armv7")
@@ -174,10 +171,9 @@ jobs:
           api-level: 24
           arch: x86_64
           script: |
-            TESTDIR=/data/local/tmp/android-swift-test
-            adb shell mkdir -p ${TESTDIR}
-            adb push android-swift-test/* ${TESTDIR}
-            adb shell LD_LIBRARY_PATH=${TESTDIR} ${TESTDIR}/swift-demo
+            adb shell mkdir -p /data/local/tmp/android-swift-test
+            adb push android-swift-test/* /data/local/tmp/android-swift-test
+            adb shell LD_LIBRARY_PATH=/data/local/tmp/android-swift-test /data/local/tmp/android-swift-test/swift-demo
 
       - name: Test Swift Android Executable (arm64-v8)
         if: ${{ matrix.arch == 'aarch64' }}
@@ -186,8 +182,7 @@ jobs:
           api-level: 30
           arch: arm64-v8a
           script: |
-            TESTDIR=/data/local/tmp/android-swift-test
-            adb shell mkdir -p ${TESTDIR}
-            adb push android-swift-test/* ${TESTDIR}
-            adb shell LD_LIBRARY_PATH=${TESTDIR} ${TESTDIR}/swift-demo
+            adb shell mkdir -p /data/local/tmp/android-swift-test
+            adb push android-swift-test/* /data/local/tmp/android-swift-test
+            adb shell LD_LIBRARY_PATH=/data/local/tmp/android-swift-test /data/local/tmp/android-swift-test/swift-demo
 
