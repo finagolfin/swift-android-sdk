@@ -167,7 +167,8 @@ jobs:
 
           cp ../swift-demo/.build/${{ matrix.arch }}-unknown-linux-android24/release/swift-demo .
           cp ${NDK}/sysroot/usr/lib/${NDK_ARCH}/libc++_shared.so .
-          cp ${SDK}/usr/lib/${NDK_ARCH}/*.so .
+          #cp ${SDK}/usr/lib/${NDK_ARCH}/*.so .
+          cp ${SDK}/usr/lib/swift/android/*.so .
 
           du -skhc *
           popd
