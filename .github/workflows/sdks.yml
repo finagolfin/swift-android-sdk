@@ -401,15 +401,46 @@ jobs:
       matrix:
         #arch: [aarch64, x86_64, armv7]
         arch: [x86_64]
-        version: [release, devel, trunk]
+        version: [release-25c, release-26d, devel, trunk]
       fail-fast: false
     steps:
+      - name: Download SDK
+        uses: actions/download-artifact@v4
+        with:
+          name: sdk-${{ matrix.version }}-${{ matrix.arch }}
+          path: swift-android-sdk
+
+      - name: Unpack Swift Android SDK
+        run: |
+          cd swift-android-sdk
+          ls
+          unzip *.zip
+          tar xf *.tar.xz
+          cd *-sdk
+          file usr/bin/swift-build-tool
+          echo "SDK=${PWD}" >> $GITHUB_ENV
+
+      - name: Setup Swift Android SDK
+        run: |
+          ls -la ${SDK}/usr/lib/swift/clang
+          rm -vf ${SDK}/usr/lib/swift/clang
+          # Swift 5.10: usr/lib/clang/15.0.0 Trunk and Devel: usr/lib/clang/17
+          ${TOOLCHAIN}/bin/clang --version
+          ln -sfv ${TOOLCHAIN}/lib/clang/* ${SDK}/usr/lib/swift/clang
+          ls -d ${SDK}/usr/lib/swift/clang/include
+
+
       - name: Install Swift Host Toolchain
         run: |
           mkdir swift-toolchain
           pushd swift-toolchain
+
+          # Note: these are hardwired to match the Ubuntu SDK versions
+          # from the get-latest-toolchain.check step;
+          # once devel/trunk is sync'd back to main, we should
+          # auto-detect the current toolchain and download it
           case ${{ matrix.version }} in
-            "release")
+            "release*")
               wget -q https://download.swift.org/swift-5.10.1-release/xcode/swift-5.10.1-RELEASE/swift-5.10.1-RELEASE-osx.pkg
               ;;
             "devel")
@@ -442,47 +473,6 @@ jobs:
       - name: Set Android NDK
         run: |
           echo "NDK_PATH=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
-
-      - name: Fetch Swift Android SDK
-        run: |
-          mkdir swift-android-sdk
-          pushd swift-android-sdk
-          #SDK_DIR="swift-5.10-android-24-sdk"
-          #wget -q https://github.com/finagolfin/swift-android-sdk/releases/download/5.10/${SDK_DIR}.tar.xz
-          #tar xf ${SDK_DIR}.tar.xz
-          #ls ${SDK_DIR}
-          #echo "SDK=${PWD}/${SDK_DIR}" >> $GITHUB_ENV
-
-          case ${{ matrix.version }} in
-            "release")
-              wget -q https://github.com/marcprux/swift-android-sdk/releases/download/sdk-snapshot-2024-08-02/sdk-release-26d-x86_64.zip
-              ;;
-            "devel")
-              wget -q https://github.com/marcprux/swift-android-sdk/releases/download/sdk-snapshot-2024-08-02/sdk-devel-x86_64.zip
-              ;;
-            "trunk")
-              wget -q https://github.com/marcprux/swift-android-sdk/releases/download/sdk-snapshot-2024-08-02/sdk-trunk-x86_64.zip
-              ;;
-            *)
-              echo "Unsupported version: ${{ matrix.version }}"
-              exit 1
-              ;;
-          esac
-
-          unzip *.zip
-          tar xf *.tar.xz
-          cd *-sdk
-          file usr/bin/swift-build-tool
-          echo "SDK=${PWD}" >> $GITHUB_ENV
-
-      - name: Setup Swift Android SDK
-        run: |
-          ls -la ${SDK}/usr/lib/swift/clang
-          rm -vf ${SDK}/usr/lib/swift/clang
-          # Swift 5.10: usr/lib/clang/15.0.0 Trunk and Devel: usr/lib/clang/17
-          ${TOOLCHAIN}/bin/clang --version
-          ln -sfv ${TOOLCHAIN}/lib/clang/* ${SDK}/usr/lib/swift/clang
-          ls -d ${SDK}/usr/lib/swift/clang/include
 
       - name: Build Android Sample 
         run: |
