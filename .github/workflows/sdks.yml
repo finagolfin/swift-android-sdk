@@ -14,15 +14,6 @@ jobs:
       devel-version: ${{ steps.check.outputs.devel-tag }}
       trunk-version: ${{ steps.check.outputs.trunk-tag }}
     steps:
-      - name: Get cached NDK
-        id: cache-ndk
-        uses: actions/cache@v4
-        with:
-          path: ~/android-ndk-r27-linux.zip
-          key: ndk-27
-      - name: Get NDK 27 if not cached
-        if: ${{ steps.cache-ndk.outputs.cache-hit != 'true' }}
-        run: wget -q -O ~/android-ndk-r27-linux.zip https://dl.google.com/android/repository/android-ndk-r27-linux.zip
       - name: Check for latest Swift ${{ matrix.version }} toolchain
         id: check
         run: |
@@ -93,19 +84,12 @@ jobs:
         with:
           path: ~/${{ steps.version.outputs.tag }}-ubuntu22.04.tar.gz
           key: ${{ steps.version.outputs.tag }}-toolchain
-      - name: Get cached NDK
-        if: ${{ matrix.version != 'release-25c'}}
-        id: cache-ndk
-        uses: actions/cache@v4
-        with:
-          path: ~/android-ndk-r27-linux.zip
-          key: ndk-27
       - name: Get cached SDK
         id: cache-sdk
         uses: actions/cache@v4
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-ndk27-sdk
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-ndk-sdk
       - name: Clone
         uses: actions/checkout@v4
         with:
@@ -132,18 +116,17 @@ jobs:
             git apply swift-android-stdlib-except-trunk.patch
             STUPID_FILE_RENAMING=Tool
           else
-            sed -i "s%r26%r27%" swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
+            sed -i "s%r26%ndk/27%" swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
             STUPID_FILE_RENAMING=Command
           fi
           if [ ${{ matrix.version }} = 'release-25c' ]; then
-            NDK=$ANDROID_NDK
+            NDK=$ANDROID_NDK/../25.2.9519653
             sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" swift-corelibs-libdispatch/dispatch/dispatch.h
             sed -i "s%#include <unistd%#include <signal.h>\n#include <unistd%" llbuild/products/libllbuild/include/llbuild/buildsystem.h
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-tools-support-core/Sources/TSCclibc/include/indexstore_functions.h
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" swift-crypto/Sources/CCryptoBoringSSL/include/CCryptoBoringSSL_asn1.h
           else
-            unzip -q ~/android-ndk-r27-linux.zip
-            NDK=`pwd`/android-ndk-r27
+            NDK=$ANDROID_NDK
             git apply -C0 swift-android-foundation-ndk26.patch
             if [ ${{ matrix.version }} = 'release-26d' ]; then
               git apply swift-android-stdlib-ndk26.patch
@@ -176,10 +159,6 @@ jobs:
         id: sdk-unpack
         run: |
           cd sdk-config
-
-          if [[ ${{ matrix.version }} != 'release-25c' && ! -d android-ndk-r27 ]]; then
-            unzip -q ~/android-ndk-r27-linux.zip
-          fi
 
           if [ ! -d ${{ steps.version.outputs.tag }}-ubuntu22.04 ]; then
             tar xf ~/${{ steps.version.outputs.tag }}-ubuntu22.04.tar.gz
