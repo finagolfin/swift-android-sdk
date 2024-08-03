@@ -103,11 +103,12 @@ jobs:
           SWIFT_TAG: ${{ steps.version.outputs.tag }}
           ANDROID_ARCH: ${{ matrix.arch }}
         run: |
+          set -x
           cd sdk-config
           sudo apt install ninja-build
           BUILD_SWIFT_PM=1 swift get-packages-and-swift-source.swift
 
-          SDK_NAME=$(ls | grep swift-$(echo ${{ matrix.version }} | sed "s/-2..//")-android-${{ matrix.arch }})
+          SDK_NAME=$(ls | grep swift-$(echo ${{ matrix.version }} | sed "s/-2[0-9][a-z]*//")-android-${{ matrix.arch }})
           SDK=`pwd`/$SDK_NAME
 
           tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
