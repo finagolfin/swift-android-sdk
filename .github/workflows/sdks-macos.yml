@@ -180,14 +180,8 @@ jobs:
           mkdir android-swift-test
           pushd android-swift-test
 
-          cp ../swift-demo/.build/${{ matrix.arch }}-unknown-linux-android24/release/swift-demo .
-          cp ${NDK}/sysroot/usr/lib/${ARCHID}/libc++_shared.so .
-          #cp ${SDK}/usr/lib/${ARCHID}/*.so .
-          cp ${SDK}/usr/lib/swift/android/*.so .
-
           # copy extra libs
           cp ../android-libs/*/usr/lib/${ARCHID}/libandroid-spawn.so .
-          cp ../android-libs/*/usr/lib/${ARCHID}/libswiftGlibc.so .
           cp ../android-libs/*/usr/lib/${ARCHID}/libicudata.so .
           cp ../android-libs/*/usr/lib/${ARCHID}/libicui18n.so .
           cp ../android-libs/*/usr/lib/${ARCHID}/libicuuc.so .
@@ -196,6 +190,13 @@ jobs:
           cp ../android-libs/*/usr/lib/${ARCHID}/libsqlite3.so .
           cp ../android-libs/*/usr/lib/${ARCHID}/libcurl.so .
           cp ../android-libs/*/usr/lib/${ARCHID}/libxml2.so .
+
+          cp ${NDK}/sysroot/usr/lib/${ARCHID}/libc++_shared.so .
+          #cp ${SDK}/usr/lib/${ARCHID}/*.so .
+          cp ${SDK}/usr/lib/swift/android/*.so .
+
+          # finally, copy the executable itself
+          cp ../swift-demo/.build/${{ matrix.arch }}-unknown-linux-android24/release/swift-demo .
 
           du -skhc *
           popd
