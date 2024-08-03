@@ -100,17 +100,6 @@ jobs:
           ln -sfv ${TOOLCHAIN}/lib/clang/* ${SDK}/usr/lib/swift/clang
           ls -d ${SDK}/usr/lib/swift/clang/include
 
-      # download an archived toolchain package just to grab libicudata.so
-      # and other sundry libraries
-      - name: Fetch Additional Android Libraries
-        run: |
-          mkdir android-libs
-          pushd android-libs
-          XTRA_DIR="swift-5.10-android-24-sdk"
-          wget -q https://github.com/finagolfin/swift-android-sdk/releases/download/5.10/${XTRA_DIR}.tar.xz
-          tar xf ${XTRA_DIR}.tar.xz
-          ls ${XTRA_DIR}
-
       - name: Build Android Sample 
         run: |
           ARCH=${{ matrix.arch }}
@@ -142,7 +131,9 @@ jobs:
               "extra-swiftc-flags": [
                   "-resource-dir", "${SDK}/usr/lib/swift",
                   "-tools-directory", "${NDK}/bin",
-                  "-L", "${SDK}/usr/lib"
+                  "-L", "${SDK}/usr/lib",
+                  "-L", "${SDK}/usr/lib/swift/android",
+                  "-L", "${SDK}/usr/lib/${ARCHID}"
               ]
           }
           EOF
@@ -183,19 +174,10 @@ jobs:
           mkdir android-swift-test
           pushd android-swift-test
 
-          # copy extra libs
-          cp ../android-libs/*/usr/lib/${ARCHID}/libandroid-spawn.so .
-          cp ../android-libs/*/usr/lib/${ARCHID}/libicudata.so .
-          cp ../android-libs/*/usr/lib/${ARCHID}/libicui18n.so .
-          cp ../android-libs/*/usr/lib/${ARCHID}/libicuuc.so .
-          cp ../android-libs/*/usr/lib/${ARCHID}/libcurses.so .
-          cp ../android-libs/*/usr/lib/${ARCHID}/libsqlite3.so .
-          cp ../android-libs/*/usr/lib/${ARCHID}/libcurl.so .
-          cp ../android-libs/*/usr/lib/${ARCHID}/libxml2.so .
-
           cp ${NDK}/sysroot/usr/lib/${ARCHID}/libc++_shared.so .
           #cp ${SDK}/usr/lib/${ARCHID}/*.so .
           cp ${SDK}/usr/lib/swift/android/*.so .
+          cp ${SDK}/usr/lib/*.so .
 
           # finally, copy the executable itself
           cp ../swift-demo/.build/${{ matrix.arch }}-unknown-linux-android24/release/swift-demo .
