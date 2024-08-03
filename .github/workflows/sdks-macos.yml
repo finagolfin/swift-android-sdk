@@ -182,12 +182,12 @@ jobs:
           cp ${SDK}/usr/lib/swift/android/*.so .
 
           # copy extra libs
-          cp ../android-libs/*/${ARCHID}/libandroid-spawn.so .
-          cp ../android-libs/*/${ARCHID}/libicudata.so .
-          cp ../android-libs/*/${ARCHID}/libicui18n.so .
-          cp ../android-libs/*/${ARCHID}/libicuuc.so .
-          cp ../android-libs/*/${ARCHID}/libcurl.so .
-          cp ../android-libs/*/${ARCHID}/libxml2.so .
+          cp ../android-libs/*/usr/lib/${ARCHID}/libandroid-spawn.so .
+          cp ../android-libs/*/usr/lib/${ARCHID}/libicudata.so .
+          cp ../android-libs/*/usr/lib/${ARCHID}/libicui18n.so .
+          cp ../android-libs/*/usr/lib/${ARCHID}/libicuuc.so .
+          cp ../android-libs/*/usr/lib/${ARCHID}/libcurl.so .
+          cp ../android-libs/*/usr/lib/${ARCHID}/libxml2.so .
 
           du -skhc *
           popd
