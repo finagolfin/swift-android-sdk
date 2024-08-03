@@ -63,11 +63,33 @@ jobs:
         run: |
           mkdir swift-android-sdk
           pushd swift-android-sdk
-          SDK_DIR="swift-5.10-android-24-sdk"
-          wget -q https://github.com/finagolfin/swift-android-sdk/releases/download/5.10/${SDK_DIR}.tar.xz
-          tar xf ${SDK_DIR}.tar.xz
-          ls ${SDK_DIR}
-          echo "SDK=${PWD}/${SDK_DIR}" >> $GITHUB_ENV
+          #SDK_DIR="swift-5.10-android-24-sdk"
+          #wget -q https://github.com/finagolfin/swift-android-sdk/releases/download/5.10/${SDK_DIR}.tar.xz
+          #tar xf ${SDK_DIR}.tar.xz
+          #ls ${SDK_DIR}
+          #echo "SDK=${PWD}/${SDK_DIR}" >> $GITHUB_ENV
+
+          case ${{ matrix.version }} in
+            "release")
+              wget -q https://github.com/marcprux/swift-android-sdk/releases/download/sdk-snapshot-2024-08-02/sdk-release-26d-x86_64.zip
+              ;;
+            "devel")
+              wget -q https://github.com/marcprux/swift-android-sdk/releases/download/sdk-snapshot-2024-08-02/sdk-devel-x86_64.zip
+              ;;
+            "trunk")
+              wget -q https://github.com/marcprux/swift-android-sdk/releases/download/sdk-snapshot-2024-08-02/sdk-trunk-x86_64.zip
+              ;;
+            *)
+              echo "Unsupported version: ${{ matrix.version }}"
+              exit 1
+              ;;
+          esac
+
+          unzip *.zip
+          tar xf *.tar.xz
+          cd *-sdk
+          file usr/bin/swift-build-tool
+          echo "SDK=${PWD}" >> $GITHUB_ENV
 
       - name: Setup Swift Android SDK
         run: |
