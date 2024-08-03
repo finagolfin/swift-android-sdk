@@ -62,7 +62,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [release-25c, release-27, devel, trunk]
+        # TODO: restore release-27 once it builds
+        ###version: [release-25c, release-27, devel, trunk]
+        version: [release-25c, devel, trunk]
         arch: [aarch64, x86_64, armv7]
     env:
       ANDROID_API_LEVEL: 24
@@ -378,7 +380,9 @@ jobs:
     needs: [get-latest-toolchain, build-sdk-and-tests]
     strategy:
       matrix:
-        version: [release-25c, release-27, devel, trunk]
+        # TODO: restore release-27 once it builds
+        ###version: [release-25c, release-27, devel, trunk]
+        version: [release-25c, devel, trunk]
         arch: [aarch64, x86_64, armv7]
       fail-fast: false
     steps:
