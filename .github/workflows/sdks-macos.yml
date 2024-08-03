@@ -156,6 +156,15 @@ jobs:
 
           ${TOOLCHAIN}/bin/swift build -c release --verbose --package-path swift-demo --destination android-${ARCH}.json -Xlinker -rpath -Xlinker \$ORIGIN/$SDK_NAME/usr/lib/$NDK_ARCH
 
+          # prepare files to push
+          mkdir pack
+
+          cp swift-demo/.build/${{ matrix.arch }}-unknown-linux-android24/release/swift-demo pack/
+          cp ${NDK}/sysroot/usr/lib/${{ matrix.arch }}-linux-android/libc++_shared.so pack/
+          cp swift-5.10-android-24-sdk/usr/lib/${{ matrix.arch }}-linux-android/*.so pack/
+          du -skc pack/*
+
+
       - name: Test Swift Android Executable
         if: ${{ matrix.arch == 'x86_64' }}
         uses: reactivecircus/android-emulator-runner@v2
@@ -164,16 +173,7 @@ jobs:
           arch: x86_64
           script: |
             adb shell mkdir -p /data/local/tmp/swifttest
-
-            adb push swift-demo/.build/${{ matrix.arch }}-unknown-linux-android24/release/swift-demo /data/local/tmp/swifttest
-
-            adb push ${NDK}/sysroot/usr/lib/${{ matrix.arch }}-linux-android/libc++_shared.so /data/local/tmp/swifttest
-
-            pushd swift-5.10-android-24-sdk/usr/lib/${{ matrix.arch }}-linux-android/
-                adb push *.so /data/local/tmp/swifttest
-            popd
-
-            # Run the sample on the emulator
+            adb push pack/* /data/local/tmp/swifttest
             adb shell LD_LIBRARY_PATH=/data/local/tmp/swifttest /data/local/tmp/swifttest/swift-demo
 
 
