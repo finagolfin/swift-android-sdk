@@ -12,6 +12,7 @@ jobs:
     timeout-minutes: 1000
     strategy:
       matrix:
+        arch: [aarch64, x86_64, armv7]
         swift_branch: ['release/5.10']
         #swift_branch: ['release/5.10', 'release/6.0', 'main']
       fail-fast: false
@@ -72,7 +73,8 @@ jobs:
       - name: Build Android Sample 
         run: |
           #ARCH=aarch64
-          ARCH=x86_64
+          #ARCH=x86_64
+          ARCH=${{ matrix.arch }}
           NDK_ARCH="${ARCH}-linux-android"
           #NDK_ARCH="arm-linux-androideabi"
 
@@ -137,42 +139,26 @@ jobs:
 
           ${TOOLCHAIN}/bin/swift build --verbose --package-path swift-demo --destination android-${ARCH}.json -Xlinker -rpath -Xlinker \$ORIGIN/$SDK_NAME/usr/lib/$NDK_ARCH
 
-      - name: Cache Android emulator snapshot
-        uses: actions/cache@v4
-        id: avd-cache
-        with:
-          path: |
-            ~/.android/avd/*
-            ~/.android/adb*
-          key: avd-30-aosp-atd
-
-      - name: Generate Android emulator snapshot
-        if: steps.avd-cache.outputs.cache-hit != 'true'
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          #working-directory: .build/android-tests
-          target: aosp_atd
-          api-level: 30
-          arch: x86_64
-          channel: canary
-          profile: pixel
-          avd-name: Pixel_API_30
-          force-avd-creation: false
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: false
-          script: echo "Generated AVD snapshot for caching"
-
       - name: Test Swift Android Executable
+        if: ${{ matrix.arch == 'x86_64' }}
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          #working-directory: .build/android-tests
-          target: aosp_atd
-          api-level: 30
-          arch: x86_64
-          channel: canary
-          profile: pixel
-          avd-name: Pixel_API_30
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          api-level: 24
+          arch: ${{ matrix.arch == 'x86_64' }}
           script: |
             ls
+            DROID_TMP=/data/local/tmp/swifttest-$(date +%s)
+            adb shell mkdir -p ${DROID_TMP}
+
+            adb push swift-demo/.build/${{ matrix.arch }}-unknown-linux-android24/${CONFIG}/swift-demo ${DROID_TMP}
+
+            adb push ${NDK}/sysroot/usr/lib/${{ matrix.arch }}-linux-android/libc++_shared.so ${DROID_TMP}
+
+            pushd swift-5.10-android-24-sdk/usr/lib/${{ matrix.arch }}-linux-android/
+                adb push *.so ${DROID_TMP}
+            popd
+
+            # Run the sample on the emulator
+            adb shell LD_LIBRARY_PATH=${DROID_TMP} ${DROID_TMP}/swift-demo
+
 
