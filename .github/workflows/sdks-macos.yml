@@ -102,28 +102,18 @@ jobs:
 
       - name: Build Android Sample 
         run: |
-          ARCH=${{ matrix.arch }}
-          case $ARCH in
-            "aarch64"|"x86_64")
-              ARCHID="${ARCH}-linux-android"
-              ;;
-            "armv7")
-              ARCHID="arm-linux-androideabi"
-              ;;
-            *)
-              echo "Unsupported architecture: ${ARCH}"
-              exit 1
-              ;;
-          esac
-
-          echo "NDK_PATH: ${NDK_PATH}"
           NDK=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-x86_64
-          echo "NDK: ${NDK}"
+          ARCH=${{ matrix.arch }}
+          ARCH_TARGET="${ARCH}-unknown-linux-android24"
+          ARCHID="${ARCH}-linux-android"
+          if [ "$ARCH" == "armv7" ]; then
+              ARCHID="arm-linux-androideabi"
+          fi
 
           cat > android-${ARCH}.json << EOF
           {
               "version": 1,
-              "target": "${ARCH}-unknown-linux-android24",
+              "target": "${ARCH_TARGET}",
               "toolchain-bin-dir": "${TOOLCHAIN}/bin",
               "sdk": "${NDK}/sysroot",
               "extra-cc-flags": [ "-fPIC" ],
@@ -138,8 +128,11 @@ jobs:
           }
           EOF
 
-          # With the full SDK, this is:
+          # With the full SDK, the libs are all located in:
           #"-L", "${SDK}/usr/lib/${ARCHID}"
+          # But with the partial SDK, they are divided between:
+          #"-L", "${SDK}/usr/lib",
+          #"-L", "${SDK}/usr/lib/swift/android",
 
           cat android-${ARCH}.json
 
@@ -185,7 +178,7 @@ jobs:
           cp ${SDK}/usr/lib/*.so .
 
           # finally, copy the executable itself
-          cp ../swift-demo/.build/${{ matrix.arch }}-unknown-linux-android24/release/swift-demo .
+          cp ../swift-demo/.build/${ARCH_TARGET}/release/swift-demo .
 
           du -skhc *
           popd
