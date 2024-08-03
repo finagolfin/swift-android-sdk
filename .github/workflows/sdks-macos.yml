@@ -75,8 +75,25 @@ jobs:
           #ARCH=aarch64
           #ARCH=x86_64
           ARCH=${{ matrix.arch }}
-          NDK_ARCH="${ARCH}-linux-android"
+
+          #NDK_ARCH="${ARCH}-linux-android"
           #NDK_ARCH="arm-linux-androideabi"
+          case $ARCH in
+            "aarch64")
+              NDK_ARCH="${ARCH}-linux-android"
+              ;;
+            "x86_64")
+              NDK_ARCH="${ARCH}-linux-android"
+              ;;
+            "armv7")
+              NDK_ARCH="arm-linux-androideabi"
+              ;;
+            *)
+              echo "Unsupported architcture: ${ARCH}"
+              exit 1
+              ;;
+          esac
+
 
           echo "NDK_PATH: ${NDK_PATH}"
           NDK=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-x86_64
@@ -144,7 +161,7 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 24
-          arch: ${{ matrix.arch == 'x86_64' }}
+          arch: x86_64
           script: |
             ls
             DROID_TMP=/data/local/tmp/swifttest-$(date +%s)
