@@ -31,26 +31,20 @@ jobs:
         run: |
           echo "NDK_PATH=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
 
-      - name: Check NDK
-        run: |
-          # /Users/runner/hostedtoolcache/ndk/r27/x64
-          echo "NDK_PATH: ${NDK_PATH}"
-          ls ${NDK_PATH}
-
       - name: Install Toolchain
-        uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: "5.10.1"
-
-      - name: Set Swift Toolchain
         run: |
-          swift --version
-          which swift
-          echo "TOOLCHAIN=$(dirname $(dirname $(which swift)))" >> $GITHUB_ENV
+          mkdir tc
+          pushd tc
+          wget -q https://download.swift.org/swift-5.10.1-release/xcode/swift-5.10.1-RELEASE/swift-5.10.1-RELEASE-osx.pkg
+          xar -x -C . -f swift-5.10.1-RELEASE-osx.pkg
+          tar xz -C . -f swift-5.10.1-RELEASE-osx-package.pkg/Payload
+          echo "TOOLCHAIN=${PWD}/usr" >> $GITHUB_ENV
 
       - name: Check Swift Toolchain
         run: |
+          # When installed with swift-actions/setup-swift@v2:
           # /Users/runner/hostedtoolcache/swift-macOS/5.10.1/x64/usr
+          # When installed with manual unpack:
           echo "TOOLCHAIN: ${TOOLCHAIN}"
           ${TOOLCHAIN}/bin/swift --version
 
@@ -86,7 +80,6 @@ jobs:
               ;;
           esac
 
-
           echo "NDK_PATH: ${NDK_PATH}"
           NDK=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-x86_64
           echo "NDK: ${NDK}"
@@ -97,16 +90,12 @@ jobs:
               "target": "${ARCH}-unknown-linux-android24",
               "toolchain-bin-dir": "${TOOLCHAIN}/bin",
               "sdk": "${NDK}/sysroot",
-              "extra-cc-flags": [
-                  "-fPIC"
-              ],
+              "extra-cc-flags": [ "-fPIC" ],
+              "extra-cpp-flags": [ "-lstdc++" ],
               "extra-swiftc-flags": [
                   "-resource-dir", "${SDK}/usr/lib/swift",
                   "-tools-directory", "${NDK}/bin",
                   "-L", "${SDK}/usr/lib/${NDK_ARCH}"
-              ],
-              "extra-cpp-flags": [
-                  "-lstdc++"
               ]
           }
           EOF
