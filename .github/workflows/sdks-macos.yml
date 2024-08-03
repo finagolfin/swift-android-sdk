@@ -174,18 +174,20 @@ jobs:
           api-level: 24
           arch: x86_64
           script: |
-            adb shell mkdir -p /data/local/tmp/android-swift-test
-            adb push android-swift-test/* /data/local/tmp/android-swift-test
-            adb shell LD_LIBRARY_PATH=/data/local/tmp/android-swift-test /data/local/tmp/android-swift-test/swift-demo
+            TESTDIR=/data/local/tmp/android-swift-test
+            adb shell mkdir -p ${TESTDIR}
+            adb push android-swift-test/* ${TESTDIR}
+            adb shell LD_LIBRARY_PATH=${TESTDIR} ${TESTDIR}/swift-demo
 
       - name: Test Swift Android Executable (arm64-v8)
         if: ${{ matrix.arch == 'aarch64' }}
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 30
-          arch: arm64-v8
+          arch: arm64-v8a
           script: |
-            adb shell mkdir -p /data/local/tmp/android-swift-test
-            adb push android-swift-test/* /data/local/tmp/android-swift-test
-            adb shell LD_LIBRARY_PATH=/data/local/tmp/android-swift-test /data/local/tmp/android-swift-test/swift-demo
+            TESTDIR=/data/local/tmp/android-swift-test
+            adb shell mkdir -p ${TESTDIR}
+            adb push android-swift-test/* ${TESTDIR}
+            adb shell LD_LIBRARY_PATH=${TESTDIR} ${TESTDIR}/swift-demo
 
