@@ -76,7 +76,7 @@ func runCommand(_ name: String, with args: [String]) -> String {
   command.standardOutput = output
   command.standardError = error
   do {
-    print("running command: \(args..joined(separator: " "))")
+    print("running command: \(args.joined(separator: " "))")
     try command.run()
   } catch {
     fatalError("couldn't find \(name) with error: \(error)")
