@@ -406,31 +406,6 @@ jobs:
         version: [release-25c, release-26d, devel, trunk]
       fail-fast: false
     steps:
-      - name: Download SDK
-        uses: actions/download-artifact@v4
-        with:
-          name: sdk-${{ matrix.version }}-${{ matrix.arch }}
-          path: swift-android-sdk
-
-      - name: Unpack Swift Android SDK
-        run: |
-          cd swift-android-sdk
-          ls
-          tar xf *.tar.xz
-          cd *-sdk
-          file usr/bin/swift-build-tool
-          echo "SDK=${PWD}" >> $GITHUB_ENV
-
-      - name: Setup Swift Android SDK
-        run: |
-          ls -la ${SDK}/usr/lib/swift/clang
-          rm -vf ${SDK}/usr/lib/swift/clang
-          # Swift 5.10: usr/lib/clang/15.0.0 Trunk and Devel: usr/lib/clang/17
-          ${TOOLCHAIN}/bin/clang --version
-          ln -sfv ${TOOLCHAIN}/lib/clang/* ${SDK}/usr/lib/swift/clang
-          ls -d ${SDK}/usr/lib/swift/clang/include
-
-
       - name: Install Swift Host Toolchain
         run: |
           mkdir swift-toolchain
@@ -458,23 +433,40 @@ jobs:
           xar -x -C . -f swift-*-osx.pkg
           tar xz -C . -f swift-*-osx-package.pkg/Payload
           echo "TOOLCHAIN=${PWD}/usr" >> $GITHUB_ENV
-
       - name: Check Swift Host Toolchain
         run: |
           echo "TOOLCHAIN: ${TOOLCHAIN}"
           ${TOOLCHAIN}/bin/swift --version
-
+      - name: Download Swift Android SDK
+        uses: actions/download-artifact@v4
+        with:
+          name: sdk-${{ matrix.version }}-${{ matrix.arch }}
+          path: swift-android-sdk
+      - name: Unpack Swift Android SDK
+        run: |
+          cd swift-android-sdk
+          ls
+          tar xf *.tar.xz
+          cd *-sdk
+          file usr/bin/swift-build-tool
+          echo "SDK=${PWD}" >> $GITHUB_ENV
+      - name: Setup Swift Android SDK
+        run: |
+          ls -la ${SDK}/usr/lib/swift/clang
+          rm -vf ${SDK}/usr/lib/swift/clang
+          # Swift 5.10: usr/lib/clang/15.0.0 Trunk and Devel: usr/lib/clang/17
+          ${TOOLCHAIN}/bin/clang --version
+          ln -sfv ${TOOLCHAIN}/lib/clang/* ${SDK}/usr/lib/swift/clang
+          ls -d ${SDK}/usr/lib/swift/clang/include
       - name: "Install Android NDK"
         id: setup-ndk
         uses: nttld/setup-ndk@v1
         with:
           ndk-version: r27
           add-to-path: false
-
       - name: Set Android NDK
         run: |
           echo "NDK_PATH=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
-
       - name: Build Android Sample 
         run: |
           NDK=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-x86_64
@@ -557,7 +549,6 @@ jobs:
 
           du -skhc *
           popd
-
       - name: Test Swift Android Executable (x86_64)
         # Can only run x86_64; attempting arm64-v8a on Intel yields:
         # PANIC: Avd's CPU Architecture 'arm64' is not supported by the QEMU2 emulator on x86_64 host
@@ -572,6 +563,4 @@ jobs:
             adb shell mkdir -p /data/local/tmp/android-swift-test
             adb push android-swift-test/* /data/local/tmp/android-swift-test
             adb shell LD_LIBRARY_PATH=/data/local/tmp/android-swift-test /data/local/tmp/android-swift-test/swift-demo
-
-
 
