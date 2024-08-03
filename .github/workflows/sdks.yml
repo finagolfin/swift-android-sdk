@@ -59,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [release-25c, release-26d, devel, trunk]
+        version: [release-25c, release-27, devel, trunk]
         arch: [aarch64, x86_64, armv7]
     env:
       ANDROID_API_LEVEL: 24
@@ -128,7 +128,7 @@ jobs:
           else
             NDK=$ANDROID_NDK
             git apply -C0 swift-android-foundation-ndk26.patch
-            if [ ${{ matrix.version }} = 'release-26d' ]; then
+            if [ ${{ matrix.version }} = 'release-27' ]; then
               git apply swift-android-stdlib-ndk26.patch
             else
               if [ ${{ matrix.version }} = 'devel' ]; then
