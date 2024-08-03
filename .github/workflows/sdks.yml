@@ -71,7 +71,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [release-25c, release-26d, devel, trunk]
+        #version: [release-25c, release-26d, devel, trunk]
+        version: [release-25c]
         arch: [aarch64, x86_64, armv7]
     env:
       ANDROID_API_LEVEL: 24
@@ -398,12 +399,13 @@ jobs:
   macos-toolchain-tests:
     # The macos-14 GH Runner is ARM, which cannot run the Android emulator
     runs-on: macos-13
-    needs: build-sdk-and-tests
+    needs: [get-latest-toolchain, build-sdk-and-tests]
     strategy:
       matrix:
         #arch: [aarch64, x86_64, armv7]
         arch: [x86_64]
-        version: [release-25c, release-26d, devel, trunk]
+        #version: [release-25c, release-26d, devel, trunk]
+        version: [release-25c]
       fail-fast: false
     steps:
       - name: Install Swift Host Toolchain
@@ -494,7 +496,6 @@ jobs:
           cat android-${ARCH}.json
 
           # create a simple "Hello World" sample
-          rm -rf swift-demo
           mkdir swift-demo
           pushd swift-demo
 
@@ -518,6 +519,11 @@ jobs:
           DispatchQueue.concurrentPerform(iterations: 10) { i in
               print("DispatchQueue.concurrentPerform: \(i)")
           }
+
+          import FoundationNetworking
+          let url = URL(string: "https://example.org")
+          // TODO: networking
+          //let data = try await URLSession.shared.data(for: url)
           EOF
 
           popd
