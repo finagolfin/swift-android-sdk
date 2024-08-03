@@ -100,15 +100,26 @@ jobs:
           ln -sfv ${TOOLCHAIN}/lib/clang/* ${SDK}/usr/lib/swift/clang
           ls -d ${SDK}/usr/lib/swift/clang/include
 
+      # download an archived toolchain package just to grab libicudata.so
+      # and other sundry libraries
+      - name: Fetch Additional Android Libraries
+        run: |
+          mkdir android-libs
+          pushd android-libs
+          XTRA_DIR="swift-5.10-android-24-sdk"
+          wget -q https://github.com/finagolfin/swift-android-sdk/releases/download/5.10/${XTRA_DIR}.tar.xz
+          tar xf ${XTRA_DIR}.tar.xz
+          ls ${XTRA_DIR}
+
       - name: Build Android Sample 
         run: |
           ARCH=${{ matrix.arch }}
           case $ARCH in
             "aarch64"|"x86_64")
-              NDK_ARCH="${ARCH}-linux-android"
+              ARCHID="${ARCH}-linux-android"
               ;;
             "armv7")
-              NDK_ARCH="arm-linux-androideabi"
+              ARCHID="arm-linux-androideabi"
               ;;
             *)
               echo "Unsupported architecture: ${ARCH}"
@@ -131,7 +142,7 @@ jobs:
               "extra-swiftc-flags": [
                   "-resource-dir", "${SDK}/usr/lib/swift",
                   "-tools-directory", "${NDK}/bin",
-                  "-L", "${SDK}/usr/lib/${NDK_ARCH}"
+                  "-L", "${SDK}/usr/lib/${ARCHID}"
               ]
           }
           EOF
@@ -159,16 +170,24 @@ jobs:
 
           popd
 
-          ${TOOLCHAIN}/bin/swift build -c release --verbose --package-path swift-demo --destination android-${ARCH}.json -Xlinker -rpath -Xlinker \$ORIGIN/$SDK_NAME/usr/lib/$NDK_ARCH
+          ${TOOLCHAIN}/bin/swift build -c release --verbose --package-path swift-demo --destination android-${ARCH}.json -Xlinker -rpath -Xlinker \$ORIGIN/$SDK_NAME/usr/lib/$ARCHID
 
           # prepare files to push
           mkdir android-swift-test
           pushd android-swift-test
 
           cp ../swift-demo/.build/${{ matrix.arch }}-unknown-linux-android24/release/swift-demo .
-          cp ${NDK}/sysroot/usr/lib/${NDK_ARCH}/libc++_shared.so .
-          #cp ${SDK}/usr/lib/${NDK_ARCH}/*.so .
+          cp ${NDK}/sysroot/usr/lib/${ARCHID}/libc++_shared.so .
+          #cp ${SDK}/usr/lib/${ARCHID}/*.so .
           cp ${SDK}/usr/lib/swift/android/*.so .
+
+          # copy extra libs
+          cp ../android-libs/*/${ARCHID}/libandroid-spawn.so .
+          cp ../android-libs/*/${ARCHID}/libicudata.so .
+          cp ../android-libs/*/${ARCHID}/libicui18n.so .
+          cp ../android-libs/*/${ARCHID}/libicuuc.so .
+          cp ../android-libs/*/${ARCHID}/libcurl.so .
+          cp ../android-libs/*/${ARCHID}/libxml2.so .
 
           du -skhc *
           popd
