@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Install Tools
-        run: brew install tree
+        run: brew install patchelf tree
 
       - name: Install Swift Host Toolchain
         run: |
