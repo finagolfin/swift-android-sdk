@@ -157,23 +157,35 @@ jobs:
           ${TOOLCHAIN}/bin/swift build -c release --verbose --package-path swift-demo --destination android-${ARCH}.json -Xlinker -rpath -Xlinker \$ORIGIN/$SDK_NAME/usr/lib/$NDK_ARCH
 
           # prepare files to push
-          mkdir pack
+          mkdir android-swift-test
+          pushd android-swift-test
 
-          cp swift-demo/.build/${{ matrix.arch }}-unknown-linux-android24/release/swift-demo pack/
-          cp ${NDK}/sysroot/usr/lib/${{ matrix.arch }}-linux-android/libc++_shared.so pack/
-          cp swift-5.10-android-24-sdk/usr/lib/${{ matrix.arch }}-linux-android/*.so pack/
-          du -skc pack/*
+          cp ../swift-demo/.build/${{ matrix.arch }}-unknown-linux-android24/release/swift-demo .
+          cp ${NDK}/sysroot/usr/lib/${NDK_ARCH}/libc++_shared.so .
+          cp ${SDK}/usr/lib/${NDK_ARCH}/*.so .
 
+          du -skhc *
+          popd
 
-      - name: Test Swift Android Executable
+      - name: Test Swift Android Executable (x86_64)
         if: ${{ matrix.arch == 'x86_64' }}
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 24
           arch: x86_64
           script: |
-            adb shell mkdir -p /data/local/tmp/swifttest
-            adb push pack/* /data/local/tmp/swifttest
-            adb shell LD_LIBRARY_PATH=/data/local/tmp/swifttest /data/local/tmp/swifttest/swift-demo
+            adb shell mkdir -p /data/local/tmp/android-swift-test
+            adb push android-swift-test/* /data/local/tmp/android-swift-test
+            adb shell LD_LIBRARY_PATH=/data/local/tmp/android-swift-test /data/local/tmp/android-swift-test/swift-demo
 
+      - name: Test Swift Android Executable (arm64-v8)
+        if: ${{ matrix.arch == 'aarch64' }}
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: arm64-v8
+          script: |
+            adb shell mkdir -p /data/local/tmp/android-swift-test
+            adb push android-swift-test/* /data/local/tmp/android-swift-test
+            adb shell LD_LIBRARY_PATH=/data/local/tmp/android-swift-test /data/local/tmp/android-swift-test/swift-demo
 
