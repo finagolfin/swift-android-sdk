@@ -379,28 +379,30 @@ jobs:
     needs: [get-latest-toolchain, build-sdk-and-tests]
     strategy:
       matrix:
-        version: [release-25c, release-27, devel, trunk]
+        version: [release, devel, trunk]
         arch: [aarch64, x86_64, armv7]
       fail-fast: false
     steps:
       - name: Install Swift Host Toolchain
         run: |
-          mkdir swift-toolchain
-          pushd swift-toolchain
           if [[ ${{ matrix.version }} = 'release'* ]]; then
             TAG="${{ needs.get-latest-toolchain.outputs.release-version }}"
             # convert "swift-5.10.1-RELEASE" to "swift-5.10.1-release"
-            BASE=$(echo "$TAG" | tr '[:upper:]' '[:lower:]')
-            wget -q "https://download.swift.org/${BASE}/xcode/${TAG}/${TAG}-osx.pkg"
+            BRANCH=$(echo "$TAG" | tr '[:upper:]' '[:lower:]')
           elif [ ${{ matrix.version }} = 'devel' ]; then
             TAG="${{ needs.get-latest-toolchain.outputs.devel-version }}"
-            wget -q "https://download.swift.org/swift-6.0-branch/xcode/${TAG}/${TAG}-osx.pkg"
+            BRANCH="swift-6.0-branch"
           else
             TAG="${{ needs.get-latest-toolchain.outputs.trunk-version }}"
-            wget -q "https://download.swift.org/development/xcode/${TAG}/${TAG}-osx.pkg"
+            BRANCH="development"
           fi
-          xar -x -C . -f swift-*-osx.pkg
-          tar xz -C . -f swift-*-osx-package.pkg/Payload
+
+          # download and unpack the toolchain in a folder named after the tag
+          mkdir ${TAG}
+          pushd ${TAG}
+          wget -q "https://download.swift.org/${BRANCH}/xcode/${TAG}/${TAG}-osx.pkg"
+          xar -x -C . -f ${TAG}-osx.pkg
+          tar xz -C . -f ${TAG}-osx-package.pkg/Payload
           echo "TOOLCHAIN=${PWD}/usr" >> $GITHUB_ENV
       - name: Check Swift Host Toolchain
         run: |
