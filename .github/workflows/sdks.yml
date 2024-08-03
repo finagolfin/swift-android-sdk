@@ -416,7 +416,6 @@ jobs:
         run: |
           cd swift-android-sdk
           ls
-          unzip *.zip
           tar xf *.tar.xz
           cd *-sdk
           file usr/bin/swift-build-tool
