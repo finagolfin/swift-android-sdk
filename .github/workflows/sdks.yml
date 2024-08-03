@@ -3,6 +3,9 @@ on:
   pull_request:
   schedule:
     - cron: '0 9 * * *'
+  push:   
+    branches: '*'
+
 jobs:
   get-latest-toolchain:
     runs-on: ubuntu-latest
@@ -389,3 +392,195 @@ jobs:
             adb shell /data/local/tmp/pack/swift-nio-http2PackageTests.xctest
             adb shell /data/local/tmp/pack/swift-algorithmsPackageTests.xctest
             adb shell /data/local/tmp/pack/YamsPackageTests.xctest
+
+  macos-toolchain:
+    # The macos-14 GH Runner is ARM, which cannot run the Android emulator
+    runs-on: macos-13
+    needs: build-sdk-and-tests
+    strategy:
+      matrix:
+        #arch: [aarch64, x86_64, armv7]
+        arch: [x86_64]
+        version: [release, devel, trunk]
+      fail-fast: false
+    steps:
+      - name: Install Swift Host Toolchain
+        run: |
+          mkdir swift-toolchain
+          pushd swift-toolchain
+          case ${{ matrix.version }} in
+            "release")
+              wget -q https://download.swift.org/swift-5.10.1-release/xcode/swift-5.10.1-RELEASE/swift-5.10.1-RELEASE-osx.pkg
+              ;;
+            "devel")
+              wget -q https://download.swift.org/swift-6.0-branch/xcode/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-07-19-a/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-07-19-a-osx.pkg
+              ;;
+            "trunk")
+              wget -q https://download.swift.org/development/xcode/swift-DEVELOPMENT-SNAPSHOT-2024-07-15-a/swift-DEVELOPMENT-SNAPSHOT-2024-07-15-a-osx.pkg
+              ;;
+            *)
+              echo "Unsupported version: ${{ matrix.version }}"
+              exit 1
+              ;;
+          esac
+          xar -x -C . -f swift-*-osx.pkg
+          tar xz -C . -f swift-*-osx-package.pkg/Payload
+          echo "TOOLCHAIN=${PWD}/usr" >> $GITHUB_ENV
+
+      - name: Check Swift Host Toolchain
+        run: |
+          echo "TOOLCHAIN: ${TOOLCHAIN}"
+          ${TOOLCHAIN}/bin/swift --version
+
+      - name: "Install Android NDK"
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27
+          add-to-path: false
+
+      - name: Set Android NDK
+        run: |
+          echo "NDK_PATH=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
+
+      - name: Fetch Swift Android SDK
+        run: |
+          mkdir swift-android-sdk
+          pushd swift-android-sdk
+          #SDK_DIR="swift-5.10-android-24-sdk"
+          #wget -q https://github.com/finagolfin/swift-android-sdk/releases/download/5.10/${SDK_DIR}.tar.xz
+          #tar xf ${SDK_DIR}.tar.xz
+          #ls ${SDK_DIR}
+          #echo "SDK=${PWD}/${SDK_DIR}" >> $GITHUB_ENV
+
+          case ${{ matrix.version }} in
+            "release")
+              wget -q https://github.com/marcprux/swift-android-sdk/releases/download/sdk-snapshot-2024-08-02/sdk-release-26d-x86_64.zip
+              ;;
+            "devel")
+              wget -q https://github.com/marcprux/swift-android-sdk/releases/download/sdk-snapshot-2024-08-02/sdk-devel-x86_64.zip
+              ;;
+            "trunk")
+              wget -q https://github.com/marcprux/swift-android-sdk/releases/download/sdk-snapshot-2024-08-02/sdk-trunk-x86_64.zip
+              ;;
+            *)
+              echo "Unsupported version: ${{ matrix.version }}"
+              exit 1
+              ;;
+          esac
+
+          unzip *.zip
+          tar xf *.tar.xz
+          cd *-sdk
+          file usr/bin/swift-build-tool
+          echo "SDK=${PWD}" >> $GITHUB_ENV
+
+      - name: Setup Swift Android SDK
+        run: |
+          ls -la ${SDK}/usr/lib/swift/clang
+          rm -vf ${SDK}/usr/lib/swift/clang
+          # Swift 5.10: usr/lib/clang/15.0.0 Trunk and Devel: usr/lib/clang/17
+          ${TOOLCHAIN}/bin/clang --version
+          ln -sfv ${TOOLCHAIN}/lib/clang/* ${SDK}/usr/lib/swift/clang
+          ls -d ${SDK}/usr/lib/swift/clang/include
+
+      - name: Build Android Sample 
+        run: |
+          NDK=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-x86_64
+          ARCH=${{ matrix.arch }}
+          ARCH_TARGET="${ARCH}-unknown-linux-android24"
+          ARCHID="${ARCH}-linux-android"
+          if [ "$ARCH" == "armv7" ]; then
+              ARCHID="arm-linux-androideabi"
+          fi
+
+          cat > android-${ARCH}.json << EOF
+          {
+              "version": 1,
+              "target": "${ARCH_TARGET}",
+              "toolchain-bin-dir": "${TOOLCHAIN}/bin",
+              "sdk": "${NDK}/sysroot",
+              "extra-cc-flags": [ "-fPIC" ],
+              "extra-cpp-flags": [ "-lstdc++" ],
+              "extra-swiftc-flags": [
+                  "-resource-dir", "${SDK}/usr/lib/swift",
+                  "-tools-directory", "${NDK}/bin",
+                  "-L", "${SDK}/usr/lib",
+                  "-L", "${SDK}/usr/lib/swift/android",
+                  "-L", "${SDK}/usr/lib/${ARCHID}"
+              ]
+          }
+          EOF
+
+          # With the full SDK, the libs are all located in:
+          #"-L", "${SDK}/usr/lib/${ARCHID}"
+          # But with the partial SDK, they are divided between:
+          #"-L", "${SDK}/usr/lib",
+          #"-L", "${SDK}/usr/lib/swift/android",
+
+          cat android-${ARCH}.json
+
+          # create a simple "Hello World" sample
+          rm -rf swift-demo
+          mkdir swift-demo
+          pushd swift-demo
+
+          ${TOOLCHAIN}/bin/swift package init --type=executable
+
+          cat >> Sources/main.swift << EOF
+          #if swift(>=6.1)
+          print("Swift version: 6.1+")
+          #elseif swift(>=6.0)
+          print("Swift version: 6.0+")
+          #elseif swift(>=5.10)
+          print("Swift version: 5.10+")
+          #elseif swift(>=5.0)
+          print("Swift version: 5.0+")
+          #endif
+
+          import Foundation
+          print("Current Date: \(Date())")
+
+          import Dispatch
+          DispatchQueue.concurrentPerform(iterations: 10) { i in
+              print("DispatchQueue.concurrentPerform: \(i)")
+          }
+          EOF
+
+          popd
+
+          ${TOOLCHAIN}/bin/swift build -c release --verbose --package-path swift-demo --destination android-${ARCH}.json -Xlinker -rpath -Xlinker \$ORIGIN/$SDK_NAME/usr/lib/$ARCHID
+
+          # prepare files to push
+          mkdir android-swift-test
+          pushd android-swift-test
+
+          cp ${NDK}/sysroot/usr/lib/${ARCHID}/libc++_shared.so .
+          # this is the path in the full SDK distribution
+          #cp ${SDK}/usr/lib/${ARCHID}/*.so .
+          cp ${SDK}/usr/lib/swift/android/*.so .
+          cp ${SDK}/usr/lib/*.so .
+
+          # finally, copy the executable itself
+          cp ../swift-demo/.build/${ARCH_TARGET}/release/swift-demo .
+
+          du -skhc *
+          popd
+
+      - name: Test Swift Android Executable (x86_64)
+        # Can only run x86_64; attempting arm64-v8a on Intel yields:
+        # PANIC: Avd's CPU Architecture 'arm64' is not supported by the QEMU2 emulator on x86_64 host
+        # And trying to run emulator on ARM macOS (e.g., macos-14) yields:
+        # HVF error: HV_UNSUPPORTED
+        if: ${{ matrix.arch == 'x86_64' }}
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 24
+          arch: x86_64
+          script: |
+            adb shell mkdir -p /data/local/tmp/android-swift-test
+            adb push android-swift-test/* /data/local/tmp/android-swift-test
+            adb shell LD_LIBRARY_PATH=/data/local/tmp/android-swift-test /data/local/tmp/android-swift-test/swift-demo
+
+
+
