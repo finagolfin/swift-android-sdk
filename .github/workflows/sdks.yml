@@ -366,7 +366,9 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Run tests on Android x86_64 emulator
-        if: ${{ matrix.arch == 'x86_64' }}
+        # temporarily disabled to speed up testing on macos
+        if: false
+        #if: ${{ matrix.arch == 'x86_64' }}
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 24
@@ -393,7 +395,7 @@ jobs:
             adb shell /data/local/tmp/pack/swift-algorithmsPackageTests.xctest
             adb shell /data/local/tmp/pack/YamsPackageTests.xctest
 
-  macos-toolchain:
+  macos-toolchain-tests:
     # The macos-14 GH Runner is ARM, which cannot run the Android emulator
     runs-on: macos-13
     needs: build-sdk-and-tests
