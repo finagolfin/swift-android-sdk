@@ -8,7 +8,7 @@ on:
 jobs:
   build-toolchain:
     # The macos-14 GH Runner is ARM, which cannot run the Android emulator
-    runs-on: macos-13
+    runs-on: macos-14
     timeout-minutes: 1000
     strategy:
       matrix:
@@ -118,24 +118,12 @@ jobs:
 
           cat android-${ARCH}.json
 
-          ls -d ${TOOLCHAIN}/bin
-
-          ls -d ${NDK_PATH}
-          ls -d ${NDK}
-          ls -d ${NDK}/sysroot
-          ls -d ${NDK}/bin
-
-          ls -d ${SDK}/usr/lib/swift
-          ls -d ${SDK}/usr/lib/${NDK_ARCH}
-
           # create a simple "Hello World" sample
           rm -rf swift-demo
           mkdir swift-demo
           pushd swift-demo
 
           ${TOOLCHAIN}/bin/swift package init --type=executable
-
-          # this works with 5.10, but fails with various compile errors like "error: could not build C module 'SwiftAndroid'" for Swift 6
 
           cat >> Sources/main.swift << EOF
           import Foundation
