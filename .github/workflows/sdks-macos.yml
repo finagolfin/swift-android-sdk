@@ -78,7 +78,7 @@ jobs:
 
           echo "NDK_PATH: ${NDK_PATH}"
           ls ${NDK_PATH}
-          NDK=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-x86_64/bin
+          NDK=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-x86_64
           echo "NDK: ${NDK}"
           ls ${NDK}
 
