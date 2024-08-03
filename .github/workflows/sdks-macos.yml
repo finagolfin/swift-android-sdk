@@ -77,10 +77,8 @@ jobs:
           #NDK_ARCH="arm-linux-androideabi"
 
           echo "NDK_PATH: ${NDK_PATH}"
-          ls ${NDK_PATH}
           NDK=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-x86_64
           echo "NDK: ${NDK}"
-          ls ${NDK}
 
           cat > android-${ARCH}.json << EOF
           {
@@ -105,9 +103,13 @@ jobs:
           cat android-${ARCH}.json
 
           ls -d ${TOOLCHAIN}/bin
+
+          ls -d ${NDK_PATH}
+          ls -d ${NDK}
           ls -d ${NDK}/sysroot
-          ls -d ${SDK}/usr/lib/swift
           ls -d ${NDK}/bin
+
+          ls -d ${SDK}/usr/lib/swift
           ls -d ${SDK}/usr/lib/${NDK_ARCH}
 
           # create a simple "Hello World" sample
@@ -142,7 +144,7 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-24-aosp-atd
+          key: avd-30-aosp-atd
 
       - name: Generate Android emulator snapshot
         if: steps.avd-cache.outputs.cache-hit != 'true'
@@ -150,26 +152,26 @@ jobs:
         with:
           #working-directory: .build/android-tests
           target: aosp_atd
-          api-level: 24
-          arch: x86
+          api-level: 30
+          arch: x86_64
           channel: canary
           profile: pixel
-          avd-name: Pixel_3a_API_24
+          avd-name: Pixel_API_30
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
           script: echo "Generated AVD snapshot for caching"
 
-      - name: Test Android (connected)
+      - name: Test Swift Android Executable
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          working-directory: .build/android-tests
+          #working-directory: .build/android-tests
           target: aosp_atd
-          api-level: 24
-          arch: x86
+          api-level: 30
+          arch: x86_64
           channel: canary
           profile: pixel
-          avd-name: Pixel_3a_API_24
+          avd-name: Pixel_API_30
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
             ls
