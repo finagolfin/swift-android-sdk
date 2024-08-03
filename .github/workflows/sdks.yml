@@ -92,7 +92,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-ndk-sdk
+          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-ndk-sdk-build
       - name: Clone
         uses: actions/checkout@v4
         with:
