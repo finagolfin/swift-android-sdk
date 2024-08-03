@@ -163,19 +163,17 @@ jobs:
           api-level: 24
           arch: x86_64
           script: |
-            ls
-            DROID_TMP=/data/local/tmp/swifttest-$(date +%s)
-            adb shell mkdir -p ${DROID_TMP}
+            adb shell mkdir -p /data/local/tmp/swifttest
 
-            adb push swift-demo/.build/${{ matrix.arch }}-unknown-linux-android24/${CONFIG}/swift-demo ${DROID_TMP}
+            adb push swift-demo/.build/${{ matrix.arch }}-unknown-linux-android24/${CONFIG}/swift-demo /data/local/tmp/swifttest
 
-            adb push ${NDK}/sysroot/usr/lib/${{ matrix.arch }}-linux-android/libc++_shared.so ${DROID_TMP}
+            adb push ${NDK}/sysroot/usr/lib/${{ matrix.arch }}-linux-android/libc++_shared.so /data/local/tmp/swifttest
 
             pushd swift-5.10-android-24-sdk/usr/lib/${{ matrix.arch }}-linux-android/
-                adb push *.so ${DROID_TMP}
+                adb push *.so /data/local/tmp/swifttest
             popd
 
             # Run the sample on the emulator
-            adb shell LD_LIBRARY_PATH=${DROID_TMP} ${DROID_TMP}/swift-demo
+            adb shell LD_LIBRARY_PATH=/data/local/tmp/swifttest /data/local/tmp/swifttest/swift-demo
 
 
