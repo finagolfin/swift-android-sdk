@@ -1,8 +1,8 @@
 name: SDKs (macOS)
 on:
-  #pull_request:
-  #schedule:
-    #- cron: '0 21 * * *'
+  pull_request:
+  schedule:
+    - cron: '0 12 * * *'
   push:
     branches: '*'
 jobs:
