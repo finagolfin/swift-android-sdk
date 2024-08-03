@@ -99,7 +99,7 @@ func runCommand(_ name: String, with args: [String]) -> String {
     command.standardError = error
     do {
       print("running command: \(([command.executableURL!.path] + args).joined(separator: " "))")
-      try? FileHandle.standardOutput.synchronize() // flush
+      fflush(stdout)
       try command.run()
     } catch {
       fatalError("couldn't run \(name) \(args) with error: \(error)")
