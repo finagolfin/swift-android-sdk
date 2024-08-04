@@ -229,6 +229,12 @@ jobs:
         with:
           name: swift-android-sdk-${{ matrix.version }}-ndk-${{ matrix.arch }}-host-${{ matrix.os }}
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-sdk.tar.xz
+      - name: "Install Android NDK"
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27
+          add-to-path: false
       - name: Unpack ${{ matrix.version }} SDK
         id: sdk-unpack
         run: |
@@ -245,15 +251,27 @@ jobs:
           elif [[ ${{ matrix.os }} = 'macos'* ]]; then
             # the toolchain destination JSON in the SDK is for ubuntu,
             # so for macOS we need to manually build it
+
             ARCH_JSON="$PWD/android-${ARCH}.json"
             ARCH=${{ matrix.arch }}
-            NDK_PATH=$ANDROID_NDK
-            NDK_PREBUILT=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-x86_64
             ARCH_TARGET="${ARCH}-unknown-linux-android24"
             ARCHID="${ARCH}-linux-android"
             if [ "$ARCH" == "armv7" ]; then
                 ARCHID="arm-linux-androideabi"
             fi
+
+            if [ ${{ matrix.version }} = 'release-25c' ]; then
+              NDK=$ANDROID_NDK/../25.2.9519653
+            else
+              # current default on macos is 26.3.11579264,
+              # so use the path from the nttld/setup-ndk action for r27
+              NDK=${{ steps.setup-ndk.outputs.ndk-path }}
+            fi
+            NDK_PREBUILT=${NDK}/toolchains/llvm/prebuilt/darwin-x86_64
+            echo "NDK: ${NDK}"
+            echo "NDK_PREBUILT: ${NDK_PREBUILT}"
+            ls ${NDK_PREBUILT}
+
             # With the full SDK, the libs are all located in:
             #"-L", "${SDK}/usr/lib/${ARCHID}"
             # But with the partial SDK, they are divided between:
