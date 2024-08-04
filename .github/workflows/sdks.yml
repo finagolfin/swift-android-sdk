@@ -507,16 +507,22 @@ jobs:
           EOF
 
           cat ${ARCH_JSON}
+      - name: Clone
+        uses: actions/checkout@v4
+        with:
+          path: sdk-config
       - name: Get Swift Argument Parser package
         uses: actions/checkout@v4
         with:
           repository: apple/swift-argument-parser
           path: swift-argument-parser
       - name: Build Swift Argument Parser package
-        # /Users/runner/work/swift-android-sdk/swift-android-sdk/swift-argument-parser/Examples/count-lines/CountLines.swift:62:46: error: value of type 'FileHandle' has no member 'bytes'
-        if: false
+        if: always()
         run: |
           cd swift-argument-parser
+          # error on macOS toolchain build:
+          # swift-argument-parser/Examples/count-lines/CountLines.swift:62:46: error: value of type 'FileHandle' has no member 'bytes'
+          rm -r Examples/count-lines
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift crypto package
         if: always()
