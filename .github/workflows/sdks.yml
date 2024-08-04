@@ -611,7 +611,7 @@ jobs:
         if: always()
         run: |
           cd sns
-          sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
+          sed -i '' "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO SSL package
         if: always()
@@ -624,7 +624,7 @@ jobs:
         run: |
           cd snl
           if [ ${{ matrix.version }} = 'release-25c' ]; then
-            sed -i "s%#include <time%#include <signal.h>\n#include <time%" Sources/CNIOBoringSSL/include/CNIOBoringSSL_asn1.h
+            sed -i '' "s%#include <time%#include <signal.h>\n#include <time%" Sources/CNIOBoringSSL/include/CNIOBoringSSL_asn1.h
           fi
           SWIFTCI_USE_LOCAL_DEPS=1 ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
@@ -637,7 +637,7 @@ jobs:
         if: always()
         run: |
           cd yams
-          sed -i "s% fixturesDirectory + \"/SourceKitten#289% \"/data/local/tmp/pack%" Tests/YamsTests/PerformanceTests.swift
+          sed -i '' "s% fixturesDirectory + \"/SourceKitten#289% \"/data/local/tmp/pack%" Tests/YamsTests/PerformanceTests.swift
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO HTTP/2 package
         if: always()
@@ -650,7 +650,7 @@ jobs:
         ###if: ${{ matrix.arch != 'armv7' }}
         run: |
           cd snh
-          sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
+          sed -i '' "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Algorithms package
         if: always()
@@ -662,7 +662,7 @@ jobs:
         if: always()
         run: |
           cd sa
-          sed -i "s%url: .*$%path: \"../swift-numerics\"),%" Package.swift
+          sed -i '' "s%url: .*$%path: \"../swift-numerics\"),%" Package.swift
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Build Android Sample Executable
         if: always()
