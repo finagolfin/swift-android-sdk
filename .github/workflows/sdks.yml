@@ -276,7 +276,7 @@ jobs:
                     "-L", "${SDK_ROOT}/usr/lib/${ARCHID}"
                 ]
             }
-            EOF
+          EOF
 
             cat ${ARCH_JSON}
           fi
