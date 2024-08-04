@@ -251,9 +251,8 @@ jobs:
           elif [[ ${{ matrix.os }} = 'macos'* ]]; then
             # the toolchain destination JSON in the SDK is for ubuntu,
             # so for macOS we need to manually build it
-
-            ARCH_JSON="$PWD/android-${ARCH}.json"
             ARCH=${{ matrix.arch }}
+            ARCH_JSON="$PWD/android-${ARCH}.json"
             ARCH_TARGET="${ARCH}-unknown-linux-android24"
             ARCHID="${ARCH}-linux-android"
             if [ "$ARCH" == "armv7" ]; then
@@ -268,9 +267,6 @@ jobs:
               NDK=${{ steps.setup-ndk.outputs.ndk-path }}
             fi
             NDK_PREBUILT=${NDK}/toolchains/llvm/prebuilt/darwin-x86_64
-            echo "NDK: ${NDK}"
-            echo "NDK_PREBUILT: ${NDK_PREBUILT}"
-            ls ${NDK_PREBUILT}
 
             # With the full SDK, the libs are all located in:
             #"-L", "${SDK}/usr/lib/${ARCHID}"
@@ -294,6 +290,24 @@ jobs:
                 ]
             }
           EOF
+
+            echo "toolchain-bin: ${TOOLCHAIN}/bin"
+            ls -d ${TOOLCHAIN}/bin
+            echo "NDK: ${NDK}"
+            ls -d ${NDK}
+            echo "NDK_PREBUILT: ${NDK_PREBUILT}"
+            ls -d ${NDK_PREBUILT}
+            echo "resource-dir: ${SDK_PATH}/usr/lib/swift"
+            ls -d ${SDK_PATH}/usr/lib/swift
+            echo "tools-directory: ${NDK_PREBUILT}/bin"
+            ls -d ${NDK_PREBUILT}/bin
+            echo "-L: ${SDK_PATH}/usr/lib"
+            ls -d ${SDK_PATH}/usr/lib
+            echo "-L: ${SDK_PATH}/usr/lib/swift/android"
+            ls -d ${SDK_PATH}/usr/lib/swift/android
+            echo "-L: ${SDK_PATH}/usr/lib/${ARCHID}"
+            ls -d ${SDK_PATH}/usr/lib/${ARCHID}
+
 
             cat ${ARCH_JSON}
           fi
