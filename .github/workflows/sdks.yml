@@ -178,6 +178,8 @@ jobs:
           repository: apple/swift-argument-parser
           path: swift-argument-parser
       - name: Build Swift Argument Parser package
+        ### temp disabled for CI speedup
+        if: false
         run: |
           cd swift-argument-parser
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
@@ -187,6 +189,8 @@ jobs:
           repository: apple/swift-crypto
           path: swift-crypto
       - name: Build Swift crypto package
+        ### temp disabled for CI speedup
+        if: false
         run: |
           cd swift-crypto
           if [ ${{ matrix.version }} = 'release-25c' ]; then
@@ -201,6 +205,8 @@ jobs:
           repository: apple/swift-nio
           path: swift-nio
       - name: Build Swift NIO package
+        ### temp disabled for CI speedup
+        if: false
         run: |
           cd swift-nio
           git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem-both-ndks.patch
@@ -220,6 +226,8 @@ jobs:
           repository: apple/swift-numerics
           path: swift-numerics
       - name: Build Swift Numerics package
+        ### temp disabled for CI speedup
+        if: false
         run: |
           cd swift-numerics
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
@@ -229,6 +237,8 @@ jobs:
           repository: apple/swift-system
           path: swift-system
       - name: Build Swift System package
+        ### temp disabled for CI speedup
+        if: false
         run: |
           cd swift-system
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
@@ -238,6 +248,8 @@ jobs:
           repository: apple/swift-collections
           path: swift-collections
       - name: Build Swift Collections package
+        ### temp disabled for CI speedup
+        if: false
         run: |
           cd swift-collections
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build -j 1 --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
@@ -253,6 +265,8 @@ jobs:
           repository: apple/swift-nio-ssh
           path: sns
       - name: Build Swift NIO SSH package
+        ### temp disabled for CI speedup
+        if: false
         run: |
           cd sns
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
@@ -263,6 +277,8 @@ jobs:
           repository: apple/swift-nio-ssl
           path: snl
       - name: Build Swift NIO SSL package
+        ### temp disabled for CI speedup
+        if: false
         run: |
           cd snl
           if [ ${{ matrix.version }} = 'release-25c' ]; then
@@ -275,6 +291,8 @@ jobs:
           repository: jpsim/Yams
           path: yams
       - name: Build Yams package
+        ### temp disabled for CI speedup
+        if: false
         run: |
           cd yams
           sed -i "s% fixturesDirectory + \"/SourceKitten#289% \"/data/local/tmp/pack%" Tests/YamsTests/PerformanceTests.swift
@@ -285,6 +303,8 @@ jobs:
           repository: apple/swift-nio-http2
           path: snh
       - name: Build Swift NIO HTTP/2 package
+        ### temp disabled for CI speedup
+        if: false
         if: ${{ matrix.arch != 'armv7' }}
         run: |
           cd snh
@@ -296,6 +316,8 @@ jobs:
           repository: apple/swift-algorithms
           path: sa
       - name: Build Swift Algorithms package
+        ### temp disabled for CI speedup
+        if: false
         run: |
           cd sa
           sed -i "s%url: .*$%path: \"../swift-numerics\"),%" Package.swift
@@ -443,25 +465,28 @@ jobs:
           add-to-path: false
       - name: Create Android target JSON
         run: |
+          ARCH=${{ matrix.arch }}
           NDK_PATH=${{ steps.setup-ndk.outputs.ndk-path }}
           NDK_PREBUILT=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-x86_64
-          ARCH=${{ matrix.arch }}
+
           ARCH_TARGET="${ARCH}-unknown-linux-android24"
+          echo "ARCH_TARGET=$ARCH_TARGET" >> $GITHUB_ENV
+
           ARCHID="${ARCH}-linux-android"
           if [ "$ARCH" == "armv7" ]; then
               ARCHID="arm-linux-androideabi"
           fi
           echo "ARCHID=$ARCHID" >> $GITHUB_ENV
 
-          ARCH_TARGET="$PWD/android-${ARCH}.json"
-          echo "ARCH_TARGET=$ARCH_TARGET" >> $GITHUB_ENV
+          ARCH_JSON="$PWD/android-${ARCH}.json"
+          echo "ARCH_JSON=$ARCH_JSON" >> $GITHUB_ENV
 
           # With the full SDK, the libs are all located in:
           #"-L", "${SDK}/usr/lib/${ARCHID}"
           # But with the partial SDK, they are divided between:
           #"-L", "${SDK}/usr/lib",
           #"-L", "${SDK}/usr/lib/swift/android",
-          cat > ${ARCH_TARGET} << EOF
+          cat > ${ARCH_JSON} << EOF
           {
               "version": 1,
               "target": "${ARCH_TARGET}",
@@ -479,10 +504,12 @@ jobs:
           }
           EOF
 
-          cat ${ARCH_TARGET}
+          cat ${ARCH_JSON}
 
       - name: Build Android Sample Executable
         run: |
+          set -x
+
           # create a simple "Hello World" sample
           mkdir swift-demo
           pushd swift-demo
@@ -516,7 +543,7 @@ jobs:
 
           popd
 
-          ${TOOLCHAIN}/bin/swift build -c release --verbose --package-path swift-demo --destination ${ARCH_TARGET} -Xlinker -rpath -Xlinker \$ORIGIN/usr/lib/$ARCHID
+          ${TOOLCHAIN}/bin/swift build -c release --verbose --package-path swift-demo --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/usr/lib/$ARCHID
 
           # prepare files to push
           mkdir android-swift-test
@@ -540,7 +567,7 @@ jobs:
       - name: Build Swift Argument Parser package
         run: |
           cd swift-argument-parser
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_TARGET} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift crypto package
         uses: actions/checkout@v4
         with:
@@ -554,7 +581,7 @@ jobs:
           fi
           sed -i "s%\\\\(testsDirectory)/.*Vectors%/data/local/tmp/pack/crypto-vectors%" Tests/CryptoTests/Utils/RFCVector.swift Tests/CryptoTests/Utils/Wycheproof.swift Tests/_CryptoExtrasTests/Utils/Wycheproof.swift
           sed -i 's%#file%"/data/local/tmp/pack/crypto-vectors"%;s%../_CryptoExtrasVectors/%%' Tests/_CryptoExtrasTests/TestRSABlindSigning.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_TARGET} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO package
         uses: actions/checkout@v4
         with:
@@ -573,7 +600,7 @@ jobs:
           cd .build/checkouts/
           patch -p1 < ../../../sdk-config/android-overlay/swift-system.patch
           cd ../..
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_TARGET} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Numerics package
         uses: actions/checkout@v4
         with:
@@ -582,7 +609,7 @@ jobs:
       - name: Build Swift Numerics package
         run: |
           cd swift-numerics
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_TARGET} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift System package
         uses: actions/checkout@v4
         with:
@@ -591,7 +618,7 @@ jobs:
       - name: Build Swift System package
         run: |
           cd swift-system
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_TARGET} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Collections package
         uses: actions/checkout@v4
         with:
@@ -600,7 +627,7 @@ jobs:
       - name: Build Swift Collections package
         run: |
           cd swift-collections
-          ${TOOLCHAIN}/bin/swift build -j 1 --build-tests --destination ${ARCH_TARGET} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build -j 1 --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Atomics package
         uses: actions/checkout@v4
         with:
@@ -616,7 +643,7 @@ jobs:
         run: |
           cd sns
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_TARGET} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO SSL package
         uses: actions/checkout@v4
         with:
@@ -628,7 +655,7 @@ jobs:
           if [ ${{ matrix.version }} = 'release-25c' ]; then
             sed -i "s%#include <time%#include <signal.h>\n#include <time%" Sources/CNIOBoringSSL/include/CNIOBoringSSL_asn1.h
           fi
-          SWIFTCI_USE_LOCAL_DEPS=1 ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_TARGET} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          SWIFTCI_USE_LOCAL_DEPS=1 ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
         uses: actions/checkout@v4
         with:
@@ -638,7 +665,7 @@ jobs:
         run: |
           cd yams
           sed -i "s% fixturesDirectory + \"/SourceKitten#289% \"/data/local/tmp/pack%" Tests/YamsTests/PerformanceTests.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_TARGET} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO HTTP/2 package
         uses: actions/checkout@v4
         with:
@@ -649,7 +676,7 @@ jobs:
         run: |
           cd snh
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_TARGET} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Algorithms package
         uses: actions/checkout@v4
         with:
@@ -659,7 +686,7 @@ jobs:
         run: |
           cd sa
           sed -i "s%url: .*$%path: \"../swift-numerics\"),%" Package.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_TARGET} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get cached Termux debug app for NIO tests
         if: ${{ matrix.arch == 'x86_64' }}
         id: cache-termux
