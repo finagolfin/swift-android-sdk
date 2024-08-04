@@ -141,6 +141,7 @@ jobs:
 
             mkdir ${SWIFT_TAG}
             pushd ${SWIFT_TAG}
+            ls ~/
             xar -x -C . -f ~/${SWIFT_TAG}-osx.pkg
             tar xz -C . -f ${SWIFT_TAG}-osx-package.pkg/Payload
             TOOLCHAIN=${PWD}/usr
@@ -224,23 +225,24 @@ jobs:
           set -x
           cd sdk-config
           tar xf ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-sdk.tar.xz
+
+          ARCH_JSON=${PWD}/$(ls swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json)
+          cat ${ARCH_JSON}
+
           if [[ ${{ matrix.os }} = 'macos'* ]]; then
-            # TODO: manually create the json on macos
+            # the toolchain destination is wrong for macOS, so manually build it
             ARCH_JSON=${PWD}/$(ls swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json)
-          elif [[ ${{ matrix.os }} = 'ubuntu'* ]]; then
-            ARCH_JSON=${PWD}/$(ls swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json)
+            cat ${ARCH_JSON}
           fi
 
           echo "ARCH_JSON=${ARCH_JSON}" >> $GITHUB_ENV
-          cat ${ARCH_JSON}
       - name: Get Swift Argument Parser package
         uses: actions/checkout@v4
         with:
           repository: apple/swift-argument-parser
           path: swift-argument-parser
       - name: Build Swift Argument Parser package
-        # weird linker error on macOS:
-        # ld.lld: error: --defsym:1: symbol not found: changelog_authors_main
+        # macOS error: ld.lld: error: --defsym:1: symbol not found: changelog_authors_main
         if: ${{ matrix.os != 'macos-13' }}
         run: |
           cd swift-argument-parser
@@ -317,7 +319,7 @@ jobs:
           repository: apple/swift-nio-ssh
           path: sns
       - name: Build Swift NIO SSH package
-        # swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
+        # macOS error: swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
         if: ${{ matrix.os != 'macos-13' }}
         run: |
           cd sns
@@ -329,7 +331,7 @@ jobs:
           repository: apple/swift-nio-ssl
           path: snl
       - name: Build Swift NIO SSL package
-        # swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
+        # macOS error: swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
         if: ${{ matrix.os != 'macos-13' }}
         run: |
           cd snl
@@ -353,7 +355,7 @@ jobs:
           repository: apple/swift-nio-http2
           path: snh
       - name: Build Swift NIO HTTP/2 package
-        # swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
+        # macOS error: swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
         if: ${{ matrix.os != 'macos-13' && matrix.arch != 'armv7' }}
         run: |
           cd snh
