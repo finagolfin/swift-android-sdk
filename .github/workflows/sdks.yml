@@ -641,7 +641,7 @@ jobs:
           path: snh
       - name: Build Swift NIO HTTP/2 package
         if: always()
-        if: ${{ matrix.arch != 'armv7' }}
+        ###if: ${{ matrix.arch != 'armv7' }}
         run: |
           cd snh
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
