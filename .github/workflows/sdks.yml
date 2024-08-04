@@ -83,10 +83,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ###arch: [x86_64, armv7, aarch64]
-        arch: [aarch64]
-        ###version: [release-25c, release-27, devel, trunk]
-        version: [release-27]
+        arch: [x86_64, armv7, aarch64]
+        version: [release-25c, release-27, devel, trunk]
         os: [ubuntu-22.04, macos-13]
     env:
       ANDROID_API_LEVEL: 24
@@ -160,7 +158,7 @@ jobs:
 
       - name: Build Swift ${{ matrix.version }} Android SDK if not the latest
         # build-script currently only works on ubuntu
-        if: ${{ steps.cache-sdk.outputs.cache-hit != 'true' && matrix.os == 'ubuntu-22.04' }}
+        if: ${{ (steps.cache-sdk.outputs.cache-hit != 'true') && (matrix.os == 'ubuntu-22.04') }}
         env:
           SWIFT_TAG: ${{ steps.version.outputs.tag }}
           ANDROID_ARCH: ${{ matrix.arch }}
@@ -249,7 +247,7 @@ jobs:
             ARCH_JSON=${SDK_PATH}/usr/swiftpm-android-${{ matrix.arch }}.json
             cat ${ARCH_JSON}
           elif [[ ${{ matrix.os }} = 'macos'* ]]; then
-            # fix the clang synlink
+            # fix the clang symlink
             ls -la ${SDK_PATH}/usr/lib/swift/clang
             rm -vf ${SDK_PATH}/usr/lib/swift/clang
             # Swift 5.10: usr/lib/clang/15.0.0 Trunk and Devel: usr/lib/clang/17
@@ -438,7 +436,7 @@ jobs:
           path: snh
       - name: Build Swift NIO HTTP/2 package
         # macOS error: swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
-        if: ${{ matrix.os != 'macos-13' && matrix.arch != 'armv7' }}
+        if: ${{ (matrix.os != 'macos-13') && (matrix.arch != 'armv7') }}
         run: |
           cd snh
           sed -i ${SEDINPLACE} "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
@@ -461,7 +459,7 @@ jobs:
           path: ~/termux-debug.apk
           key: termux-app
       - name: Get Termux debug app if not cached
-        if: ${{ matrix.arch == 'x86_64' && steps.cache-termux.outputs.cache-hit != 'true'}}
+        if: ${{ (matrix.arch == 'x86_64') && (steps.cache-termux.outputs.cache-hit != 'true') }}
         run: wget -O ~/termux-debug.apk https://github.com/termux/termux-app/releases/download/v0.118.0/termux-app_v0.118.0+github-debug_x86_64.apk
       - name: Put x86_64 tests in one directory to push to Android x86_64 emulator and set KVM permissions
         if: ${{ matrix.arch == 'x86_64' }}
