@@ -130,7 +130,7 @@ jobs:
           path: ~/${{ steps.version.outputs.tag }}-ubuntu22.04.tar.gz
           key: swift-ubuntu22.04-${{ steps.version.outputs.tag }}-toolchain
       - name: Get cached Swift macOS ${{ matrix.version }} toolchain
-        if: ${{ matrix.os == 'macos-14' }}
+        if: ${{ matrix.os == 'macos-'* }}
         id: cache-toolchain-macos
         uses: actions/cache@v4
         with:
