@@ -39,11 +39,12 @@ jobs:
       - name: Get cached toolchain
         id: cache-toolchain
         uses: actions/cache@v4
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
         with:
           path: ~/${{ steps.check.outputs.latest-tag }}-ubuntu22.04.tar.gz
           key: ${{ steps.check.outputs.latest-tag }}-toolchain
       - name: Get latest toolchain if not cached
-        if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' }}
+        if: ${{ matrix.os == 'ubuntu-22.04' && steps.cache-toolchain.outputs.cache-hit != 'true' }}
         run: |
           if [ ${{ matrix.version }} = 'release' ]; then
             SWIFT_BRANCH="swift-$(echo ${{ steps.check.outputs.release-tag }} | cut -d- -f2)-release"
@@ -90,6 +91,7 @@ jobs:
             echo "SEDINPLACE=''" >> $GITHUB_ENV
           fi
       - name: Get cached Swift ${{ matrix.version }} toolchain
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
         id: cache-toolchain
         uses: actions/cache@v4
         with:
@@ -132,10 +134,11 @@ jobs:
             xar -x -C . -f ${SWIFT_TAG}-osx.pkg
             tar xz -C . -f ${SWIFT_TAG}-osx-package.pkg/Payload
             TOOLCHAIN=${PWD}/usr
+            popd
           else
             sudo apt install ninja-build
             tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
-            TOOLCHAIN=$SWIFT_TAG-ubuntu22.04/usr
+            TOOLCHAIN=${PWD}/$SWIFT_TAG-ubuntu22.04/usr
           fi
 
           echo "TOOLCHAIN=${TOOLCHAIN}" >> $GITHUB_ENV
@@ -209,9 +212,12 @@ jobs:
           repository: apple/swift-argument-parser
           path: swift-argument-parser
       - name: Build Swift Argument Parser package
+        # weird linker error on macOS:
+        # ld.lld: error: --defsym:1: symbol not found: changelog_authors_main
+        if: ${{ matrix.os != 'macos-13' }}
         run: |
           cd swift-argument-parser
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift crypto package
         uses: actions/checkout@v4
         with:
@@ -225,7 +231,7 @@ jobs:
           fi
           sed -i ${SEDINPLACE} "s%\\\\(testsDirectory)/.*Vectors%/data/local/tmp/pack/crypto-vectors%" Tests/CryptoTests/Utils/RFCVector.swift Tests/CryptoTests/Utils/Wycheproof.swift Tests/_CryptoExtrasTests/Utils/Wycheproof.swift
           sed -i ${SEDINPLACE} 's%#file%"/data/local/tmp/pack/crypto-vectors"%;s%../_CryptoExtrasVectors/%%' Tests/_CryptoExtrasTests/TestRSABlindSigning.swift
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO package
         uses: actions/checkout@v4
         with:
@@ -240,11 +246,11 @@ jobs:
           else
             git apply ../sdk-config/swift-nio-ndk27.patch
           fi
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift package update
+          ${TOOLCHAIN}/bin/swift package update
           cd .build/checkouts/
           patch -p1 < ../../../sdk-config/android-overlay/swift-system.patch
           cd ../..
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Numerics package
         uses: actions/checkout@v4
         with:
@@ -253,7 +259,7 @@ jobs:
       - name: Build Swift Numerics package
         run: |
           cd swift-numerics
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift System package
         uses: actions/checkout@v4
         with:
@@ -262,7 +268,7 @@ jobs:
       - name: Build Swift System package
         run: |
           cd swift-system
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Collections package
         uses: actions/checkout@v4
         with:
@@ -271,7 +277,7 @@ jobs:
       - name: Build Swift Collections package
         run: |
           cd swift-collections
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build -j 1 --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build -j 1 --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Atomics package
         uses: actions/checkout@v4
         with:
@@ -284,22 +290,26 @@ jobs:
           repository: apple/swift-nio-ssh
           path: sns
       - name: Build Swift NIO SSH package
+        # swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
+        if: ${{ matrix.os != 'macos-13' }}
         run: |
           cd sns
           sed -i ${SEDINPLACE} "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO SSL package
         uses: actions/checkout@v4
         with:
           repository: apple/swift-nio-ssl
           path: snl
       - name: Build Swift NIO SSL package
+        # swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
+        if: ${{ matrix.os != 'macos-13' }}
         run: |
           cd snl
           if [ ${{ matrix.version }} = 'release-25c' ]; then
             sed -i ${SEDINPLACE} "s%#include <time%#include <signal.h>\n#include <time%" Sources/CNIOBoringSSL/include/CNIOBoringSSL_asn1.h
           fi
-          SWIFTCI_USE_LOCAL_DEPS=1 ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          SWIFTCI_USE_LOCAL_DEPS=1 ${TOOLCHAIN}/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
         uses: actions/checkout@v4
         with:
@@ -309,18 +319,19 @@ jobs:
         run: |
           cd yams
           sed -i ${SEDINPLACE} "s% fixturesDirectory + \"/SourceKitten#289% \"/data/local/tmp/pack%" Tests/YamsTests/PerformanceTests.swift
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO HTTP/2 package
         uses: actions/checkout@v4
         with:
           repository: apple/swift-nio-http2
           path: snh
       - name: Build Swift NIO HTTP/2 package
-        if: ${{ matrix.arch != 'armv7' }}
+        # swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
+        if: ${{ matrix.os != 'macos-13' && matrix.arch != 'armv7' }}
         run: |
           cd snh
           sed -i ${SEDINPLACE} "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Algorithms package
         uses: actions/checkout@v4
         with:
@@ -330,7 +341,7 @@ jobs:
         run: |
           cd sa
           sed -i ${SEDINPLACE} "s%url: .*$%path: \"../swift-numerics\"),%" Package.swift
-          ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get cached Termux debug app for NIO tests
         if: ${{ matrix.arch == 'x86_64' }}
         id: cache-termux
