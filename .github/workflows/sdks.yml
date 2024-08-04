@@ -124,14 +124,14 @@ jobs:
           path: sdk-config
       - name: Get cached Swift Ubuntu ${{ matrix.version }} toolchain
         if: ${{ matrix.os == 'ubuntu-22.04' }}
-        id: cache-toolchain
+        id: cache-toolchain-ubuntu
         uses: actions/cache@v4
         with:
           path: ~/${{ steps.version.outputs.tag }}-ubuntu22.04.tar.gz
           key: swift-ubuntu22.04-${{ steps.version.outputs.tag }}-toolchain
       - name: Get cached Swift macOS ${{ matrix.version }} toolchain
         if: ${{ matrix.os == 'macos-14' }}
-        id: cache-toolchain
+        id: cache-toolchain-macos
         uses: actions/cache@v4
         with:
           path: ~/${{ steps.version.outputs.tag }}-osx.pkg
