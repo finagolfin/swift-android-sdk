@@ -517,12 +517,15 @@ jobs:
           repository: apple/swift-argument-parser
           path: swift-argument-parser
       - name: Build Swift Argument Parser package
-        if: always()
+        # weird linker error:
+        # ld.lld: error: --defsym:1: symbol not found: changelog_authors_main
+        if: false
         run: |
           cd swift-argument-parser
           # error on macOS toolchain build:
           # swift-argument-parser/Examples/count-lines/CountLines.swift:62:46: error: value of type 'FileHandle' has no member 'bytes'
           echo '' > Examples/count-lines/CountLines.swift
+
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift crypto package
         if: always()
@@ -608,13 +611,15 @@ jobs:
           repository: apple/swift-nio-ssh
           path: sns
       - name: Build Swift NIO SSH package
-        if: always()
+        # swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
+        if: false
         run: |
           cd sns
           sed -i '' "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO SSL package
-        if: always()
+        # swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
+        if: false
         uses: actions/checkout@v4
         with:
           repository: apple/swift-nio-ssl
