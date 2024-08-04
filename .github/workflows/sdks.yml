@@ -202,12 +202,15 @@ jobs:
       - name: Unpack ${{ matrix.version }} toolchain and SDK
         id: sdk-unpack
         run: |
+          set -x
           cd sdk-config
 
-          if [ ! -d ${{ steps.version.outputs.tag }}-${{ matrix.os }} ]; then
-            tar xf ~/${{ steps.version.outputs.tag }}-${{ matrix.os }}.tar.gz
+          if [ ! -d ${{ steps.version.outputs.tag }}-ubuntu22.04 ]; then
+            tar xf ~/${{ steps.version.outputs.tag }}-ubuntu22.04.tar.gz
           fi
+
           ./${{ steps.version.outputs.tag }}-${{ matrix.os }}/usr/bin/swift --version
+          ${TOOLCHAIN}/bin/swift --version
 
           tar xf ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-sdk.tar.xz
       - name: Get Swift Argument Parser package
