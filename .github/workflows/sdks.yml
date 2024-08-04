@@ -466,8 +466,10 @@ jobs:
       - name: Create Android target JSON
         run: |
           ARCH=${{ matrix.arch }}
+
           NDK_PATH=${{ steps.setup-ndk.outputs.ndk-path }}
           NDK_PREBUILT=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-x86_64
+          echo "NDK_PREBUILT=$NDK_PREBUILT" >> $GITHUB_ENV
 
           ARCH_TARGET="${ARCH}-unknown-linux-android24"
           echo "ARCH_TARGET=$ARCH_TARGET" >> $GITHUB_ENV
