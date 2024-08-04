@@ -150,7 +150,7 @@ jobs:
 
           ls -1
 
-          SDK_NAME=$(ls | grep swift-$(echo ${{ matrix.version }} | sed "s/-2[5-9][a-e]\?//")-android-${{ matrix.arch }})
+          SDK_NAME=$(ls | grep swift-$(echo ${{ matrix.version }} | sed "s/-2[5-9][a-e]*//")-android-${{ matrix.arch }})
           SDK=`pwd`/$SDK_NAME
 
           git apply swift-android-ci.patch
