@@ -116,10 +116,11 @@ jobs:
           set -x
           cd sdk-config
           if [[ ${{ matrix.os }} = 'macos'* ]]; then
-            brew install ninja-build
+            brew install cmake ninja autoconf automake libtool pkg-config git-lfs
           else
             sudo apt install ninja-build
           fi
+
           BUILD_SWIFT_PM=1 swift get-packages-and-swift-source.swift
 
           SDK_NAME=$(ls | grep swift-$(echo ${{ matrix.version }} | sed "s/-2[5-9][a-e]\?//")-android-${{ matrix.arch }})
