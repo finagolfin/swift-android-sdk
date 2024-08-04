@@ -235,8 +235,8 @@ jobs:
         with:
           ndk-version: r27
           add-to-path: false
-      - name: Unpack ${{ matrix.version }} SDK
-        id: sdk-unpack
+      - name: Setup Swift ${{ matrix.version }} Android SDK
+        id: sdk-setup
         run: |
           set -x
           cd sdk-config
@@ -249,6 +249,14 @@ jobs:
             ARCH_JSON=${SDK_PATH}/usr/swiftpm-android-${{ matrix.arch }}.json
             cat ${ARCH_JSON}
           elif [[ ${{ matrix.os }} = 'macos'* ]]; then
+            # fix the clang synlink
+            ls -la ${SDK_PATH}/usr/lib/swift/clang
+            rm -vf ${SDK_PATH}/usr/lib/swift/clang
+            # Swift 5.10: usr/lib/clang/15.0.0 Trunk and Devel: usr/lib/clang/17
+            ${TOOLCHAIN}/bin/clang --version
+            ln -sfv ${TOOLCHAIN}/lib/clang/* ${SDK_PATH}/usr/lib/swift/clang
+            ls -d ${SDK_PATH}/usr/lib/swift/clang/include
+
             # the toolchain destination JSON in the SDK is for ubuntu,
             # so for macOS we need to manually build it
             ARCH=${{ matrix.arch }}
@@ -297,7 +305,7 @@ jobs:
             echo "NDK: ${NDK}"
             ls -d ${NDK}
             echo "NDK_PREBUILT: ${NDK_PREBUILT}"
-            ls -d ${NDK_PREBUILT}
+            ls -d ${NDK_PREBUILT}/sysroot
             echo "resource-dir: ${SDK_PATH}/usr/lib/swift"
             ls -d ${SDK_PATH}/usr/lib/swift
             echo "tools-directory: ${NDK_PREBUILT}/bin"
@@ -306,8 +314,6 @@ jobs:
             ls -d ${SDK_PATH}/usr/lib
             echo "-L: ${SDK_PATH}/usr/lib/swift/android"
             ls -d ${SDK_PATH}/usr/lib/swift/android
-            #echo "-L: ${SDK_PATH}/usr/lib/${ARCHID}"
-            #ls -d ${SDK_PATH}/usr/lib/${ARCHID}
           fi
 
           echo "SDK_PATH=${SDK_PATH}" >> $GITHUB_ENV
