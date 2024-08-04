@@ -235,9 +235,12 @@ jobs:
           set -x
           cd sdk-config
           tar xf ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-sdk.tar.xz
+          pushd swift-*-sdk
+          SDK_PATH=${PWD}
+          popd
 
           if [[ ${{ matrix.os }} = 'ubuntu'* ]]; then
-            ARCH_JSON=${PWD}/$(ls swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json)
+            ARCH_JSON=${SDK_PATH}/usr/swiftpm-android-${{ matrix.arch }}.json
             cat ${ARCH_JSON}
           elif [[ ${{ matrix.os }} = 'macos'* ]]; then
             # the toolchain destination JSON in the SDK is for ubuntu,
@@ -245,11 +248,7 @@ jobs:
             ARCH_JSON="$PWD/android-${ARCH}.json"
             ARCH=${{ matrix.arch }}
             NDK_PATH=$ANDROID_NDK
-            echo "NDK_PATH: ${NDK_PATH}"
-            ls ${NDK_PATH}
             NDK_PREBUILT=${NDK_PATH}/toolchains/llvm/prebuilt/darwin-x86_64
-            echo "NDK_PREBUILT: ${NDK_PREBUILT}"
-            ls ${NDK_PREBUILT}
             ARCH_TARGET="${ARCH}-unknown-linux-android24"
             ARCHID="${ARCH}-linux-android"
             if [ "$ARCH" == "armv7" ]; then
@@ -269,11 +268,11 @@ jobs:
                 "extra-cc-flags": [ "-fPIC" ],
                 "extra-cpp-flags": [ "-lstdc++" ],
                 "extra-swiftc-flags": [
-                    "-resource-dir", "${SDK_ROOT}/usr/lib/swift",
+                    "-resource-dir", "${SDK_PATH}/usr/lib/swift",
                     "-tools-directory", "${NDK_PREBUILT}/bin",
-                    "-L", "${SDK_ROOT}/usr/lib",
-                    "-L", "${SDK_ROOT}/usr/lib/swift/android",
-                    "-L", "${SDK_ROOT}/usr/lib/${ARCHID}"
+                    "-L", "${SDK_PATH}/usr/lib",
+                    "-L", "${SDK_PATH}/usr/lib/swift/android",
+                    "-L", "${SDK_PATH}/usr/lib/${ARCHID}"
                 ]
             }
           EOF
@@ -281,6 +280,7 @@ jobs:
             cat ${ARCH_JSON}
           fi
 
+          echo "SDK_PATH=${SDK_PATH}" >> $GITHUB_ENV
           echo "ARCH_JSON=${ARCH_JSON}" >> $GITHUB_ENV
       - name: Get Swift Argument Parser package
         uses: actions/checkout@v4
