@@ -86,7 +86,7 @@ jobs:
         ###arch: [x86_64, armv7, aarch64]
         arch: [x86_64]
         ###version: [release-25c, release-27, devel, trunk]
-        version: [release-27]
+        version: [devel]
         os: [ubuntu-22.04, macos-13]
     env:
       ANDROID_API_LEVEL: 24
@@ -159,7 +159,8 @@ jobs:
           ${TOOLCHAIN}/bin/swift --version
 
       - name: Build Swift ${{ matrix.version }} Android SDK if not the latest
-        if: ${{ steps.cache-sdk.outputs.cache-hit != 'true' }}
+        # build-script currently only works on ubuntu
+        if: ${{ steps.cache-sdk.outputs.cache-hit != 'true' && matrix.os == 'ubuntu-22.04' }}
         env:
           SWIFT_TAG: ${{ steps.version.outputs.tag }}
           ANDROID_ARCH: ${{ matrix.arch }}
