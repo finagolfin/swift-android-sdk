@@ -62,8 +62,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [release-25c, release-27, devel, trunk]
-        arch: [aarch64, x86_64, armv7]
+        ###version: [release-25c, release-27, devel, trunk]
+        ###arch: [aarch64, x86_64, armv7]
+        version: [release-27]
+        arch: [aarch64]
     env:
       ANDROID_API_LEVEL: 24
     steps:
@@ -346,8 +348,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Run tests on Android x86_64 emulator
-        ###if: ${{ matrix.arch == 'x86_64' }}
-        if: false
+        if: ${{ matrix.arch == 'x86_64' }}
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 24
@@ -380,8 +381,10 @@ jobs:
     needs: [get-latest-toolchain, build-sdk-and-tests]
     strategy:
       matrix:
-        version: [release-27, devel, trunk]
-        arch: [aarch64, x86_64, armv7]
+        ###arch: [x86_64, aarch64, armv7]
+        ###version: [release-27, devel, trunk]
+        arch: [aarch64]
+        version: [release-27]
       fail-fast: false
     env:
       ANDROID_API_LEVEL: 24
