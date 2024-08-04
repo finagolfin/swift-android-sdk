@@ -116,7 +116,7 @@ jobs:
           set -x
           cd sdk-config
           if [[ ${{ matrix.os }} = 'macos'* ]]; then
-            brew install cmake ninja autoconf automake libtool pkg-config git-lfs
+            brew install ninja patchelf
           else
             sudo apt install ninja-build
           fi
@@ -126,8 +126,9 @@ jobs:
           SDK_NAME=$(ls | grep swift-$(echo ${{ matrix.version }} | sed "s/-2[5-9][a-e]\?//")-android-${{ matrix.arch }})
           SDK=`pwd`/$SDK_NAME
 
-          tar xf ~/$SWIFT_TAG-${{ matrix.os }}.tar.gz
+          tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
           ./$SWIFT_TAG-ubuntu22.04/usr/bin/swift --version
+
           git apply swift-android-ci.patch
           git apply -C1 swift-android.patch swift-android-both-ndks.patch
           if [[ ${{ matrix.version }} = 'release'* ]]; then
