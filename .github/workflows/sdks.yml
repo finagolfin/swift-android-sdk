@@ -86,7 +86,7 @@ jobs:
         ###arch: [x86_64, armv7, aarch64]
         arch: [x86_64]
         ###version: [release-25c, release-27, devel, trunk]
-        version: [release-25c]
+        version: [release-27]
         os: [ubuntu-22.04, macos-13]
     env:
       ANDROID_API_LEVEL: 24
