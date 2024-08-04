@@ -41,7 +41,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/${{ steps.check.outputs.latest-tag }}-ubuntu22.04.tar.gz
-          key: ${{ matrix.os }}-${{ steps.check.outputs.latest-tag }}-toolchain
+          key: swift-ubuntu22.04-${{ steps.check.outputs.latest-tag }}-toolchain
       - name: Download Ubuntu toolchain
         if: ${{ steps.cache-toolchain-ubuntu.outputs.cache-hit != 'true' }}
         run: |
@@ -61,7 +61,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/${{ steps.check.outputs.latest-tag }}-osx.pkg
-          key: ${{ matrix.os }}-${{ steps.check.outputs.latest-tag }}-toolchain
+          key: swift-macos-${{ steps.check.outputs.latest-tag }}-toolchain
       - name: Download macOS toolchain
         if: ${{ steps.cache-toolchain-macos.outputs.cache-hit != 'true' }}
         run: |
