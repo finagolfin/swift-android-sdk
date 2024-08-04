@@ -271,8 +271,8 @@ jobs:
             # With the full SDK, the libs are all located in:
             #"-L", "${SDK}/usr/lib/${ARCHID}"
             # But with the partial SDK, they are divided between:
-            #"-L", "${SDK}/usr/lib",
-            #"-L", "${SDK}/usr/lib/swift/android",
+            #"-L", "${SDK_PATH}/usr/lib",
+            #"-L", "${SDK_PATH}/usr/lib/swift/android",
             cat > ${ARCH_JSON} << EOF
             {
                 "version": 1,
@@ -285,11 +285,12 @@ jobs:
                     "-resource-dir", "${SDK_PATH}/usr/lib/swift",
                     "-tools-directory", "${NDK_PREBUILT}/bin",
                     "-L", "${SDK_PATH}/usr/lib",
-                    "-L", "${SDK_PATH}/usr/lib/swift/android",
-                    "-L", "${SDK_PATH}/usr/lib/${ARCHID}"
+                    "-L", "${SDK_PATH}/usr/lib/swift/android"
                 ]
             }
           EOF
+
+            cat ${ARCH_JSON}
 
             echo "toolchain-bin: ${TOOLCHAIN}/bin"
             ls -d ${TOOLCHAIN}/bin
@@ -305,11 +306,8 @@ jobs:
             ls -d ${SDK_PATH}/usr/lib
             echo "-L: ${SDK_PATH}/usr/lib/swift/android"
             ls -d ${SDK_PATH}/usr/lib/swift/android
-            echo "-L: ${SDK_PATH}/usr/lib/${ARCHID}"
-            ls -d ${SDK_PATH}/usr/lib/${ARCHID}
-
-
-            cat ${ARCH_JSON}
+            #echo "-L: ${SDK_PATH}/usr/lib/${ARCHID}"
+            #ls -d ${SDK_PATH}/usr/lib/${ARCHID}
           fi
 
           echo "SDK_PATH=${SDK_PATH}" >> $GITHUB_ENV
