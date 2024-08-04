@@ -507,8 +507,159 @@ jobs:
           EOF
 
           cat ${ARCH_JSON}
-
+      - name: Get Swift Argument Parser package
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-argument-parser
+          path: swift-argument-parser
+      - name: Build Swift Argument Parser package
+        # /Users/runner/work/swift-android-sdk/swift-android-sdk/swift-argument-parser/Examples/count-lines/CountLines.swift:62:46: error: value of type 'FileHandle' has no member 'bytes'
+        if: false
+        run: |
+          cd swift-argument-parser
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift crypto package
+        if: always()
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-crypto
+          path: swift-crypto
+      - name: Build Swift crypto package
+        if: always()
+        run: |
+          cd swift-crypto
+          if [ ${{ matrix.version }} = 'release-25c' ]; then
+            sed -i "s%#include <time%#include <signal.h>\n#include <time%" Sources/CCryptoBoringSSL/include/CCryptoBoringSSL_asn1.h
+          fi
+          sed -i "s%\\\\(testsDirectory)/.*Vectors%/data/local/tmp/pack/crypto-vectors%" Tests/CryptoTests/Utils/RFCVector.swift Tests/CryptoTests/Utils/Wycheproof.swift Tests/_CryptoExtrasTests/Utils/Wycheproof.swift
+          sed -i 's%#file%"/data/local/tmp/pack/crypto-vectors"%;s%../_CryptoExtrasVectors/%%' Tests/_CryptoExtrasTests/TestRSABlindSigning.swift
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift NIO package
+        if: always()
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-nio
+          path: swift-nio
+      - name: Build Swift NIO package
+        if: always()
+        run: |
+          cd swift-nio
+          git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem-both-ndks.patch
+          if [ ${{ matrix.version }} = 'release-25c' ]; then
+            git apply -R ../sdk-config/swift-nio-ndk26.patch
+          else
+            git apply ../sdk-config/swift-nio-ndk27.patch
+          fi
+          ${TOOLCHAIN}/bin/swift package update
+          cd .build/checkouts/
+          patch -p1 < ../../../sdk-config/android-overlay/swift-system.patch
+          cd ../..
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift Numerics package
+        if: always()
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-numerics
+          path: swift-numerics
+      - name: Build Swift Numerics package
+        if: always()
+        run: |
+          cd swift-numerics
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift System package
+        if: always()
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-system
+          path: swift-system
+      - name: Build Swift System package
+        if: always()
+        run: |
+          cd swift-system
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift Collections package
+        if: always()
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-collections
+          path: swift-collections
+      - name: Build Swift Collections package
+        if: always()
+        run: |
+          cd swift-collections
+          ${TOOLCHAIN}/bin/swift build -j 1 --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift Atomics package
+        if: always()
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-atomics
+          path: swift-atomics
+          ref: 1.1.0
+      - name: Get Swift NIO SSH package
+        if: always()
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-nio-ssh
+          path: sns
+      - name: Build Swift NIO SSH package
+        if: always()
+        run: |
+          cd sns
+          sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift NIO SSL package
+        if: always()
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-nio-ssl
+          path: snl
+      - name: Build Swift NIO SSL package
+        if: always()
+        run: |
+          cd snl
+          if [ ${{ matrix.version }} = 'release-25c' ]; then
+            sed -i "s%#include <time%#include <signal.h>\n#include <time%" Sources/CNIOBoringSSL/include/CNIOBoringSSL_asn1.h
+          fi
+          SWIFTCI_USE_LOCAL_DEPS=1 ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Yams package
+        if: always()
+        uses: actions/checkout@v4
+        with:
+          repository: jpsim/Yams
+          path: yams
+      - name: Build Yams package
+        if: always()
+        run: |
+          cd yams
+          sed -i "s% fixturesDirectory + \"/SourceKitten#289% \"/data/local/tmp/pack%" Tests/YamsTests/PerformanceTests.swift
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift NIO HTTP/2 package
+        if: always()
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-nio-http2
+          path: snh
+      - name: Build Swift NIO HTTP/2 package
+        if: always()
+        if: ${{ matrix.arch != 'armv7' }}
+        run: |
+          cd snh
+          sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift Algorithms package
+        if: always()
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-algorithms
+          path: sa
+      - name: Build Swift Algorithms package
+        if: always()
+        run: |
+          cd sa
+          sed -i "s%url: .*$%path: \"../swift-numerics\"),%" Package.swift
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Build Android Sample Executable
+        if: always()
         run: |
           set -x
 
@@ -561,181 +712,6 @@ jobs:
           cp ../swift-demo/.build/${ARCH_TARGET}/release/swift-demo .
           du -skhc *
           popd
-      - name: Get Swift Argument Parser package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-argument-parser
-          path: swift-argument-parser
-      - name: Build Swift Argument Parser package
-        run: |
-          cd swift-argument-parser
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
-      - name: Get Swift crypto package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-crypto
-          path: swift-crypto
-      - name: Build Swift crypto package
-        run: |
-          cd swift-crypto
-          if [ ${{ matrix.version }} = 'release-25c' ]; then
-            sed -i "s%#include <time%#include <signal.h>\n#include <time%" Sources/CCryptoBoringSSL/include/CCryptoBoringSSL_asn1.h
-          fi
-          sed -i "s%\\\\(testsDirectory)/.*Vectors%/data/local/tmp/pack/crypto-vectors%" Tests/CryptoTests/Utils/RFCVector.swift Tests/CryptoTests/Utils/Wycheproof.swift Tests/_CryptoExtrasTests/Utils/Wycheproof.swift
-          sed -i 's%#file%"/data/local/tmp/pack/crypto-vectors"%;s%../_CryptoExtrasVectors/%%' Tests/_CryptoExtrasTests/TestRSABlindSigning.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
-      - name: Get Swift NIO package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-nio
-          path: swift-nio
-      - name: Build Swift NIO package
-        run: |
-          cd swift-nio
-          git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem-both-ndks.patch
-          if [ ${{ matrix.version }} = 'release-25c' ]; then
-            git apply -R ../sdk-config/swift-nio-ndk26.patch
-          else
-            git apply ../sdk-config/swift-nio-ndk27.patch
-          fi
-          ${TOOLCHAIN}/bin/swift package update
-          cd .build/checkouts/
-          patch -p1 < ../../../sdk-config/android-overlay/swift-system.patch
-          cd ../..
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
-      - name: Get Swift Numerics package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-numerics
-          path: swift-numerics
-      - name: Build Swift Numerics package
-        run: |
-          cd swift-numerics
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
-      - name: Get Swift System package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-system
-          path: swift-system
-      - name: Build Swift System package
-        run: |
-          cd swift-system
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
-      - name: Get Swift Collections package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-collections
-          path: swift-collections
-      - name: Build Swift Collections package
-        run: |
-          cd swift-collections
-          ${TOOLCHAIN}/bin/swift build -j 1 --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
-      - name: Get Swift Atomics package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-atomics
-          path: swift-atomics
-          ref: 1.1.0
-      - name: Get Swift NIO SSH package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-nio-ssh
-          path: sns
-      - name: Build Swift NIO SSH package
-        run: |
-          cd sns
-          sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
-      - name: Get Swift NIO SSL package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-nio-ssl
-          path: snl
-      - name: Build Swift NIO SSL package
-        run: |
-          cd snl
-          if [ ${{ matrix.version }} = 'release-25c' ]; then
-            sed -i "s%#include <time%#include <signal.h>\n#include <time%" Sources/CNIOBoringSSL/include/CNIOBoringSSL_asn1.h
-          fi
-          SWIFTCI_USE_LOCAL_DEPS=1 ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
-      - name: Get Yams package
-        uses: actions/checkout@v4
-        with:
-          repository: jpsim/Yams
-          path: yams
-      - name: Build Yams package
-        run: |
-          cd yams
-          sed -i "s% fixturesDirectory + \"/SourceKitten#289% \"/data/local/tmp/pack%" Tests/YamsTests/PerformanceTests.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
-      - name: Get Swift NIO HTTP/2 package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-nio-http2
-          path: snh
-      - name: Build Swift NIO HTTP/2 package
-        if: ${{ matrix.arch != 'armv7' }}
-        run: |
-          cd snh
-          sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
-      - name: Get Swift Algorithms package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-algorithms
-          path: sa
-      - name: Build Swift Algorithms package
-        run: |
-          cd sa
-          sed -i "s%url: .*$%path: \"../swift-numerics\"),%" Package.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
-      - name: Get cached Termux debug app for NIO tests
-        if: ${{ matrix.arch == 'x86_64' }}
-        id: cache-termux
-        uses: actions/cache@v4
-        with:
-          path: ~/termux-debug.apk
-          key: termux-app
-      - name: Get Termux debug app if not cached
-        if: ${{ matrix.arch == 'x86_64' && steps.cache-termux.outputs.cache-hit != 'true'}}
-        run: wget -O ~/termux-debug.apk https://github.com/termux/termux-app/releases/download/v0.118.0/termux-app_v0.118.0+github-debug_x86_64.apk
-      - name: Put x86_64 tests in one directory to push to Android x86_64 emulator and set KVM permissions
-        if: ${{ matrix.arch == 'x86_64' }}
-        run: |
-          mkdir -p pack/lib/swift/android
-          TARGET="x86_64-unknown-linux-android$ANDROID_API_LEVEL"
-          cp swift-argument-parser/.build/$TARGET/debug/{generate-manual,math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
-
-          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v1.10/termux-elf-cleaner.cpp
-          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v1.10/elf.h
-          clang -D__ANDROID_API__=$ANDROID_API_LEVEL -o elf-cleaner termux-elf-cleaner.cpp
-          ./elf-cleaner pack/{generate-manual,math,repeat,roll} || true
-
-          cp swift-crypto/.build/$TARGET/debug/swift-cryptoPackageTests.xctest pack
-          cp swift-nio/.build/$TARGET/debug/swift-nioPackageTests.xctest pack
-          cp swift-numerics/.build/$TARGET/debug/swift-numericsPackageTests.xctest pack
-          cp swift-system/.build/$TARGET/debug/swift-systemPackageTests.xctest pack
-          cp swift-collections/.build/$TARGET/debug/swift-collectionsPackageTests.xctest pack
-          cp sns/.build/$TARGET/debug/swift-nio-sshPackageTests.xctest pack
-          cp snl/.build/$TARGET/debug/swift-nio-sslPackageTests.xctest pack
-          cp yams/.build/$TARGET/debug/YamsPackageTests.xctest pack
-          cp snh/.build/$TARGET/debug/swift-nio-http2PackageTests.xctest pack
-          cp sa/.build/$TARGET/debug/swift-algorithmsPackageTests.xctest pack
-
-          mkdir pack/crypto-vectors pack/swift-crypto_CryptoTests.resources
-          cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/_CryptoExtrasVectors/* pack/crypto-vectors
-          cp swift-crypto/Tests/CryptoTests/HPKE/hpke-test-vectors.json pack/swift-crypto_CryptoTests.resources
-          rm swift-nio/Tests/NIOFileSystemIntegrationTests/Test\ Data/*symlink
-          cp -r swift-nio/Tests/NIOFileSystemIntegrationTests/Test\ Data/ swift-nio/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift pack
-          cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
-          cp sdk-config/swift-*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/lib*so pack/lib
-          cp sdk-config/swift-*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/swift/android/lib*so pack/lib/swift/android
-          mv pack/lib/libc++_shared.so pack/lib/swift/android
-          rm -rf sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04
-
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
       - name: Test Swift Android Executable (x86_64)
         # Can only run x86_64; attempting arm64-v8a on Intel yields:
         # PANIC: Avd's CPU Architecture 'arm64' is not supported by the QEMU2 emulator on x86_64 host
