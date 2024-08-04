@@ -62,10 +62,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ###version: [release-25c, release-27, devel, trunk]
-        ###arch: [aarch64, x86_64, armv7]
-        version: [release-27]
-        arch: [aarch64]
+        version: [release-25c, release-27, devel, trunk]
+        arch: [aarch64, x86_64, armv7]
     env:
       ANDROID_API_LEVEL: 24
     steps:
@@ -178,8 +176,6 @@ jobs:
           repository: apple/swift-argument-parser
           path: swift-argument-parser
       - name: Build Swift Argument Parser package
-        ### temp disabled for CI speedup
-        if: false
         run: |
           cd swift-argument-parser
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
@@ -189,8 +185,6 @@ jobs:
           repository: apple/swift-crypto
           path: swift-crypto
       - name: Build Swift crypto package
-        ### temp disabled for CI speedup
-        if: false
         run: |
           cd swift-crypto
           if [ ${{ matrix.version }} = 'release-25c' ]; then
@@ -205,8 +199,6 @@ jobs:
           repository: apple/swift-nio
           path: swift-nio
       - name: Build Swift NIO package
-        ### temp disabled for CI speedup
-        if: false
         run: |
           cd swift-nio
           git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem-both-ndks.patch
@@ -226,8 +218,6 @@ jobs:
           repository: apple/swift-numerics
           path: swift-numerics
       - name: Build Swift Numerics package
-        ### temp disabled for CI speedup
-        if: false
         run: |
           cd swift-numerics
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
@@ -237,8 +227,6 @@ jobs:
           repository: apple/swift-system
           path: swift-system
       - name: Build Swift System package
-        ### temp disabled for CI speedup
-        if: false
         run: |
           cd swift-system
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
@@ -248,8 +236,6 @@ jobs:
           repository: apple/swift-collections
           path: swift-collections
       - name: Build Swift Collections package
-        ### temp disabled for CI speedup
-        if: false
         run: |
           cd swift-collections
           ../sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift build -j 1 --build-tests --destination ../sdk-config/swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
@@ -265,8 +251,6 @@ jobs:
           repository: apple/swift-nio-ssh
           path: sns
       - name: Build Swift NIO SSH package
-        ### temp disabled for CI speedup
-        if: false
         run: |
           cd sns
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
@@ -277,8 +261,6 @@ jobs:
           repository: apple/swift-nio-ssl
           path: snl
       - name: Build Swift NIO SSL package
-        ### temp disabled for CI speedup
-        if: false
         run: |
           cd snl
           if [ ${{ matrix.version }} = 'release-25c' ]; then
@@ -291,8 +273,6 @@ jobs:
           repository: jpsim/Yams
           path: yams
       - name: Build Yams package
-        ### temp disabled for CI speedup
-        if: false
         run: |
           cd yams
           sed -i "s% fixturesDirectory + \"/SourceKitten#289% \"/data/local/tmp/pack%" Tests/YamsTests/PerformanceTests.swift
@@ -303,9 +283,7 @@ jobs:
           repository: apple/swift-nio-http2
           path: snh
       - name: Build Swift NIO HTTP/2 package
-        ### temp disabled for CI speedup
-        if: false
-        ###if: ${{ matrix.arch != 'armv7' }}
+        if: ${{ matrix.arch != 'armv7' }}
         run: |
           cd snh
           sed -i "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
@@ -316,8 +294,6 @@ jobs:
           repository: apple/swift-algorithms
           path: sa
       - name: Build Swift Algorithms package
-        ### temp disabled for CI speedup
-        if: false
         run: |
           cd sa
           sed -i "s%url: .*$%path: \"../swift-numerics\"),%" Package.swift
@@ -403,10 +379,8 @@ jobs:
     needs: [get-latest-toolchain, build-sdk-and-tests]
     strategy:
       matrix:
-        ###arch: [x86_64, aarch64, armv7]
-        ###version: [release-27, devel, trunk]
-        arch: [aarch64]
-        version: [release-27]
+        arch: [x86_64, aarch64, armv7]
+        version: [release-27, devel, trunk]
       fail-fast: false
     env:
       ANDROID_API_LEVEL: 24
@@ -528,13 +502,11 @@ jobs:
 
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift crypto package
-        if: always()
         uses: actions/checkout@v4
         with:
           repository: apple/swift-crypto
           path: swift-crypto
       - name: Build Swift crypto package
-        if: always()
         run: |
           cd swift-crypto
           if [ ${{ matrix.version }} = 'release-25c' ]; then
@@ -544,13 +516,11 @@ jobs:
           sed -i '' 's%#file%"/data/local/tmp/pack/crypto-vectors"%;s%../_CryptoExtrasVectors/%%' Tests/_CryptoExtrasTests/TestRSABlindSigning.swift
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO package
-        if: always()
         uses: actions/checkout@v4
         with:
           repository: apple/swift-nio
           path: swift-nio
       - name: Build Swift NIO package
-        if: always()
         run: |
           cd swift-nio
           git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem-both-ndks.patch
@@ -565,47 +535,39 @@ jobs:
           cd ../..
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Numerics package
-        if: always()
         uses: actions/checkout@v4
         with:
           repository: apple/swift-numerics
           path: swift-numerics
       - name: Build Swift Numerics package
-        if: always()
         run: |
           cd swift-numerics
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift System package
-        if: always()
         uses: actions/checkout@v4
         with:
           repository: apple/swift-system
           path: swift-system
       - name: Build Swift System package
-        if: always()
         run: |
           cd swift-system
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Collections package
-        if: always()
         uses: actions/checkout@v4
         with:
           repository: apple/swift-collections
           path: swift-collections
       - name: Build Swift Collections package
-        if: always()
         run: |
           cd swift-collections
           ${TOOLCHAIN}/bin/swift build -j 1 --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Atomics package
-        if: always()
         uses: actions/checkout@v4
         with:
           repository: apple/swift-atomics
           path: swift-atomics
           ref: 1.1.0
       - name: Get Swift NIO SSH package
-        if: always()
         uses: actions/checkout@v4
         with:
           repository: apple/swift-nio-ssh
@@ -618,14 +580,13 @@ jobs:
           sed -i '' "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO SSL package
-        # swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
-        if: false
         uses: actions/checkout@v4
         with:
           repository: apple/swift-nio-ssl
           path: snl
       - name: Build Swift NIO SSL package
-        if: always()
+        # swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
+        if: false
         run: |
           cd snl
           if [ ${{ matrix.version }} = 'release-25c' ]; then
@@ -633,44 +594,39 @@ jobs:
           fi
           SWIFTCI_USE_LOCAL_DEPS=1 ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Yams package
-        if: always()
         uses: actions/checkout@v4
         with:
           repository: jpsim/Yams
           path: yams
       - name: Build Yams package
-        if: always()
         run: |
           cd yams
           sed -i '' "s% fixturesDirectory + \"/SourceKitten#289% \"/data/local/tmp/pack%" Tests/YamsTests/PerformanceTests.swift
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO HTTP/2 package
-        if: always()
         uses: actions/checkout@v4
         with:
           repository: apple/swift-nio-http2
           path: snh
       - name: Build Swift NIO HTTP/2 package
-        if: always()
-        ###if: ${{ matrix.arch != 'armv7' }}
+        #if: ${{ matrix.arch != 'armv7' }}
+        # swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
+        if: false
         run: |
           cd snh
           sed -i '' "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Algorithms package
-        if: always()
         uses: actions/checkout@v4
         with:
           repository: apple/swift-algorithms
           path: sa
       - name: Build Swift Algorithms package
-        if: always()
         run: |
           cd sa
           sed -i '' "s%url: .*$%path: \"../swift-numerics\"),%" Package.swift
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Build Android Sample Executable
-        if: always()
         run: |
           set -x
 
