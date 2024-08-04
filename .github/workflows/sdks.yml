@@ -144,8 +144,6 @@ jobs:
           set -x
           cd sdk-config
           if [[ ${{ matrix.os }} = 'macos'* ]]; then
-            brew install ninja patchelf
-
             mkdir ${SWIFT_TAG}
             pushd ${SWIFT_TAG}
             xar -x -C . -f ~/${SWIFT_TAG}-osx.pkg
@@ -153,8 +151,6 @@ jobs:
             TOOLCHAIN=${PWD}/usr
             popd
           elif [[ ${{ matrix.os }} = 'ubuntu'* ]]; then
-            sudo apt install ninja-build
-
             tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
             TOOLCHAIN=${PWD}/$SWIFT_TAG-ubuntu22.04/usr
           fi
@@ -169,6 +165,13 @@ jobs:
           ANDROID_ARCH: ${{ matrix.arch }}
         run: |
           set -x
+
+          if [[ ${{ matrix.os }} = 'macos'* ]]; then
+            brew install ninja patchelf
+          elif [[ ${{ matrix.os }} = 'ubuntu'* ]]; then
+            sudo apt install ninja-build
+          fi
+
           cd sdk-config
 
           ${TOOLCHAIN}/bin/swift --version
