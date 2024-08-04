@@ -215,11 +215,15 @@ jobs:
           set -x
           cd sdk-config
 
-          if [ ! -d ${{ steps.version.outputs.tag }}-ubuntu22.04 ]; then
-            tar xf ~/${{ steps.version.outputs.tag }}-ubuntu22.04.tar.gz
+          if [[ ${{ matrix.os }} == 'ubuntu-22.04' ]]; then
+            if [ ! -d ${{ steps.version.outputs.tag }}-ubuntu22.04 ]; then
+              tar xf ~/${{ steps.version.outputs.tag }}-ubuntu22.04.tar.gz
+            fi
+
+            ./${{ steps.version.outputs.tag }}-ubuntu22.04/usr/bin/swift --version
           fi
 
-          ./${{ steps.version.outputs.tag }}-${{ matrix.os }}/usr/bin/swift --version
+          # macOS doesn't currently cache the toolchain
           ${TOOLCHAIN}/bin/swift --version
 
           tar xf ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-sdk.tar.xz
