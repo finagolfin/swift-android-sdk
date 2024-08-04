@@ -195,7 +195,7 @@ jobs:
       - name: Upload SDK
         uses: actions/upload-artifact@v4
         with:
-          name: sdk-${{ matrix.version }}-${{ matrix.arch }}
+          name: swift-android-sdk-${{ matrix.version }}-ndk-${{ matrix.arch }}-host-${{ matrix.os }}
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-sdk.tar.xz
       - name: Unpack ${{ matrix.version }} toolchain and SDK
         id: sdk-unpack
