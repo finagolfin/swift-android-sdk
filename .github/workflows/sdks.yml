@@ -145,7 +145,7 @@ jobs:
             tar xz -C . -f ${SWIFT_TAG}-osx-package.pkg/Payload
             TOOLCHAIN=${PWD}/usr
             popd
-          elif [[ ${{ matrix.os }} = 'ubuntu'* ]]
+          elif [[ ${{ matrix.os }} = 'ubuntu'* ]]; then
             sudo apt install ninja-build
 
             tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
@@ -227,7 +227,7 @@ jobs:
           if [[ ${{ matrix.os }} = 'macos'* ]]; then
             # TODO: manually create the json on macos
             ARCH_JSON=${PWD}/$(ls swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json)
-          elif [[ ${{ matrix.os }} = 'ubuntu'* ]]
+          elif [[ ${{ matrix.os }} = 'ubuntu'* ]]; then
             ARCH_JSON=${PWD}/$(ls swift-*-sdk/usr/swiftpm-android-${{ matrix.arch }}.json)
           fi
 
