@@ -57,14 +57,14 @@ jobs:
           wget -q https://download.swift.org/$SWIFT_BRANCH/ubuntu2204/$SWIFT_TAG/$SWIFT_TAG-ubuntu22.04.tar.gz
           echo "got latest toolchain: ${SWIFT_TAG}"
   build-sdk-and-tests:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: get-latest-toolchain
     strategy:
       fail-fast: false
       matrix:
         arch: [x86_64, armv7, aarch64]
         version: [release-25c, release-27, devel, trunk]
-        os: [ubuntu-latest, macos-13]
+        os: [ubuntu-22.04, macos-13]
     env:
       ANDROID_API_LEVEL: 24
     steps:
@@ -86,6 +86,7 @@ jobs:
         id: setup-os
         run: |
           if [[ ${{ matrix.os }} = 'macos'* ]]; then
+            # the inplace "-i" flag to sed requires an empty arg on macOS
             echo "SEDINPLACE='\'\''" >> $GITHUB_ENV
           else
             echo "SEDINPLACE=''" >> $GITHUB_ENV
