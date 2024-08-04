@@ -312,6 +312,39 @@ jobs:
 
           echo "SDK_PATH=${SDK_PATH}" >> $GITHUB_ENV
           echo "ARCH_JSON=${ARCH_JSON}" >> $GITHUB_ENV
+      - name: Get Swift Numerics package
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-numerics
+          path: swift-numerics
+      - name: Build Swift Numerics package
+        run: |
+          cd swift-numerics
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift System package
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-system
+          path: swift-system
+      - name: Build Swift System package
+        run: |
+          cd swift-system
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift Collections package
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-collections
+          path: swift-collections
+      - name: Build Swift Collections package
+        run: |
+          cd swift-collections
+          ${TOOLCHAIN}/bin/swift build -j 1 --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get Swift Atomics package
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-atomics
+          path: swift-atomics
+          ref: 1.1.0
       - name: Get Swift Argument Parser package
         uses: actions/checkout@v4
         with:
@@ -356,39 +389,6 @@ jobs:
           patch -p1 < ../../../sdk-config/android-overlay/swift-system.patch
           cd ../..
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
-      - name: Get Swift Numerics package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-numerics
-          path: swift-numerics
-      - name: Build Swift Numerics package
-        run: |
-          cd swift-numerics
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
-      - name: Get Swift System package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-system
-          path: swift-system
-      - name: Build Swift System package
-        run: |
-          cd swift-system
-          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
-      - name: Get Swift Collections package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-collections
-          path: swift-collections
-      - name: Build Swift Collections package
-        run: |
-          cd swift-collections
-          ${TOOLCHAIN}/bin/swift build -j 1 --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
-      - name: Get Swift Atomics package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-atomics
-          path: swift-atomics
-          ref: 1.1.0
       - name: Get Swift NIO SSH package
         uses: actions/checkout@v4
         with:
