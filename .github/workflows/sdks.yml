@@ -42,7 +42,7 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-22.04' }}
         with:
           path: ~/${{ steps.check.outputs.latest-tag }}-ubuntu22.04.tar.gz
-          key: ${{ steps.check.outputs.latest-tag }}-toolchain
+          key: ${{ matrix.os }}-${{ steps.check.outputs.latest-tag }}-toolchain
       - name: Download Ubuntu toolchain
         if: ${{ matrix.os == 'ubuntu-22.04' && steps.cache-toolchain-ubuntu.outputs.cache-hit != 'true' }}
         run: |
@@ -63,22 +63,21 @@ jobs:
         if: ${{ matrix.os == 'macos-13' }}
         with:
           path: ~/${{ steps.check.outputs.latest-tag }}-osx.pkg
-          key: ${{ steps.check.outputs.latest-tag }}-toolchain
+          key: ${{ matrix.os }}-${{ steps.check.outputs.latest-tag }}-toolchain
       - name: Download macOS toolchain
         if: ${{ matrix.os == 'macos-13' && steps.cache-toolchain-macos.outputs.cache-hit != 'true' }}
         run: |
           SWIFT_TAG="${{ steps.check.outputs.latest-tag }}"
           if [[ ${{ matrix.version }} = 'release'* ]]; then
             # downcase "swift-5.10.1-RELEASE" to "swift-5.10.1-release"
-            BRANCH=$(echo "$SWIFT_TAG" | tr '[:upper:]' '[:lower:]')
+            SWIFT_BRANCH=$(echo "$SWIFT_TAG" | tr '[:upper:]' '[:lower:]')
           elif [ ${{ matrix.version }} = 'devel' ]; then
-            BRANCH="swift-6.0-branch"
+            SWIFT_BRANCH="swift-6.0-branch"
           else
-            BRANCH="development"
+            SWIFT_BRANCH="development"
           fi
           cd
-          # download and unpack the toolchain in a folder named after the tag
-          wget -q "https://download.swift.org/${BRANCH}/xcode/${SWIFT_TAG}/${SWIFT_TAG}-osx.pkg"
+          wget -q https://download.swift.org/$SWIFT_BRANCH/xcode/$SWIFT_TAG/$SWIFT_TAG-osx.pkg
           echo "got latest toolchain: ${SWIFT_TAG}"
   build-sdk-and-tests:
     runs-on: ${{ matrix.os }}
