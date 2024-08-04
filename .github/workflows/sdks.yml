@@ -83,7 +83,7 @@ jobs:
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
       - name: Setup OS Environment
-        id: version
+        id: setup-os
         run: |
           if [[ ${{ matrix.os }} = 'macos'* ]]; then
             echo "SEDINPLACE='\'\''" >> $GITHUB_ENV
