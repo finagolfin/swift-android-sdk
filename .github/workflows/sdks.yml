@@ -39,12 +39,11 @@ jobs:
       - name: Get cached Ubuntu toolchain
         id: cache-toolchain-ubuntu
         uses: actions/cache@v4
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
         with:
           path: ~/${{ steps.check.outputs.latest-tag }}-ubuntu22.04.tar.gz
           key: ${{ matrix.os }}-${{ steps.check.outputs.latest-tag }}-toolchain
       - name: Download Ubuntu toolchain
-        if: ${{ matrix.os == 'ubuntu-22.04' && steps.cache-toolchain-ubuntu.outputs.cache-hit != 'true' }}
+        if: ${{ steps.cache-toolchain-ubuntu.outputs.cache-hit != 'true' }}
         run: |
           SWIFT_TAG="${{ steps.check.outputs.latest-tag }}"
           if [ ${{ matrix.version }} = 'release' ]; then
@@ -60,12 +59,11 @@ jobs:
       - name: Get cached macOS toolchain
         id: cache-toolchain-macos
         uses: actions/cache@v4
-        if: ${{ matrix.os == 'macos-13' }}
         with:
           path: ~/${{ steps.check.outputs.latest-tag }}-osx.pkg
           key: ${{ matrix.os }}-${{ steps.check.outputs.latest-tag }}-toolchain
       - name: Download macOS toolchain
-        if: ${{ matrix.os == 'macos-13' && steps.cache-toolchain-macos.outputs.cache-hit != 'true' }}
+        if: ${{ steps.cache-toolchain-macos.outputs.cache-hit != 'true' }}
         run: |
           SWIFT_TAG="${{ steps.check.outputs.latest-tag }}"
           if [[ ${{ matrix.version }} = 'release'* ]]; then
