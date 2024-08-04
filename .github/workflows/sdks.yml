@@ -87,9 +87,9 @@ jobs:
         run: |
           if [[ ${{ matrix.os }} = 'macos'* ]]; then
             # the inplace "-i" flag to sed requires an empty arg on macOS
-            echo "SEDINPLACE='\'\''" >> $GITHUB_ENV
-          else
             echo "SEDINPLACE=''" >> $GITHUB_ENV
+          else
+            #echo "SEDINPLACE=''" >> $GITHUB_ENV
           fi
       - name: Get cached Swift ${{ matrix.version }} toolchain
         id: cache-toolchain
@@ -117,17 +117,36 @@ jobs:
           cd sdk-config
           if [[ ${{ matrix.os }} = 'macos'* ]]; then
             brew install ninja patchelf
+
+            if [[ ${{ matrix.version }} = 'release'* ]]; then
+              # downcase "swift-5.10.1-RELEASE" to "swift-5.10.1-release"
+              BRANCH=$(echo "$SWIFT_TAG" | tr '[:upper:]' '[:lower:]')
+            elif [ ${{ matrix.version }} = 'devel' ]; then
+              BRANCH="swift-6.0-branch"
+            else
+              BRANCH="development"
+            fi
+
+            # download and unpack the toolchain in a folder named after the tag
+            mkdir ${SWIFT_TAG}
+            pushd ${SWIFT_TAG}
+            wget -q "https://download.swift.org/${BRANCH}/xcode/${SWIFT_TAG}/${SWIFT_TAG}-osx.pkg"
+            xar -x -C . -f ${SWIFT_TAG}-osx.pkg
+            tar xz -C . -f ${SWIFT_TAG}-osx-package.pkg/Payload
+            TOOLCHAIN=${PWD}/usr
           else
             sudo apt install ninja-build
+            tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
+            TOOLCHAIN=$SWIFT_TAG-ubuntu22.04/usr
           fi
+
+          echo "TOOLCHAIN=${TOOLCHAIN}" >> $GITHUB_ENV
+          ${TOOLCHAIN}/bin/swift --version
 
           BUILD_SWIFT_PM=1 swift get-packages-and-swift-source.swift
 
           SDK_NAME=$(ls | grep swift-$(echo ${{ matrix.version }} | sed "s/-2[5-9][a-e]\?//")-android-${{ matrix.arch }})
           SDK=`pwd`/$SDK_NAME
-
-          tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
-          ./$SWIFT_TAG-ubuntu22.04/usr/bin/swift --version
 
           git apply swift-android-ci.patch
           git apply -C1 swift-android.patch swift-android-both-ndks.patch
