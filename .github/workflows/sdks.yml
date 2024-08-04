@@ -109,8 +109,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: sdk-config
-      - name: Build Swift ${{ matrix.version }} Android SDK if not the latest
-        if: ${{ steps.cache-sdk.outputs.cache-hit != 'true' }}
+      - name: Setup Swift Toolchain
+        #if: ${{ steps.cache-sdk.outputs.cache-hit != 'true' }}
         env:
           SWIFT_TAG: ${{ steps.version.outputs.tag }}
           ANDROID_ARCH: ${{ matrix.arch }}
@@ -146,7 +146,17 @@ jobs:
           echo "TOOLCHAIN=${TOOLCHAIN}" >> $GITHUB_ENV
           ${TOOLCHAIN}/bin/swift --version
 
-          BUILD_SWIFT_PM=1 swift get-packages-and-swift-source.swift
+      - name: Build Swift ${{ matrix.version }} Android SDK if not the latest
+        if: ${{ steps.cache-sdk.outputs.cache-hit != 'true' }}
+        env:
+          SWIFT_TAG: ${{ steps.version.outputs.tag }}
+          ANDROID_ARCH: ${{ matrix.arch }}
+        run: |
+          set -x
+          cd sdk-config
+
+          ${TOOLCHAIN}/bin/swift --version
+          BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
 
           SDK_NAME=$(ls | grep swift-$(echo ${{ matrix.version }} | sed "s/-2[5-9][a-e]*//")-android-${{ matrix.arch }})
           SDK=`pwd`/$SDK_NAME
@@ -183,6 +193,8 @@ jobs:
           fi
           sed -i ${SEDINPLACE} "s%/data/data/com.termux/files%$SDK%" $SDK/usr/lib/pkgconfig/sqlite3.pc
           sed -i ${SEDINPLACE} "s%String(cString: getpass%\"fake\" //%" swiftpm/Sources/PackageRegistry$STUPID_FILE_RENAMING/PackageRegistry$STUPID_FILE_RENAMING+Auth.swift
+
+          # currently failing when run on macOS during "Performing build step for 'libdispatch-android-x86_64'": Error copying file "/Users/runner/work/swift-android-sdk/swift-android-sdk/sdk-config/build/Ninja-Release/swift-android-x86_64/libdispatch-android-x86_64-prefix//libdispatch.so" to "/Users/runner/work/swift-android-sdk/swift-android-sdk/sdk-config/build/Ninja-Release/swift-android-x86_64/./lib/swift/android/x86_64/libdispatch.so".
 
           ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $NDK --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=${TOOLCHAIN}/bin --native-clang-tools-path=${TOOLCHAIN}/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --skip-early-swift-driver --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --sourcekit-lsp --skip-early-swiftsyntax
 
