@@ -463,7 +463,7 @@ jobs:
       - name: Get Termux debug app if not cached
         if: ${{ (matrix.arch == 'x86_64') && (steps.cache-termux.outputs.cache-hit != 'true') }}
         run: wget -O ~/termux-debug.apk https://github.com/termux/termux-app/releases/download/v0.118.0/termux-app_v0.118.0+github-debug_x86_64.apk
-      - name: Put x86_64 tests in one directory to push to Android x86_64 emulator and set KVM permissions
+      - name: Prepare Android emulator test package
         if: ${{ matrix.arch == 'x86_64' }}
         run: |
           # create the test runner script
@@ -533,12 +533,19 @@ jobs:
 
           chmod +x ~/test-toolchain.sh
 
+          echo "TEST SCRIPT:"
+          cat ~/test-toolchain.sh
+
           if [[ ${{ matrix.os }} != 'macos'* ]]; then
             echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
             sudo udevadm control --reload-rules
             sudo udevadm trigger --name-match=kvm
           fi
 
+          # need to free up some space or else the emulator fails to launch:
+          # ERROR   | Not enough space to create userdata partition. Available: 6086.191406 MB at /home/runner/.android/avd/../avd/test.avd, need 7372.800000 MB.
+          rm -rf */.build
+          df -h
 
       - name: Run tests on Android x86_64 emulator
         if: ${{ matrix.arch == 'x86_64' }}
