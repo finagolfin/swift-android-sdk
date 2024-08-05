@@ -83,10 +83,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ###arch: [x86_64, armv7, aarch64]
-        arch: [x86_64]
-        ###version: [release-25c, release-27, devel, trunk]
-        version: [release-27]
+        arch: [x86_64, armv7, aarch64]
+        version: [release-25c, release-27, devel, trunk]
         os: [ubuntu-22.04, macos-13]
     env:
       ANDROID_API_LEVEL: 24
@@ -466,6 +464,7 @@ jobs:
       - name: Prepare Android emulator test package
         if: ${{ matrix.arch == 'x86_64' }}
         run: |
+          set -x
           # create the test runner script
           cat > ~/test-toolchain.sh << EOF
           adb install ~/termux-debug.apk
@@ -545,7 +544,6 @@ jobs:
           # need to free up some space or else the emulator fails to launch:
           # ERROR   | Not enough space to create userdata partition. Available: 6086.191406 MB at /home/runner/.android/avd/../avd/test.avd, need 7372.800000 MB.
           rm -rf */.build
-          df -h
 
       - name: Run tests on Android x86_64 emulator
         if: ${{ matrix.arch == 'x86_64' }}
@@ -553,6 +551,5 @@ jobs:
         with:
           api-level: 24
           arch: x86_64
-          emulator-boot-timeout: 3600
           script: ~/test-toolchain.sh
 
