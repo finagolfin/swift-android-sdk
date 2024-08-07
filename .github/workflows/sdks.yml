@@ -396,11 +396,9 @@ jobs:
           repository: apple/swift-nio-ssh
           path: sns
       - name: Build Swift NIO SSH package
-        # macOS error: swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
-        if: ${{ matrix.os != 'macos-13' }}
         run: |
           cd sns
-          sed -i ${SEDINPLACE} "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
+          sed -i ${SEDINPLACE} "s%url: .*swift-\([a-z]*\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift NIO SSL package
         uses: actions/checkout@v4
@@ -408,8 +406,6 @@ jobs:
           repository: apple/swift-nio-ssl
           path: snl
       - name: Build Swift NIO SSL package
-        # macOS error: swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
-        if: ${{ matrix.os != 'macos-13' }}
         run: |
           cd snl
           if [ ${{ matrix.version }} = 'release-25c' ]; then
@@ -432,11 +428,10 @@ jobs:
           repository: apple/swift-nio-http2
           path: snh
       - name: Build Swift NIO HTTP/2 package
-        # macOS error: swift-nio/Sources/NIOPosix/System.swift:128:97: error: cannot convert value of type '(Int32, UnsafeMutablePointer<msghdr>, Int32) -> Int' to specified type '@convention(c) (CInt, UnsafeMutablePointer<msghdr>?, CInt) -> ssize_t' (aka '@convention(c) (Int32, Optional<UnsafeMutablePointer<msghdr>>, Int32) -> Int')
-        if: ${{ (matrix.os != 'macos-13') && (matrix.arch != 'armv7') }}
+        if: ${{ matrix.arch != 'armv7' }}
         run: |
           cd snh
-          sed -i ${SEDINPLACE} "s%url: .*swift-\(\w\+\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
+          sed -i ${SEDINPLACE} "s%url: .*swift-\([a-z]*\)\.git.*$%path: \"../swift-\1\"),%g" Package.swift
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift Algorithms package
         uses: actions/checkout@v4
@@ -501,14 +496,14 @@ jobs:
           cp swift-collections/.build/$TARGET/debug/swift-collectionsPackageTests.xctest pack
           echo 'adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest' >> ~/test-toolchain.sh
 
-          if [[ ${{ matrix.os }} != 'macos'* ]]; then
-            cp sns/.build/$TARGET/debug/swift-nio-sshPackageTests.xctest pack
-            echo 'adb shell /data/local/tmp/pack/swift-nio-sshPackageTests.xctest' >> ~/test-toolchain.sh
-            cp snl/.build/$TARGET/debug/swift-nio-sslPackageTests.xctest pack
-            echo 'adb shell /data/local/tmp/pack/swift-nio-sslPackageTests.xctest' >> ~/test-toolchain.sh
-            cp snh/.build/$TARGET/debug/swift-nio-http2PackageTests.xctest pack
-            echo 'adb shell /data/local/tmp/pack/swift-nio-http2PackageTests.xctest' >> ~/test-toolchain.sh
-          fi
+          cp sns/.build/$TARGET/debug/swift-nio-sshPackageTests.xctest pack
+          echo 'adb shell /data/local/tmp/pack/swift-nio-sshPackageTests.xctest' >> ~/test-toolchain.sh
+
+          cp snl/.build/$TARGET/debug/swift-nio-sslPackageTests.xctest pack
+          echo 'adb shell /data/local/tmp/pack/swift-nio-sslPackageTests.xctest' >> ~/test-toolchain.sh
+
+          cp snh/.build/$TARGET/debug/swift-nio-http2PackageTests.xctest pack
+          echo 'adb shell /data/local/tmp/pack/swift-nio-http2PackageTests.xctest' >> ~/test-toolchain.sh
 
           cp yams/.build/$TARGET/debug/YamsPackageTests.xctest pack
           echo 'adb shell /data/local/tmp/pack/YamsPackageTests.xctest' >> ~/test-toolchain.sh
