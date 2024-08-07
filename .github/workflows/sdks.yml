@@ -158,6 +158,7 @@ jobs:
         if: ${{ (steps.cache-sdk.outputs.cache-hit != 'true') && (matrix.os == 'ubuntu-22.04') }}
         env:
           SWIFT_TAG: ${{ steps.version.outputs.tag }}
+          ANDROID_ARCH: ${{ matrix.arch }}
         run: |
           set -x
 
