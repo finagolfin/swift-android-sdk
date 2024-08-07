@@ -36,13 +36,13 @@ let tagExtract = try NSRegularExpression(pattern: "swift-([5-9]\\.[0-9]+)?\\.?[1
 if tagExtract.numberOfMatches(in: SWIFT_TAG, range: tagRange) == 1 {
   let match = tagExtract.firstMatch(in: SWIFT_TAG, range: tagRange)
   if match!.range(at: 1).location != NSNotFound {
-    swiftVersion = SWIFT_TAG.substring(with: match!.range(at: 1))
+    swiftVersion = (SWIFT_TAG as NSString).substring(with: match!.range(at: 1))
   }
 
-  swiftBranch = SWIFT_TAG.substring(with: match!.range(at: 2))
+  swiftBranch = (SWIFT_TAG as NSString).substring(with: match!.range(at: 2))
 
   if match!.range(at: 3).location != NSNotFound {
-    swiftSnapshotDate = SWIFT_TAG.substring(with: match!.range(at: 3))
+    swiftSnapshotDate = (SWIFT_TAG as NSString).substring(with: match!.range(at: 3))
   }
 } else {
   fatalError("Something went wrong with extracting data from the SWIFT_TAG environment variable: \(SWIFT_TAG)")
@@ -98,6 +98,8 @@ func runCommand(_ name: String, with args: [String]) -> String {
     command.standardOutput = output
     command.standardError = error
     do {
+      print("running command: \(([command.executableURL!.path] + args).joined(separator: " "))")
+      fflush(stdout)
       try command.run()
     } catch {
       fatalError("couldn't run \(name) \(args) with error: \(error)")
@@ -128,13 +130,29 @@ func runCommand(_ name: String, with args: [String]) -> String {
 print("Checking if needed system utilities are installed...")
 print(runCommand("cmake", with: ["--version"]))
 print("ninja \(runCommand("ninja", with: ["--version"]))")
+
+#if os(macOS)
+print(runCommand("python3", with: ["--version"]))
+#else
 print(runCommand("python", with: ["--version"]))
+#endif
 print(runCommand("patchelf", with: ["--version"]))
+#if !os(macOS)
+// ar does not take a "--version" arg on macOS
 print(runCommand("ar", with: ["--version"]))
+#endif
 print(runCommand("tar", with: ["--version"]))
 print(runCommand("xz", with: ["--version"]))
 print(runCommand("curl", with: ["--version"]))
 print(runCommand("gzip", with: ["--version"]))
+
+#if os(macOS)
+extension String {
+    func appendingPathComponent(_ path: String) -> String {
+        (self as NSString).appendingPathComponent(path)
+    }
+} 
+#endif
 
 let fmd = FileManager.default
 let cwd = fmd.currentDirectoryPath
@@ -164,7 +182,7 @@ for termuxPackage in termuxPackages {
   print("Checking for \(packageName)")
   if !fmd.fileExists(atPath: termuxArchive.appendingPathComponent(String(packageName))) {
     print("Downloading \(packageName)")
-    _ = runCommand("curl", with: ["-o", "termux/\(packageName)",
+    _ = runCommand("curl", with: ["-f", "-o", "termux/\(packageName)",
         "\(termuxURL)/\(packagePath)"])
   }
 
@@ -181,7 +199,11 @@ for termuxPackage in termuxPackages {
 
   if !fmd.fileExists(atPath: cwd.appendingPathComponent(sdkDir)) {
     print("Unpacking \(packageName)")
+#if os(macOS)
+    _ = runCommand("tar", with: ["xf", "\(termuxArchive.appendingPathComponent(String(packageName)))"])
+#else
     _ = runCommand("ar", with: ["x", "\(termuxArchive.appendingPathComponent(String(packageName)))"])
+#endif
     _ = runCommand("tar", with: ["xf", "data.tar.xz"])
   }
 }
@@ -240,7 +262,7 @@ for repo in swiftRepos {
   print("Checking for \(repo) source")
   if !fmd.fileExists(atPath: cwd.appendingPathComponent(repo)) {
     print("Downloading and extracting \(repo) source")
-    _ = runCommand("curl", with: ["-L", "-O",
+    _ = runCommand("curl", with: ["-f", "-L", "-O",
               "https://github.com/apple/\(repo)/archive/refs/tags/\(SWIFT_TAG).tar.gz"])
     _ = runCommand("tar", with: ["xf", "\(SWIFT_TAG).tar.gz"])
     try fmd.moveItem(atPath: cwd.appendingPathComponent("\(repo)-\(SWIFT_TAG)"),
@@ -252,7 +274,7 @@ for repo in swiftRepos {
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
   for repo in extraSwiftRepos {
     let tag = repoTags[repo] ?? SWIFT_TAG
-    _ = runCommand("curl", with: ["-L", "-O",
+    _ = runCommand("curl", with: ["-f", "-L", "-O",
               "https://github.com/\(repo == "Yams" ? "jpsim" : "apple")/\(repo)/archive/refs/tags/\(tag).tar.gz"])
     _ = runCommand("tar", with: ["xf", "\(tag).tar.gz"])
     try fmd.moveItem(atPath: cwd.appendingPathComponent("\(repo)-\(tag)"),
