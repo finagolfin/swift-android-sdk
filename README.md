@@ -7,14 +7,9 @@ the Swift toolchain for AArch64, armv7, and x86_64, builds several Swift
 packages against those SDKs, and then runs their tests in the Android x86_64
 emulator](https://github.com/finagolfin/swift-android-sdk/blob/main/.github/workflows/sdks.yml).
 
-The CI now builds with both the latest LTS NDK 27 and the last LTS NDK before
-nullability annotations were added, 25c. Now that Swift 5.9 supports [the new experimental SDK bundle
+Now that Swift 5.10 supports [the new SDK bundle
 format](https://github.com/apple/swift-evolution/blob/main/proposals/0387-cross-compilation-destinations.md),
-I plan to distribute an Android SDK bundle for NDK 27 in the coming months.
-
-If you cannot build against NDK 27 because of the nullability annotations, you
-can download a 5.10 SDK built against 25c from a recent run of
-the CI, eg `sdk-release-25c-aarch64` under `Artifacts`.
+I plan to distribute an Android SDK bundle in the coming months.
 
 ## Cross-compiling and testing Swift packages with the Android SDK
 
