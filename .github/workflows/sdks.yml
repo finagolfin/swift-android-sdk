@@ -110,26 +110,21 @@ jobs:
           tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
           ./$SWIFT_TAG-ubuntu22.04/usr/bin/swift --version
           git apply swift-android-ci.patch
-          git apply -C1 swift-android.patch swift-android-both-ndks.patch
+          git apply -C1 swift-android.patch
+          git apply -C0 swift-android-foundation-ndk26.patch
           if [[ ${{ matrix.version }} = 'release' ]]; then
             sed -i "s%strsignal(signal).map%String(cString: strsignal(signal)) //%" swift-driver/Sources/SwiftDriver/Driver/ToolExecutionDelegate.swift
-            git apply swift-android-stdlib-except-trunk.patch
+            git apply swift-android-release-stdlib.patch
             STUPID_FILE_RENAMING=Tool
           else
             sed -i "s%r26%ndk/27%" swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
-            STUPID_FILE_RENAMING=Command
-          fi
-
-          git apply -C0 swift-android-foundation-ndk26.patch
-          if [ ${{ matrix.version }} = 'release' ]; then
-            git apply swift-android-stdlib-ndk26.patch
-          else
             if [ ${{ matrix.version }} = 'devel' ]; then
               git apply android-overlay/import-android-devel.patch
             else
               git apply swift-android-foundation-trunk.patch
             fi
             git apply android-overlay/foundation-fixes.patch android-overlay/swift-argument-parser.patch android-overlay/swift-stdlib-modulemap.patch android-overlay/swift-system.patch android-overlay/yams.patch
+            STUPID_FILE_RENAMING=Command
           fi
 
           sed -i "s%/data/data/com.termux/files%$SDK%" $SDK/usr/lib/pkgconfig/sqlite3.pc

@@ -28,3 +28,16 @@ index f8daa50325c..66be85a77f0 100644
  #else
      return pipe(unsafeFds.baseAddress)
  #endif
+diff --git a/swift/stdlib/public/SwiftShims/swift/shims/LibcShims.h b/swift/stdlib/public/SwiftShims/swift/shims/LibcShims.h
+index 1e4132f6279..045b8a28746 100644
+--- a/swift/stdlib/public/SwiftShims/swift/shims/LibcShims.h
++++ b/swift/stdlib/public/SwiftShims/swift/shims/LibcShims.h
+@@ -61,7 +61,7 @@ SWIFT_READONLY
+ static inline int _swift_stdlib_memcmp(const void *s1, const void *s2,
+                                        __swift_size_t n) {
+ // FIXME: Is there a way to identify Glibc specifically?
+-#if defined(__gnu_linux__)
++#if defined(__gnu_linux__) || defined(__ANDROID__)
+   extern int memcmp(const void * _Nonnull, const void * _Nonnull, __swift_size_t);
+ #else
+   extern int memcmp(const void * _Null_unspecified, const void * _Null_unspecified, __swift_size_t);
