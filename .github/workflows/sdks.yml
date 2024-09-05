@@ -112,7 +112,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: sdk-config
-      - name: Get cached Swift ${{ matrix.os }} ${{ matrix.version }} ${{ steps.version.outputs.tag }} toolchain
+      - name: Get cached ${{ matrix.os }} ${{ steps.version.outputs.tag }} toolchain
         id: cache-toolchain
         uses: actions/cache@v4
         with:
@@ -272,7 +272,7 @@ jobs:
           path: swift-argument-parser
       - name: Build Swift Argument Parser package
         # macOS error: ld.lld: error: --defsym:1: symbol not found: changelog_authors_main
-        if: ${{ startsWith(matrix.os, 'macos') }}
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
           cd swift-argument-parser
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
