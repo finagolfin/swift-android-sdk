@@ -39,13 +39,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/${{ steps.check.outputs.latest-tag }}-ubuntu22.04.tar.gz
-          key: swift-ubuntu22.04-${{ steps.check.outputs.latest-tag }}-toolchain
+          key: swift-ubuntu-22.04-${{ steps.check.outputs.latest-tag }}-toolchain
       - name: Get cached macOS toolchain
         id: cache-toolchain-macos
         uses: actions/cache@v4
         with:
           path: ~/${{ steps.check.outputs.latest-tag }}-osx.pkg
-          key: swift-macos-${{ steps.check.outputs.latest-tag }}-toolchain
+          key: swift-macos-13-${{ steps.check.outputs.latest-tag }}-toolchain
       - name: Download toolchain
         if: ${{ steps.cache-toolchain-ubuntu.outputs.cache-hit != 'true' || steps.cache-toolchain-macos.outputs.cache-hit != 'true' }}
         run: |
@@ -112,20 +112,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: sdk-config
-      - name: Get cached Swift Ubuntu ${{ matrix.version }} toolchain
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
-        id: cache-toolchain-ubuntu
+      - name: Get cached Swift ${{ matrix.os }} ${{ matrix.version }} ${{ steps.version.outputs.tag }} toolchain
+        id: cache-toolchain
         uses: actions/cache@v4
         with:
-          path: ~/${{ steps.version.outputs.tag }}-ubuntu22.04.tar.gz
-          key: swift-ubuntu22.04-${{ steps.version.outputs.tag }}-toolchain
-      - name: Get cached Swift macOS ${{ matrix.version }} toolchain
-        if: ${{ matrix.os == 'macos-13' }}
-        id: cache-toolchain-macos
-        uses: actions/cache@v4
-        with:
-          path: ~/${{ steps.version.outputs.tag }}-osx.pkg
-          key: swift-macos-${{ steps.version.outputs.tag }}-toolchain
+          path: ~/${{ steps.version.outputs.tag }}-${{ startsWith(matrix.os, 'macos') && 'osx.pkg' || 'ubuntu22.04.tar.gz' }}
+          key: swift-${{ matrix.os }}-${{ steps.version.outputs.tag }}-toolchain
       - name: Setup Swift Toolchain
         env:
           SWIFT_TAG: ${{ steps.version.outputs.tag }}
@@ -149,7 +141,7 @@ jobs:
 
       - name: Build Swift ${{ matrix.version }} Android SDK if not the latest
         # build-script currently only works on ubuntu
-        if: ${{ (steps.cache-sdk.outputs.cache-hit != 'true') && (matrix.os == 'ubuntu-22.04') }}
+        if: ${{ (steps.cache-sdk.outputs.cache-hit != 'true') && startsWith(matrix.os, 'ubuntu') }}
         env:
           SWIFT_TAG: ${{ steps.version.outputs.tag }}
           ANDROID_ARCH: ${{ matrix.arch }}
@@ -280,7 +272,7 @@ jobs:
           path: swift-argument-parser
       - name: Build Swift Argument Parser package
         # macOS error: ld.lld: error: --defsym:1: symbol not found: changelog_authors_main
-        if: ${{ matrix.os != 'macos-13' }}
+        if: ${{ startsWith(matrix.os, 'macos') }}
         run: |
           cd swift-argument-parser
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
@@ -491,4 +483,3 @@ jobs:
           api-level: 24
           arch: x86_64
           script: ~/test-toolchain.sh
-
