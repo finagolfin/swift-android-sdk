@@ -1,7 +1,9 @@
 import Foundation
 
 // The Termux packages to download and unpack
-var termuxPackages = ["libandroid-spawn", "libcurl", "libxml2"]
+// libxml2 needs liblzma and libiconv
+// libcurl needs zlib, libnghttp3, libnghttp2, libssh2, and openssl
+var termuxPackages = ["libandroid-spawn", "libcurl", "zlib", "libxml2", "libnghttp3", "libnghttp2", "libssh2", "openssl", "liblzma", "libiconv"]
 let termuxURL = "https://packages.termux.dev/apt/termux-main"
 
 let swiftRepos = ["llvm-project", "swift", "swift-experimental-string-processing", "swift-corelibs-libdispatch",
@@ -168,10 +170,10 @@ if !fmd.fileExists(atPath: termuxArchive.appendingPathComponent("Packages-\(ANDR
 let packages = try String(contentsOfFile: termuxArchive.appendingPathComponent("Packages-\(ANDROID_ARCH)"), encoding: .utf8)
 
 for termuxPackage in termuxPackages {
-  guard let packagePathRange = packages.range(of: "\\S+\(termuxPackage)_\\S+", options: .regularExpression) else {
+  guard let packagePathRange = packages.range(of: "Filename: \\S+/\(termuxPackage)_\\S+", options: .regularExpression) else {
     fatalError("couldn't find \(termuxPackage) in Packages list")
   }
-  let packagePath = packages[packagePathRange]
+  let packagePath = packages[packagePathRange].dropFirst("Filename: ".count).description
 
   guard let packageNameRange = packagePath.range(of: "\(termuxPackage)_\\S+", options: .regularExpression) else {
     fatalError("couldn't extract \(termuxPackage) .deb package from package path")
@@ -210,6 +212,9 @@ if !fmd.fileExists(atPath: sdkPath) {
   try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/bin/curl-config"))
   try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/bin/xml2-config"))
   try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/share/man"))
+  try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/lib/ossl-modules"))
+  try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/lib/engines-3"))
+  try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/etc"))
 }
 
 _ = runCommand("patchelf", with: ["--set-rpath", "$ORIGIN",
