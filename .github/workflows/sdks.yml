@@ -198,6 +198,7 @@ jobs:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-sdk.tar.xz
       - name: "Install Android NDK"
         id: setup-ndk
+        if: ${{ startsWith(matrix.os, 'macos') }}
         uses: nttld/setup-ndk@v1
         with:
           ndk-version: r27
