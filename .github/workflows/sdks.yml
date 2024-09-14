@@ -461,7 +461,7 @@ jobs:
           cp sa/.build/$TARGET/debug/swift-algorithmsPackageTests.xctest pack
           echo 'adb shell /data/local/tmp/pack/swift-algorithmsPackageTests.xctest' >> ~/test-toolchain.sh
 
-          cp -ar scfat/.build/$TARGET/debug/swift-corelibs-foundationPackageTests.xctest scfat/.build/$TARGET/debug/swift-corelibs-foundation_TestFoundation.resources pack
+          cp -r scfat/.build/$TARGET/debug/swift-corelibs-foundationPackageTests.xctest scfat/.build/$TARGET/debug/swift-corelibs-foundation_TestFoundation.resources pack
           echo 'adb shell /data/local/tmp/pack/swift-corelibs-foundationPackageTests.xctest' >> ~/test-toolchain.sh
 
           mkdir pack/crypto-vectors pack/swift-crypto_CryptoTests.resources
