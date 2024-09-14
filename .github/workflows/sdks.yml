@@ -384,6 +384,15 @@ jobs:
           cd sa
           ~/sedinplace.sh "s%url: .*$%path: \"../swift-numerics\"),%" Package.swift
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
+      - name: Get swift-corelibs-foundation-android-test package
+        uses: actions/checkout@v4
+        with:
+          repository: marcprux/swift-corelibs-foundation-android-test
+          path: scfat
+      - name: Build swift-corelibs-foundation-android-test package
+        run: |
+          cd scfat
+          ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get cached Termux debug app for NIO tests
         if: ${{ matrix.arch == 'x86_64' }}
         id: cache-termux
@@ -451,6 +460,9 @@ jobs:
 
           cp sa/.build/$TARGET/debug/swift-algorithmsPackageTests.xctest pack
           echo 'adb shell /data/local/tmp/pack/swift-algorithmsPackageTests.xctest' >> ~/test-toolchain.sh
+
+          cp -ar scfat/.build/$TARGET/debug/swift-corelibs-foundationPackageTests.xctest scfat/.build/$TARGET/debug/swift-corelibs-foundation_TestFoundation.resources pack
+          echo 'adb shell /data/local/tmp/pack/swift-corelibs-foundationPackageTests.xctest' >> ~/test-toolchain.sh
 
           mkdir pack/crypto-vectors pack/swift-crypto_CryptoTests.resources
           cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/_CryptoExtrasVectors/* pack/crypto-vectors
