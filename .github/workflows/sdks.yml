@@ -193,8 +193,9 @@ jobs:
           rm -rf build/ $SDK_NAME llvm-project/
       - name: Upload SDK
         uses: actions/upload-artifact@v4
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
         with:
-          name: swift-android-sdk-${{ matrix.version }}-${{ matrix.arch }}-host-${{ matrix.os }}
+          name: swift-android-sdk-${{ matrix.version }}-${{ matrix.arch }}
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-sdk.tar.xz
       - name: "Install Android NDK"
         id: setup-ndk
