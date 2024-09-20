@@ -298,7 +298,6 @@ jobs:
         run: |
           cd swift-nio
           git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem-both-ndks.patch ../sdk-config/swift-nio-ndk27.patch
-          git apply -R ../sdk-config/swift-nio-async-revert.patch
           ${TOOLCHAIN}/bin/swift package update
           cd .build/checkouts/
           patch -p1 < ../../../sdk-config/android-overlay/swift-system.patch
