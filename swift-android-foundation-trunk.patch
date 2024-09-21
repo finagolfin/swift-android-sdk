@@ -1,132 +1,79 @@
-commit 7e5350751e17515253c096350dddd3aeeda0eee2
-Author: Evan Wilde <etceterawilde@gmail.com>
-Date:   Tue Jul 9 22:45:20 2024 -0700
-
-    Workaround broken glibc modulemap
-    
-    We have been running into modularization issues on newer versions of
-    various Linux distros, resulting in the compiler saying that the Glibc
-    module doesn't have a SOCK_STREAM or SOCK_DGRAM. From some poking
-    around, the definition is now coming from the CoreFoundation module as
-    far as Swift is concerned. This is ultimately because our modulemap for
-    Glibc is bad, but also means that I can't bring up Swift 6 on all of the
-    Linux distros that 5.10 has support for.
-    
-    This workaround removes the explicit module name from `SOCK_STREAM` and
-    renames it to `FOUNDATION_SOCK_STREAM` to avoid an ambiguous name, and
-    completely removes `SOCK_DGRAM`.
-    
-    Both SOCK_STREAM and SOCK_DGRAM are fileprivates, so changing them will
-    have no visible external effect. It is true that if another header
-    somewhere defines `SOCK_STREAM`, we may pick it up instead of the
-    definition from the glibc module, but that will also cause some nasty
-    surprises to anyone using that header in C, so it is unlikely.
-    
-    Fixes: rdar://128079849
-
-diff --git a/swift-corelibs-foundation/Sources/Foundation/Port.swift b/swift-corelibs-foundation/Sources/Foundation/Port.swift
-index c53263f0..f06f95a9 100644
---- a/swift-corelibs-foundation/Sources/Foundation/Port.swift
-+++ b/swift-corelibs-foundation/Sources/Foundation/Port.swift
-@@ -90,18 +90,22 @@ open class SocketPort: Port {}
+diff --git a/swift/utils/build-script-impl b/swift/utils/build-script-impl
+index 16e05052609..7ab8cebfab8 100755
+--- a/swift/utils/build-script-impl
++++ b/swift/utils/build-script-impl
+@@ -2622,6 +2622,7 @@ for host in "${ALL_HOSTS[@]}"; do
+                     echo "Cleaning the libdispatch build directory"
+                     call rm -rf "${LIBDISPATCH_BUILD_DIR}"
+                   fi
++                  call ln -sf "${SWIFT_BUILD_PATH}/lib/swift" "${ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib"
  
- #else
- 
-+#if canImport(Darwin)
-+import Darwin
-+fileprivate let FOUNDATION_SOCK_STREAM = SOCK_STREAM
-+fileprivate let FOUNDATION_IPPROTO_TCP = IPPROTO_TCP
-+#endif
-+
- #if canImport(Glibc) && !os(Android) && !os(OpenBSD)
- import Glibc
--fileprivate let SOCK_STREAM = Int32(Glibc.SOCK_STREAM.rawValue)
--fileprivate let SOCK_DGRAM  = Int32(Glibc.SOCK_DGRAM.rawValue)
--fileprivate let IPPROTO_TCP = Int32(Glibc.IPPROTO_TCP)
-+fileprivate let FOUNDATION_SOCK_STREAM = Int32(SOCK_STREAM.rawValue)
-+fileprivate let FOUNDATION_IPPROTO_TCP = Int32(IPPROTO_TCP)
+                   cmake_options=(
+                     -DENABLE_SWIFT=YES
+diff --git a/swift-corelibs-foundation/Package.swift b/swift-corelibs-foundation/Package.swift
+index 2b5b5e05..60f1dde8 100644
+--- a/swift-corelibs-foundation/Package.swift
++++ b/swift-corelibs-foundation/Package.swift
+@@ -245,7 +245,8 @@ let package = Package(
+                 "BlockRuntime",
+                 "CMakeLists.txt"
+             ],
+-            cSettings: coreFoundationBuildSettings
++            cSettings: coreFoundationBuildSettings,
++            linkerSettings: [.linkedLibrary("log", .when(platforms: [.android]))]
+         ),
+         .target(
+             name: "BlocksRuntime",
+@@ -262,7 +263,7 @@ let package = Package(
+             name: "_CFXMLInterface",
+             dependencies: [
+                 "CoreFoundation",
+-                .target(name: "Clibxml2", condition: .when(platforms: [.linux])),
++                .target(name: "Clibxml2", condition: .when(platforms: [.linux, .android])),
+             ],
+             path: "Sources/_CFXMLInterface",
+             exclude: [
+@@ -275,7 +276,7 @@ let package = Package(
+             name: "_CFURLSessionInterface",
+             dependencies: [
+                 "CoreFoundation",
+-                .target(name: "Clibcurl", condition: .when(platforms: [.linux])),
++                .target(name: "Clibcurl", condition: .when(platforms: [.linux, .android])),
+             ],
+             path: "Sources/_CFURLSessionInterface",
+             exclude: [
+@@ -348,7 +349,7 @@ let package = Package(
+                 "FoundationNetworking",
+                 "XCTest",
+                 "Testing",
+-                .target(name: "xdgTestHelper", condition: .when(platforms: [.linux]))
++                .target(name: "xdgTestHelper", condition: .when(platforms: [.linux, .android]))
+             ],
+             resources: [
+                 .copy("Foundation/Resources")
+diff --git a/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift b/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift
+index 8043ef00..23b602f6 100644
+--- a/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift
++++ b/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift
+@@ -10,6 +10,8 @@
+ @_implementationOnly import CoreFoundation
+ #if os(Windows)
+ import WinSDK
++#elseif canImport(Android)
++import Android
+ #elseif os(WASI)
+ import WASILibc
  #endif
- 
- #if canImport(Glibc) && os(Android) || os(OpenBSD)
+diff --git a/swift-corelibs-foundation/Sources/Testing/Testing.swift b/swift-corelibs-foundation/Sources/Testing/Testing.swift
+index 712d9dee..2483c14e 100644
+--- a/swift-corelibs-foundation/Sources/Testing/Testing.swift
++++ b/swift-corelibs-foundation/Sources/Testing/Testing.swift
+@@ -11,6 +11,8 @@
  import Glibc
--fileprivate let SOCK_STREAM = Int32(Glibc.SOCK_STREAM)
--fileprivate let SOCK_DGRAM  = Int32(Glibc.SOCK_DGRAM)
--fileprivate let IPPROTO_TCP = Int32(Glibc.IPPROTO_TCP)
-+fileprivate let FOUNDATION_SOCK_STREAM = Int32(SOCK_STREAM)
-+fileprivate let FOUNDATION_IPPROTO_TCP = Int32(IPPROTO_TCP)
- fileprivate let INADDR_ANY: in_addr_t = 0
- #if os(OpenBSD)
- fileprivate let INADDR_LOOPBACK = 0x7f000001
-@@ -123,7 +127,8 @@ import WinSDK
- fileprivate typealias sa_family_t = ADDRESS_FAMILY
- fileprivate typealias in_port_t = USHORT
- fileprivate typealias in_addr_t = UInt32
--fileprivate let IPPROTO_TCP = Int32(WinSDK.IPPROTO_TCP.rawValue)
-+fileprivate let FOUNDATION_SOCK_STREAM = SOCK_STREAM
-+fileprivate let FOUNDATION_IPPROTO_TCP = Int32(WinSDK.IPPROTO_TCP.rawValue)
- #endif
- 
- // MARK: Darwin representation of socket addresses
-@@ -484,7 +489,7 @@ open class SocketPort : Port {
-         
-         let data = withUnsafeBytes(of: address) { Data($0) }
-         
--        self.init(protocolFamily: PF_INET, socketType: SOCK_STREAM, protocol: IPPROTO_TCP, address: data)
-+        self.init(protocolFamily: PF_INET, socketType: FOUNDATION_SOCK_STREAM, protocol: FOUNDATION_IPPROTO_TCP, address: data)
-     }
-     
-     private final func createNonuniquedCore(from socket: CFSocket, protocolFamily family: Int32, socketType type: Int32, protocol: Int32) {
-@@ -500,7 +505,7 @@ open class SocketPort : Port {
-         var context = CFSocketContext()
-         context.info = Unmanaged.passUnretained(self).toOpaque()
-         var s: CFSocket
--        if type == SOCK_STREAM {
-+        if type == FOUNDATION_SOCK_STREAM {
-             s = CFSocketCreate(nil, family, type, `protocol`, CFOptionFlags(kCFSocketAcceptCallBack), __NSFireSocketAccept, &context)
-         } else {
-             s = CFSocketCreate(nil, family, type, `protocol`, CFOptionFlags(kCFSocketDataCallBack), __NSFireSocketDatagram, &context)
-@@ -519,7 +524,7 @@ open class SocketPort : Port {
-         var context = CFSocketContext()
-         context.info = Unmanaged.passUnretained(self).toOpaque()
-         var s: CFSocket
--        if type == SOCK_STREAM {
-+        if type == FOUNDATION_SOCK_STREAM {
-             s = CFSocketCreateWithNative(nil, CFSocketNativeHandle(sock), CFOptionFlags(kCFSocketAcceptCallBack), __NSFireSocketAccept, &context)
-         } else {
-             s = CFSocketCreateWithNative(nil, CFSocketNativeHandle(sock), CFOptionFlags(kCFSocketDataCallBack), __NSFireSocketDatagram, &context)
-@@ -543,7 +548,7 @@ open class SocketPort : Port {
-                 sinAddr.sin_addr = inAddr
-                 
-                 let data = withUnsafeBytes(of: sinAddr) { Data($0) }
--                self.init(remoteWithProtocolFamily: PF_INET, socketType: SOCK_STREAM, protocol: IPPROTO_TCP, address: data)
-+                self.init(remoteWithProtocolFamily: PF_INET, socketType: FOUNDATION_SOCK_STREAM, protocol: FOUNDATION_IPPROTO_TCP, address: data)
-                 return
-             }
-         }
-@@ -556,7 +561,7 @@ open class SocketPort : Port {
-                 sinAddr.sin6_addr = in6Addr
-                 
-                 let data = withUnsafeBytes(of: sinAddr) { Data($0) }
--                self.init(remoteWithProtocolFamily: PF_INET, socketType: SOCK_STREAM, protocol: IPPROTO_TCP, address: data)
-+                self.init(remoteWithProtocolFamily: PF_INET, socketType: FOUNDATION_SOCK_STREAM, protocol: FOUNDATION_IPPROTO_TCP, address: data)
-                 return
-             }
-         }
-@@ -573,7 +578,7 @@ open class SocketPort : Port {
-             withUnsafeBytes(of: in_addr_t(INADDR_LOOPBACK).bigEndian) { buffer.copyMemory(from: $0) }
-         }
-         let data = withUnsafeBytes(of: sinAddr) { Data($0) }
--        self.init(remoteWithProtocolFamily: PF_INET, socketType: SOCK_STREAM, protocol: IPPROTO_TCP, address: data)
-+        self.init(remoteWithProtocolFamily: PF_INET, socketType: FOUNDATION_SOCK_STREAM, protocol: FOUNDATION_IPPROTO_TCP, address: data)
-     }
-     
-     private static let remoteSocketCoresLock = NSLock()
-@@ -1049,7 +1054,7 @@ open class SocketPort : Port {
-             if let connector = core.connectors[signature], CFSocketIsValid(connector) {
-                 return connector
-             } else {
--                if signature.socketType == SOCK_STREAM {
-+                if signature.socketType == FOUNDATION_SOCK_STREAM {
-                     if let connector = CFSocketCreate(nil, socketKind.protocolFamily, socketKind.socketType, socketKind.protocol, CFOptionFlags(kCFSocketDataCallBack), __NSFireSocketData, &context), CFSocketIsValid(connector) {
-                         var timeout = time - Date.timeIntervalSinceReferenceDate
-                         if timeout < 0 || timeout >= SocketPort.maximumTimeout {
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Bionic)
++import Bionic
+ #elseif os(WASI)
+ import WASILibc
+ #elseif canImport(CRT)

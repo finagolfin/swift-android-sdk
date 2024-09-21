@@ -1,0 +1,14 @@
+diff --git a/swift-crypto/Sources/Crypto/Key Derivation/HKDF.swift b/swift-crypto/Sources/Crypto/Key Derivation/HKDF.swift
+index 5f47c2f..4b5579e 100644
+--- a/swift-crypto/Sources/Crypto/Key Derivation/HKDF.swift
++++ b/swift-crypto/Sources/Crypto/Key Derivation/HKDF.swift
+@@ -15,6 +15,9 @@
+ @_exported import CryptoKit
+ #else
+ import Foundation
++#if canImport(Android)
++import Android
++#endif
+ 
+ /// A standards-based implementation of an HMAC-based Key Derivation Function
+ /// (HKDF).

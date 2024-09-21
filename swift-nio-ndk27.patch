@@ -40,3 +40,91 @@ index 33b3be73..b97fa645 100644
          }
      }
      #endif
+diff --git a/Tests/NIOConcurrencyHelpersTests/NIOConcurrencyHelpersTests.swift b/Tests/NIOConcurrencyHelpersTests/NIOConcurrencyHelpersTests.swift
+index 53864db0..bb062226 100644
+--- a/Tests/NIOConcurrencyHelpersTests/NIOConcurrencyHelpersTests.swift
++++ b/Tests/NIOConcurrencyHelpersTests/NIOConcurrencyHelpersTests.swift
+@@ -22,8 +22,8 @@ import XCTest
+ import Darwin
+ #elseif canImport(Glibc)
+ import Glibc
+-#elseif canImport(Bionic)
+-import Bionic
++#elseif canImport(Android)
++import Android
+ #else
+ #error("The Concurrency helpers test module was unable to identify your C library.")
+ #endif
+diff --git a/Tests/NIOCoreTests/XCTest+Extensions.swift b/Tests/NIOCoreTests/XCTest+Extensions.swift
+index 1717542d..99474008 100644
+--- a/Tests/NIOCoreTests/XCTest+Extensions.swift
++++ b/Tests/NIOCoreTests/XCTest+Extensions.swift
+@@ -15,6 +15,10 @@
+ import NIOCore
+ import XCTest
+ 
++#if canImport(Android)
++import Android
++#endif
++
+ func assert(
+     _ condition: @autoclosure () -> Bool,
+     within time: TimeAmount,
+diff --git a/Tests/NIOEmbeddedTests/TestUtils.swift b/Tests/NIOEmbeddedTests/TestUtils.swift
+index 02fe152e..c25bc44a 100644
+--- a/Tests/NIOEmbeddedTests/TestUtils.swift
++++ b/Tests/NIOEmbeddedTests/TestUtils.swift
+@@ -17,6 +17,10 @@ import NIOConcurrencyHelpers
+ import NIOCore
+ import XCTest
+ 
++#if canImport(Android)
++import Android
++#endif
++
+ // FIXME: Duplicated with NIO
+ func assert(
+     _ condition: @autoclosure () -> Bool,
+diff --git a/Tests/NIOFileSystemTests/FileInfoTests.swift b/Tests/NIOFileSystemTests/FileInfoTests.swift
+index e69e7720..d944e425 100644
+--- a/Tests/NIOFileSystemTests/FileInfoTests.swift
++++ b/Tests/NIOFileSystemTests/FileInfoTests.swift
+@@ -20,8 +20,8 @@ import XCTest
+ import Darwin
+ #elseif canImport(Glibc)
+ import Glibc
+-#elseif canImport(Bionic)
+-import Bionic
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ final class FileInfoTests: XCTestCase {
+diff --git a/Tests/NIOFileSystemTests/FileTypeTests.swift b/Tests/NIOFileSystemTests/FileTypeTests.swift
+index 4b436d87..537b4642 100644
+--- a/Tests/NIOFileSystemTests/FileTypeTests.swift
++++ b/Tests/NIOFileSystemTests/FileTypeTests.swift
+@@ -20,6 +20,8 @@ import XCTest
+ import Darwin
+ #elseif canImport(Glibc)
+ import Glibc
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ final class FileTypeTests: XCTestCase {
+diff --git a/Tests/NIOFileSystemTests/Internal/SyscallTests.swift b/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
+index 66ed1171..5253a650 100644
+--- a/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
++++ b/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
+@@ -17,6 +17,10 @@
+ import SystemPackage
+ import XCTest
+ 
++#if canImport(Android)
++import Android
++#endif
++
+ #if ENABLE_MOCKING
+ final class SyscallTests: XCTestCase {
+     func test_openat() throws {

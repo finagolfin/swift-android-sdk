@@ -30,22 +30,31 @@ index 9d5a714b..3f8f8c1d 100644
 +  )
 +endif()
  endif()
-diff --git a/llbuild/unittests/CMakeLists.txt b/llbuild/unittests/CMakeLists.txt
-index 92a1ee38..52273afb 100644
---- a/llbuild/unittests/CMakeLists.txt
-+++ b/llbuild/unittests/CMakeLists.txt
-@@ -6,9 +6,9 @@ function(add_llbuild_unittest test_dirname)
- endfunction()
+diff --git a/sourcekit-lsp/Sources/SKSupport/Process+Run.swift b/sourcekit-lsp/Sources/SKSupport/Process+Run.swift
+--- a/sourcekit-lsp/Sources/SKSupport/Process+Run.swift
++++ b/sourcekit-lsp/Sources/SKSupport/Process+Run.swift
+@@ -22,6 +22,8 @@
  
- add_subdirectory(Basic)
--add_subdirectory(CAS)
-+#add_subdirectory(CAS)
- add_subdirectory(CAPI)
- add_subdirectory(Core)
- add_subdirectory(Evo)
- add_subdirectory(BuildSystem)
--add_subdirectory(Ninja)
-+#add_subdirectory(Ninja)
+ #if os(Windows)
+ import WinSDK
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ extension Process {
+diff --git a/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift b/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift
+--- a/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift
++++ b/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift
+@@ -28,6 +28,9 @@
+ import struct TSCBasic.AbsolutePath
+ import struct TSCBasic.RelativePath
+ import var TSCBasic.localFileSystem
++#if canImport(Android)
++import Android
++#endif
+ 
+ extension AbsolutePath {
+   public init?(argument: String) {
 diff --git a/sourcekit-lsp/Utilities/build-script-helper.py b/sourcekit-lsp/Utilities/build-script-helper.py
 index bd31bec..4469cab 100755
 --- a/sourcekit-lsp/Utilities/build-script-helper.py
@@ -58,6 +67,114 @@ index bd31bec..4469cab 100755
              # Android and fail.
              '-Xswiftc', '-Xcc', '-Xswiftc', '-U_GNU_SOURCE',
          ]
+diff --git a/swift-argument-parser/Sources/ArgumentParser/Utilities/Platform.swift b/swift-argument-parser/Sources/ArgumentParser/Utilities/Platform.swift
+index b7fa046..a94e3b8 100644
+--- a/swift-argument-parser/Sources/ArgumentParser/Utilities/Platform.swift
++++ b/swift-argument-parser/Sources/ArgumentParser/Utilities/Platform.swift
+@@ -19,6 +19,8 @@ import Darwin
+ import CRT
+ #elseif canImport(WASILibc)
+ import WASILibc
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ enum Platform {}
+@@ -88,6 +90,8 @@ extension Platform {
+     ucrt._exit(code)
+ #elseif canImport(WASILibc)
+     WASILibc.exit(code)
++#elseif canImport(Android)
++    Android.exit(code)
+ #endif
+   }
+ }
+@@ -108,7 +112,7 @@ extension Platform {
+ 
+ // MARK: Terminal size
+ 
+-#if canImport(Glibc)
++#if canImport(Glibc) || canImport(Android)
+ func ioctl(_ a: Int32, _ b: Int32, _ p: UnsafeMutableRawPointer) -> Int32 {
+   ioctl(CInt(a), UInt(b), p)
+ }
+diff --git a/swift-certificates/Sources/X509/Verifier/RFC5280/URIConstraints.swift b/swift-certificates/Sources/X509/Verifier/RFC5280/URIConstraints.swift
+--- a/swift-certificates/Sources/X509/Verifier/RFC5280/URIConstraints.swift
++++ b/swift-certificates/Sources/X509/Verifier/RFC5280/URIConstraints.swift
+@@ -21,6 +21,9 @@
+ #elseif canImport(Musl)
+ import Musl
+ import CoreFoundation
++#elseif canImport(Android)
++import Android
++import CoreFoundation
+ #elseif canImport(Darwin)
+ import Darwin
+ #endif
+diff --git a/swift-tools-support-core/Sources/TSCUtility/Tracing.swift b/swift-tools-support-core/Sources/TSCUtility/Tracing.swift
+--- a/swift-tools-support-core/Sources/TSCUtility/Tracing.swift
++++ b/swift-tools-support-core/Sources/TSCUtility/Tracing.swift
+@@ -9,6 +9,9 @@
+  */
+ 
+ import Foundation
++#if canImport(Android)
++import Android
++#endif
+ 
+ public enum TracingEventType: String, Codable, Sendable {
+     case asyncBegin
+diff --git a/swiftpm/Sources/Basics/Cancellator.swift b/swiftpm/Sources/Basics/Cancellator.swift
+--- a/swiftpm/Sources/Basics/Cancellator.swift
++++ b/swiftpm/Sources/Basics/Cancellator.swift
+@@ -15,6 +15,8 @@
+ import class TSCBasic.Thread
+ #if canImport(WinSDK)
+ import WinSDK
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ public typealias CancellationHandler = @Sendable (DispatchTime) throws -> Void
+diff --git a/swiftpm/Sources/Basics/Environment/Environment.swift b/swiftpm/Sources/Basics/Environment/Environment.swift
+--- a/swiftpm/Sources/Basics/Environment/Environment.swift
++++ b/swiftpm/Sources/Basics/Environment/Environment.swift
+@@ -19,8 +19,8 @@
+ #elseif os(Windows)
+ import CRT
+ import WinSDK
+-#elseif canImport(Bionic)
+-import Bionic
++#elseif canImport(Android)
++import Android
+ #else
+ import Darwin.C
+ #endif
+diff --git a/swiftpm/Sources/Commands/SwiftRunCommand.swift b/swiftpm/Sources/Commands/SwiftRunCommand.swift
+--- a/swiftpm/Sources/Commands/SwiftRunCommand.swift
++++ b/swiftpm/Sources/Commands/SwiftRunCommand.swift
+@@ -9,6 +9,9 @@
+ // See http://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
+ //
+ //===----------------------------------------------------------------------===//
++#if canImport(Android)
++import Android
++#endif
+ 
+ import ArgumentParser
+ import Basics
+diff --git a/swiftpm/Sources/PackagePlugin/Plugin.swift b/swiftpm/Sources/PackagePlugin/Plugin.swift
+--- a/swiftpm/Sources/PackagePlugin/Plugin.swift
++++ b/swiftpm/Sources/PackagePlugin/Plugin.swift
+@@ -36,6 +36,8 @@
+         return String(decodingCString: baseAddress, as: UTF16.self)
+     }
+ }
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ //
 diff --git a/swiftpm/Utilities/bootstrap b/swiftpm/Utilities/bootstrap
 index 085056de..1ded1a90 100755
 --- a/swiftpm/Utilities/bootstrap
@@ -71,3 +188,18 @@ index 085056de..1ded1a90 100755
  
      cross_compile_hosts = args.cross_compile_hosts
      if cross_compile_hosts:
+diff --git a/yams/Sources/Yams/Representer.swift b/yams/Sources/Yams/Representer.swift
+index a749c52..b74ef8e 100644
+--- a/yams/Sources/Yams/Representer.swift
++++ b/yams/Sources/Yams/Representer.swift
+@@ -14,6 +14,10 @@ private let cpow: (_: Double, _: Double) -> Double = Darwin.pow
+ #elseif os(Windows)
+ import ucrt
+ private let cpow: (_: Double, _: Double) -> Double = ucrt.pow
++#elseif canImport(Bionic)
++import CoreFoundation
++import Bionic
++private let cpow: (_: Double, _: Double) -> Double = Bionic.pow
+ #else
+ import CoreFoundation
+ import Glibc
