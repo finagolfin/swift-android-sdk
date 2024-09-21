@@ -1,0 +1,15 @@
+diff --git a/Tests/NIOHTTP2Tests/TestUtilities.swift b/Tests/NIOHTTP2Tests/TestUtilities.swift
+index f091045..8aee4ca 100644
+--- a/Tests/NIOHTTP2Tests/TestUtilities.swift
++++ b/Tests/NIOHTTP2Tests/TestUtilities.swift
+@@ -16,8 +16,8 @@
+ import Darwin.C
+ #elseif canImport(Glibc)
+ import Glibc
+-#elseif canImport(Bionic)
+-import Bionic
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ import XCTest

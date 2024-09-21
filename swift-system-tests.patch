@@ -1,0 +1,30 @@
+diff --git a/swift-system/Tests/SystemTests/FileOperationsTest.swift b/swift-system/Tests/SystemTests/FileOperationsTest.swift
+index ed05dcf..db9aa0e 100644
+--- a/swift-system/Tests/SystemTests/FileOperationsTest.swift
++++ b/swift-system/Tests/SystemTests/FileOperationsTest.swift
+@@ -15,6 +15,10 @@ import XCTest
+ @testable import System
+ #endif
+ 
++#if canImport(Android)
++import Android
++#endif
++
+ @available(/*System 0.0.1: macOS 11.0, iOS 14.0, watchOS 7.0, tvOS 14.0*/iOS 8, *)
+ final class FileOperationsTest: XCTestCase {
+   func testSyscalls() {
+diff --git a/swift-system/Tests/SystemTests/FileTypesTest.swift b/swift-system/Tests/SystemTests/FileTypesTest.swift
+index 620cfd7..496fc56 100644
+--- a/swift-system/Tests/SystemTests/FileTypesTest.swift
++++ b/swift-system/Tests/SystemTests/FileTypesTest.swift
+@@ -15,6 +15,10 @@ import SystemPackage
+ import System
+ #endif
+ 
++#if canImport(Android)
++import Android
++#endif
++
+ @available(/*System 0.0.1: macOS 11.0, iOS 14.0, watchOS 7.0, tvOS 14.0*/iOS 8, *)
+ final class FileDescriptorTest: XCTestCase {
+   func testStandardDescriptors() {

@@ -1,0 +1,26 @@
+diff --git a/swift-corelibs-foundation/Sources/Testing/Testing.swift b/swift-corelibs-foundation/Sources/Testing/Testing.swift
+index 712d9dee..2483c14e 100644
+--- a/swift-corelibs-foundation/Sources/Testing/Testing.swift
++++ b/swift-corelibs-foundation/Sources/Testing/Testing.swift
+@@ -11,6 +11,8 @@
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Bionic)
++import Bionic
+ #elseif os(WASI)
+ import WASILibc
+ #elseif canImport(CRT)
+diff --git a/swift-foundation/Sources/FoundationEssentials/FileManager/FileManager+Files.swift b/swift-foundation/Sources/FoundationEssentials/FileManager/FileManager+Files.swift
+index 9cd97525a..b5050a18c 100644
+--- a/swift-foundation/Sources/FoundationEssentials/FileManager/FileManager+Files.swift
++++ b/swift-foundation/Sources/FoundationEssentials/FileManager/FileManager+Files.swift
+@@ -955,6 +955,8 @@ extension _FileManagerImpl {
+                 #if os(WASI)
+                 // WASI does not support extended attributes
+                 throw CocoaError.errorWithFilePath(.featureUnsupported, path)
++                #elseif canImport(Android)
++                // Android doesn't allow setting this for normal apps, so just skip it.
+                 #else
+                 try Self._setAttributes(extendedAttrs, at: fileSystemRepresentation, followSymLinks: false)
+                 #endif

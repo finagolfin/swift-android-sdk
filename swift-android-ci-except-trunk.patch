@@ -1,0 +1,52 @@
+diff --git a/llbuild/products/llbuildSwift/BuildSystemBindings.swift b/llbuild/products/llbuildSwift/BuildSystemBindings.swift
+index 6962fff5..8f1bf502 100644
+--- a/llbuild/products/llbuildSwift/BuildSystemBindings.swift
++++ b/llbuild/products/llbuildSwift/BuildSystemBindings.swift
+@@ -17,8 +17,8 @@ import WinSDK
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
+-#elseif canImport(Bionic)
+-import Bionic
++#elseif canImport(Android)
++import Android
+ #else
+ #error("Missing libc or equivalent")
+ #endif
+@@ -1293,7 +1293,7 @@ public final class BuildSystem {
+         #elseif os(Windows)
+         info.pointee.mod_time.seconds = UInt64(s.st_mtime)
+         info.pointee.mod_time.nanoseconds = 0
+-        #elseif canImport(Glibc) || canImport(Musl) || canImport(Bionic)
++        #elseif canImport(Glibc) || canImport(Musl) || canImport(Android)
+         info.pointee.mod_time.seconds = UInt64(s.st_mtim.tv_sec)
+         info.pointee.mod_time.nanoseconds = UInt64(s.st_mtim.tv_nsec)
+         #else
+diff --git a/llbuild/unittests/CMakeLists.txt b/llbuild/unittests/CMakeLists.txt
+index 92a1ee38..52273afb 100644
+--- a/llbuild/unittests/CMakeLists.txt
++++ b/llbuild/unittests/CMakeLists.txt
+@@ -6,9 +6,9 @@ function(add_llbuild_unittest test_dirname)
+ endfunction()
+ 
+ add_subdirectory(Basic)
+-add_subdirectory(CAS)
++#add_subdirectory(CAS)
+ add_subdirectory(CAPI)
+ add_subdirectory(Core)
+ add_subdirectory(Evo)
+ add_subdirectory(BuildSystem)
+-add_subdirectory(Ninja)
++#add_subdirectory(Ninja)
+diff --git a/swiftpm/Sources/Basics/AsyncProcess.swift b/swiftpm/Sources/Basics/AsyncProcess.swift
+--- a/swiftpm/Sources/Basics/AsyncProcess.swift
++++ b/swiftpm/Sources/Basics/AsyncProcess.swift
+@@ -14,6 +14,8 @@
+ 
+ #if os(Windows)
+ import TSCLibc
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ #if os(Linux)

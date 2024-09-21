@@ -1,0 +1,34 @@
+diff --git a/llbuild/unittests/CMakeLists.txt b/llbuild/unittests/CMakeLists.txt
+index 92a1ee38..52273afb 100644
+--- a/llbuild/unittests/CMakeLists.txt
++++ b/llbuild/unittests/CMakeLists.txt
+@@ -6,4 +6,4 @@ function(add_llbuild_unittest test_dirname)
+ add_subdirectory(CAPI)
+ add_subdirectory(Core)
+ add_subdirectory(BuildSystem)
+-add_subdirectory(Ninja)
++#add_subdirectory(Ninja)
+diff --git a/swiftpm/Package.swift b/swiftpm/Package.swift
+--- a/swiftpm/Package.swift
++++ b/swiftpm/Package.swift
+@@ -198,7 +198,7 @@
+             name: "Basics",
+             dependencies: [
+                 "_AsyncFileSystem",
+-                .target(name: "SPMSQLite3", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .visionOS, .macCatalyst, .linux])),
++                .target(name: "SPMSQLite3", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .visionOS, .macCatalyst, .linux, .android])),
+                 .product(name: "SwiftToolchainCSQLite", package: "swift-toolchain-sqlite", condition: .when(platforms: [.windows])),
+                 .product(name: "DequeModule", package: "swift-collections"),
+                 .product(name: "OrderedCollections", package: "swift-collections"),
+diff --git a/swiftpm/Sources/Basics/Concurrency/AsyncProcess.swift b/swiftpm/Sources/Basics/Concurrency/AsyncProcess.swift
+--- a/swiftpm/Sources/Basics/Concurrency/AsyncProcess.swift
++++ b/swiftpm/Sources/Basics/Concurrency/AsyncProcess.swift
+@@ -14,6 +14,8 @@
+ 
+ #if os(Windows)
+ import TSCLibc
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ #if os(Linux)

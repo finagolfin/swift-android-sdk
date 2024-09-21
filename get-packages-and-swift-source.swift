@@ -1,20 +1,22 @@
 import Foundation
 
 // The Termux packages to download and unpack
-var termuxPackages = ["libicu", "libicu-static", "libandroid-spawn", "libcurl", "libxml2"]
+var termuxPackages = ["libandroid-spawn", "libcurl", "libxml2"]
 let termuxURL = "https://packages.termux.dev/apt/termux-main"
 
 let swiftRepos = ["llvm-project", "swift", "swift-experimental-string-processing", "swift-corelibs-libdispatch",
-                  "swift-corelibs-foundation", "swift-corelibs-xctest", "swift-syntax"]
+                  "swift-corelibs-foundation", "swift-corelibs-xctest", "swift-syntax", "swift-collections",
+                  "swift-foundation", "swift-foundation-icu"]
 
 let extraSwiftRepos = ["swift-llbuild", "swift-package-manager", "swift-driver",
                        "swift-tools-support-core", "swift-argument-parser", "swift-crypto",
                        "Yams", "indexstore-db", "sourcekit-lsp", "swift-system",
-                       "swift-collections", "swift-certificates", "swift-asn1"]
+                       "swift-certificates", "swift-asn1", "swift-toolchain-sqlite"]
+let appleRepos = ["swift-argument-parser", "swift-crypto", "swift-system", "swift-collections", "swift-certificates", "swift-asn1"]
 let renameRepos = ["swift-llbuild" : "llbuild", "swift-package-manager" : "swiftpm", "Yams" : "yams"]
 var repoTags = ["swift-system" : "1.3.0", "swift-collections" : "1.1.2", "swift-asn1" : "1.0.0",
                 "swift-certificates" : "1.0.1", "Yams" : "5.0.6", "swift-argument-parser" : "1.2.3",
-                "swift-crypto" : "3.0.0"]
+                "swift-crypto" : "3.0.0", "swift-toolchain-sqlite" : "1.0.1"]
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
   termuxPackages += ["ncurses", "libsqlite"]
 }
@@ -27,8 +29,7 @@ guard let ANDROID_ARCH = ProcessInfo.processInfo.environment["ANDROID_ARCH"] els
   fatalError("You must specify an ANDROID_ARCH environment variable.")
 }
 
-var sdkDir = "", icuVersion = "", icuMajorVersion = "", swiftVersion = "",
-    swiftBranch = "", swiftSnapshotDate = ""
+var sdkDir = "", swiftVersion = "", swiftBranch = "", swiftSnapshotDate = ""
 
 let tagRange = NSRange(SWIFT_TAG.startIndex..., in: SWIFT_TAG)
 let tagExtract = try NSRegularExpression(pattern: "swift-([5-9]\\.[0-9]+)?\\.?[1-9]*-?([A-Z-]+)([0-9-]+[0-9])?")
@@ -49,13 +50,11 @@ if tagExtract.numberOfMatches(in: SWIFT_TAG, range: tagRange) == 1 {
 }
 
 if swiftBranch == "RELEASE" {
-  repoTags["swift-collections"] = "1.0.5"
-  repoTags["swift-system"] = "1.1.1"
-  repoTags["Yams"] = "5.0.1"
   sdkDir = "swift-release-android-\(ANDROID_ARCH)-24-sdk"
 } else {
   if swiftVersion == "" {
     repoTags["swift-argument-parser"] = "1.4.0"
+    repoTags["swift-collections"] = "1.1.3"
   }
   sdkDir = "swift-\(swiftVersion == "" ? "trunk" : "devel")-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"
 }
@@ -186,17 +185,6 @@ for termuxPackage in termuxPackages {
         "\(termuxURL)/\(packagePath)"])
   }
 
-  if termuxPackage == "libicu" {
-    guard let icuVersionRange = packageName.range(of: "([0-9]+)\\.[0-9]", options: .regularExpression) else {
-      fatalError("couldn't extract ICU version from \(packageName)")
-    }
-    icuVersion = String(packageName[icuVersionRange])
-    guard let icuMajorVersionRange = icuVersion.range(of: "^[0-9]+", options: .regularExpression) else {
-      fatalError("couldn't extract ICU major version from \(icuVersion)")
-    }
-    icuMajorVersion = String(icuVersion[icuMajorVersionRange])
-  }
-
   if !fmd.fileExists(atPath: cwd.appendingPathComponent(sdkDir)) {
     print("Unpacking \(packageName)")
 #if os(macOS)
@@ -224,35 +212,6 @@ if !fmd.fileExists(atPath: sdkPath) {
   try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/share/man"))
 }
 
-for iculib in ["data", "i18n", "io", "test", "tu", "uc"] {
-  if fmd.fileExists(atPath: sdkPath.appendingPathComponent("usr/lib/libicu\(iculib).so.\(icuMajorVersion)")) {
-    try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/lib/libicu\(iculib).so"))
-    try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/lib/libicu\(iculib).so.\(icuMajorVersion)"))
-
-    if ["io", "test", "tu"].contains(iculib) {
-      try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/lib/libicu\(iculib).a"))
-      try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/lib/libicu\(iculib).so.\(icuVersion)"))
-    } else {
-      try fmd.moveItem(atPath: sdkPath.appendingPathComponent("usr/lib/libicu\(iculib).so.\(icuVersion)"),
-                       toPath: sdkPath.appendingPathComponent("usr/lib/libicu\(iculib).so"))
-      _ = runCommand("patchelf", with: ["--set-rpath", "$ORIGIN",
-                "\(sdkPath.appendingPathComponent("usr/lib/libicu\(iculib).so"))"])
-      _ = runCommand("patchelf", with: ["--set-soname", "libicu\(iculib).so",
-                "\(sdkPath.appendingPathComponent("usr/lib/libicu\(iculib).so"))"])
-
-      if iculib == "i18n" {
-        _ = runCommand("patchelf", with: ["--replace-needed", "libicuuc.so.\(icuMajorVersion)",
-                  "libicuuc.so", "\(sdkPath.appendingPathComponent("usr/lib/libicui18n.so"))"])
-      }
-
-      if iculib == "uc" {
-        _ = runCommand("patchelf", with: ["--replace-needed", "libicudata.so.\(icuMajorVersion)",
-                  "libicudata.so", "\(sdkPath.appendingPathComponent("usr/lib/libicuuc.so"))"])
-      }
-    }
-  }
-}
-
 _ = runCommand("patchelf", with: ["--set-rpath", "$ORIGIN",
           "\(sdkPath.appendingPathComponent("usr/lib/libandroid-spawn.so"))",
           "\(sdkPath.appendingPathComponent("usr/lib/libcurl.so"))",
@@ -262,20 +221,31 @@ for repo in swiftRepos {
   print("Checking for \(repo) source")
   if !fmd.fileExists(atPath: cwd.appendingPathComponent(repo)) {
     print("Downloading and extracting \(repo) source")
+    let tag = repoTags[repo] ?? SWIFT_TAG
+    var repoOrg = "swiftlang"
+    if ["swift-corelibs-libdispatch", "swift-collections"].contains(repo) {
+      repoOrg = "apple"
+    }
     _ = runCommand("curl", with: ["-f", "-L", "-O",
-              "https://github.com/apple/\(repo)/archive/refs/tags/\(SWIFT_TAG).tar.gz"])
-    _ = runCommand("tar", with: ["xf", "\(SWIFT_TAG).tar.gz"])
-    try fmd.moveItem(atPath: cwd.appendingPathComponent("\(repo)-\(SWIFT_TAG)"),
+              "https://github.com/\(repoOrg)/\(repo)/archive/refs/tags/\(tag).tar.gz"])
+    _ = runCommand("tar", with: ["xf", "\(tag).tar.gz"])
+    try fmd.moveItem(atPath: cwd.appendingPathComponent("\(repo)-\(tag)"),
                      toPath: cwd.appendingPathComponent(repo))
-    try fmd.removeItem(atPath: cwd.appendingPathComponent("\(SWIFT_TAG).tar.gz"))
+    try fmd.removeItem(atPath: cwd.appendingPathComponent("\(tag).tar.gz"))
   }
 }
 
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
   for repo in extraSwiftRepos {
     let tag = repoTags[repo] ?? SWIFT_TAG
+    var repoOrg = "swiftlang"
+    if repo == "Yams" {
+      repoOrg = "jpsim"
+    } else if appleRepos.contains(repo) {
+      repoOrg = "apple"
+    }
     _ = runCommand("curl", with: ["-f", "-L", "-O",
-              "https://github.com/\(repo == "Yams" ? "jpsim" : "apple")/\(repo)/archive/refs/tags/\(tag).tar.gz"])
+              "https://github.com/\(repoOrg)/\(repo)/archive/refs/tags/\(tag).tar.gz"])
     _ = runCommand("tar", with: ["xf", "\(tag).tar.gz"])
     try fmd.moveItem(atPath: cwd.appendingPathComponent("\(repo)-\(tag)"),
                      toPath: cwd.appendingPathComponent(renameRepos[repo] ?? repo))

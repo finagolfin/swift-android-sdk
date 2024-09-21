@@ -1,0 +1,59 @@
+diff --git a/Tests/NIOSSLTests/NIOSSLTestHelpers.swift b/Tests/NIOSSLTests/NIOSSLTestHelpers.swift
+index ac8ef96..9472460 100644
+--- a/Tests/NIOSSLTests/NIOSSLTestHelpers.swift
++++ b/Tests/NIOSSLTests/NIOSSLTestHelpers.swift
+@@ -18,6 +18,10 @@ import NIOCore
+ import NIOEmbedded
+ @testable import NIOSSL
+ 
++#if canImport(Android)
++import Android
++#endif
++
+ let samplePemCert = """
+ -----BEGIN CERTIFICATE-----
+ MIIGGzCCBAOgAwIBAgIJAJ/X0Fo0ynmEMA0GCSqGSIb3DQEBCwUAMIGjMQswCQYD
+diff --git a/Tests/NIOSSLTests/SSLCertificateTest.swift b/Tests/NIOSSLTests/SSLCertificateTest.swift
+index ebf04dd..eb5dac8 100644
+--- a/Tests/NIOSSLTests/SSLCertificateTest.swift
++++ b/Tests/NIOSSLTests/SSLCertificateTest.swift
+@@ -17,6 +17,10 @@ import XCTest
+ import NIOCore
+ @testable import NIOSSL
+ 
++#if canImport(Android)
++import Android
++#endif
++
+ let multiSanCert = """
+ -----BEGIN CERTIFICATE-----
+ MIIDEzCCAfugAwIBAgIURiMaUmhI1Xr0mZ4p+JmI0XjZTaIwDQYJKoZIhvcNAQEL
+diff --git a/Tests/NIOSSLTests/SSLPKCS12BundleTest.swift b/Tests/NIOSSLTests/SSLPKCS12BundleTest.swift
+index 12803f9..a9649dc 100644
+--- a/Tests/NIOSSLTests/SSLPKCS12BundleTest.swift
++++ b/Tests/NIOSSLTests/SSLPKCS12BundleTest.swift
+@@ -17,6 +17,9 @@ import XCTest
+ import NIOCore
+ @testable import NIOSSL
+ 
++#if canImport(Android)
++import Android
++#endif
+ 
+ /// This is a base64-PKCS12 file that contains only samplePemCert and
+ /// samplePemKey, no extra certs. The passphrase is
+diff --git a/Tests/NIOSSLTests/SSLPrivateKeyTests.swift b/Tests/NIOSSLTests/SSLPrivateKeyTests.swift
+index 9dd8d61..1abd9df 100644
+--- a/Tests/NIOSSLTests/SSLPrivateKeyTests.swift
++++ b/Tests/NIOSSLTests/SSLPrivateKeyTests.swift
+@@ -17,6 +17,10 @@ import XCTest
+ import NIOCore
+ @testable import NIOSSL
+ 
++#if canImport(Android)
++import Android
++#endif
++
+ class SSLPrivateKeyTest: XCTestCase {
+     static var pemKeyFilePath: String! = nil
+     static var derKeyFilePath: String! = nil
