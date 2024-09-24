@@ -14,6 +14,7 @@ jobs:
       release-version: ${{ steps.check.outputs.release-tag }}
       devel-version: ${{ steps.check.outputs.devel-tag }}
       trunk-version: ${{ steps.check.outputs.trunk-tag }}
+      new-devel-tag: ${{ steps.download.outputs.devel-updated == 'true' }}
     steps:
       - name: Check for latest Swift ${{ matrix.version }} toolchain
         id: check
@@ -38,13 +39,16 @@ jobs:
         with:
           path: ~/${{ steps.check.outputs.latest-tag }}-ubuntu22.04.tar.gz
           key: swift-ubuntu-22.04-${{ steps.check.outputs.latest-tag }}-toolchain
+          lookup-only: true
       - name: Get cached macOS toolchain
         id: cache-toolchain-macos
         uses: actions/cache@v4
         with:
           path: ~/${{ steps.check.outputs.latest-tag }}-osx.pkg
           key: swift-macos-13-${{ steps.check.outputs.latest-tag }}-toolchain
+          lookup-only: true
       - name: Download toolchain
+        id: download
         if: ${{ steps.cache-toolchain-ubuntu.outputs.cache-hit != 'true' || steps.cache-toolchain-macos.outputs.cache-hit != 'true' }}
         run: |
           SWIFT_TAG="${{ steps.check.outputs.latest-tag }}"
@@ -52,6 +56,7 @@ jobs:
             SWIFT_BRANCH="swift-$(echo ${{ steps.check.outputs.release-tag }} | cut -d- -f2)-release"
           elif [ ${{ matrix.version }} = 'devel' ]; then
             SWIFT_BRANCH="swift-6.0-branch"
+            echo "devel-updated='true'" >> $GITHUB_OUTPUT
           else
             SWIFT_BRANCH="development"
           fi
@@ -76,6 +81,8 @@ jobs:
         exclude:
           - os: macos-13
             version: trunk
+          - os: macos-13
+            version: ${{ needs.get-latest-toolchain.outputs.new-devel-tag == 'true' && 'devel' || 'none' }}
     env:
       ANDROID_API_LEVEL: 24
     steps:
@@ -84,31 +91,29 @@ jobs:
         run: |
           if [[ ${{ matrix.version }} = 'release' ]]; then
             TAG="${{ needs.get-latest-toolchain.outputs.release-version }}"
-            echo "latest=$(echo $TAG | cut -d- -f2)" >> $GITHUB_OUTPUT
           elif [ ${{ matrix.version }} = 'devel' ]; then
             TAG="${{ needs.get-latest-toolchain.outputs.devel-version }}"
-            echo "latest=$(echo $TAG | cut -d- -f5-7)" >> $GITHUB_OUTPUT
           else
             TAG="${{ needs.get-latest-toolchain.outputs.trunk-version }}"
-            echo "latest=$(echo $TAG | cut -d- -f4-6)" >> $GITHUB_OUTPUT
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
       - name: Get cached SDK
         id: cache-sdk
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ matrix.version }}-${{ steps.version.outputs.latest }}-${{ matrix.arch }}-ndk-27b-sdk
+          key: ${{ steps.version.outputs.tag }}-${{ matrix.arch }}-ndk-27b-sdk
       - name: Clone
         uses: actions/checkout@v4
         with:
           path: sdk-config
       - name: Get cached ${{ matrix.os }} ${{ steps.version.outputs.tag }} toolchain
         id: cache-toolchain
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ~/${{ steps.version.outputs.tag }}-${{ startsWith(matrix.os, 'macos') && 'osx.pkg' || 'ubuntu22.04.tar.gz' }}
           key: swift-${{ matrix.os }}-${{ steps.version.outputs.tag }}-toolchain
+          fail-on-cache-miss: true
       - name: Setup Swift Toolchain
         env:
           SWIFT_TAG: ${{ steps.version.outputs.tag }}
@@ -179,12 +184,12 @@ jobs:
 
           tar cJf ~/$SDK_NAME.tar.xz $SDK_NAME
           rm -rf build/ $SDK_NAME llvm-project/
-      - name: Upload SDK
-        uses: actions/upload-artifact@v4
-        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+      - name: Cache new SDK on linux
+        if: ${{ (steps.cache-sdk.outputs.cache-hit != 'true') && startsWith(matrix.os, 'ubuntu') }}
+        uses: actions/cache/save@v4
         with:
-          name: swift-android-sdk-${{ matrix.version }}-${{ matrix.arch }}
-          path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}*-sdk.tar.xz
+          path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
+          key: ${{ steps.version.outputs.tag }}-${{ matrix.arch }}-ndk-27b-sdk
       - name: Setup Swift ${{ matrix.version }} Android SDK
         id: sdk-setup
         run: |
@@ -279,7 +284,6 @@ jobs:
           repository: apple/swift-nio
           path: swift-nio
       - name: Build Swift NIO package
-        if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
           cd swift-nio
           git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem.patch ../sdk-config/swift-nio-ndk27.patch
@@ -328,7 +332,6 @@ jobs:
           repository: apple/swift-nio-ssh
           path: sns
       - name: Build Swift NIO SSH package
-        if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
           cd sns
           perl -pi -e 's%url: .*swift-([a-z]*)\.git.*$%path: \"../swift-\1\"),%g' Package.swift
@@ -339,7 +342,6 @@ jobs:
           repository: apple/swift-nio-ssl
           path: snl
       - name: Build Swift NIO SSL package
-        if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
           cd snl
           git apply ../sdk-config/swift-nio-ssl-test.patch
@@ -360,7 +362,7 @@ jobs:
           repository: apple/swift-nio-http2
           path: snh
       - name: Build Swift NIO HTTP/2 package
-        if: ${{ startsWith(matrix.os, 'ubuntu') && matrix.arch != 'armv7' }}
+        if: ${{ matrix.arch != 'armv7' }}
         run: |
           cd snh
           git apply ../sdk-config/swift-nio-http2-test.patch
@@ -390,7 +392,6 @@ jobs:
         if: ${{ matrix.arch == 'x86_64' }}
         run: |
           set -x
-          if ${{ startsWith(matrix.os, 'ubuntu') }}; then
           # create the test runner script
           cat > ~/test-toolchain.sh << EOF
           adb install ~/termux-debug.apk
@@ -404,13 +405,6 @@ jobs:
           adb shell "run-as com.termux sh -c 'TMPDIR=/data/data/com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest'"
           adb shell "TMPDIR=/data/local/tmp /data/local/tmp/pack/swift-systemPackageTests.xctest"
           EOF
-          else
-          cat > ~/test-toolchain.sh << EOF
-          adb install ~/termux-debug.apk
-          adb push pack /data/local/tmp
-          adb shell "TMPDIR=/data/local/tmp /data/local/tmp/pack/swift-systemPackageTests.xctest"
-          EOF
-          fi
 
           mkdir -p pack/lib/swift/android
           TARGET="x86_64-unknown-linux-android$ANDROID_API_LEVEL"
@@ -431,9 +425,7 @@ jobs:
           cp swift-crypto/.build/$TARGET/debug/swift-cryptoPackageTests.xctest pack
           echo 'adb shell /data/local/tmp/pack/swift-cryptoPackageTests.xctest' >> ~/test-toolchain.sh
 
-          if ${{ startsWith(matrix.os, 'ubuntu') }}; then
           cp swift-nio/.build/$TARGET/debug/swift-nioPackageTests.xctest pack
-          fi
 
           cp swift-numerics/.build/$TARGET/debug/swift-numericsPackageTests.xctest pack
           echo 'adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest' >> ~/test-toolchain.sh
@@ -442,7 +434,6 @@ jobs:
           cp swift-collections/.build/$TARGET/debug/swift-collectionsPackageTests.xctest pack
           echo 'adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest' >> ~/test-toolchain.sh
 
-          if ${{ startsWith(matrix.os, 'ubuntu') }}; then
           cp sns/.build/$TARGET/debug/swift-nio-sshPackageTests.xctest pack
           echo 'adb shell /data/local/tmp/pack/swift-nio-sshPackageTests.xctest' >> ~/test-toolchain.sh
 
@@ -451,7 +442,6 @@ jobs:
 
           cp snh/.build/$TARGET/debug/swift-nio-http2PackageTests.xctest pack
           echo 'adb shell /data/local/tmp/pack/swift-nio-http2PackageTests.xctest' >> ~/test-toolchain.sh
-          fi
 
           cp yams/.build/$TARGET/debug/YamsPackageTests.xctest pack
           echo 'adb shell /data/local/tmp/pack/YamsPackageTests.xctest' >> ~/test-toolchain.sh
