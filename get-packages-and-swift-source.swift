@@ -217,10 +217,54 @@ if !fmd.fileExists(atPath: sdkPath) {
   try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/etc"))
 }
 
-_ = runCommand("patchelf", with: ["--set-rpath", "$ORIGIN",
-          "\(sdkPath.appendingPathComponent("usr/lib/libandroid-spawn.so"))",
-          "\(sdkPath.appendingPathComponent("usr/lib/libcurl.so"))",
-          "\(sdkPath.appendingPathComponent("usr/lib/libxml2.so"))"])
+let libPath = sdkPath.appendingPathComponent("usr/lib")
+/// The path to the shared object file
+func sopath(_ soname: String) -> String {
+  return libPath.appendingPathComponent(soname)
+}
+
+// flatten each of the shared object file links, since Android APKs do not support version-suffixed .so.x.y.z paths
+var renamedSharedObjects: [String: String] = [:]
+for soFile in try fmd.contentsOfDirectory(atPath: libPath) {
+  var parts = soFile.split(separator: ".")
+  guard let soIndex = parts.firstIndex(of: "so") else { continue }
+
+  // e.g., for "libtinfo.so.6.5": soBase="libtinfo.so" soVersion="6.5"
+  let soBase = parts[0...soIndex].joined(separator: ".")
+  let soVersion = parts.dropFirst(soIndex + 1).joined(separator: ".")
+
+  if !soVersion.isEmpty {
+    renamedSharedObjects[soFile] = soBase // libtinfo.so.6.5->libtinfo.so
+  }
+
+  let soPath = sopath(soFile)
+  let soBasePath = sopath(soBase)
+  if (try? fmd.destinationOfSymbolicLink(atPath: soPath)) != nil {
+    try fmd.removeItem(atPath: soPath) // clear links
+  } else if !soVersion.isEmpty {
+    // otherwise move the version-suffixed path to the un-versioned destination
+    if (try? fmd.destinationOfSymbolicLink(atPath: soBasePath)) != nil {
+      // need to remove the destination before we can move
+      try fmd.removeItem(atPath: soBasePath)
+    }
+    try fmd.moveItem(atPath: soPath, toPath: soBasePath)
+  }
+}
+
+// update the rpath to be $ORIGIN, set the soname, and update all the "needed" sections for each of the peer libraries
+for soFile in try fmd.contentsOfDirectory(atPath: libPath).filter({ $0.hasSuffix(".so")} ) {
+  let soPath = sopath(soFile)
+  // fix the soname (e.g., libtinfo.so.6.5->libtinfo.so)
+  _ = runCommand("patchelf", with: ["--set-soname", soFile, soPath])
+  _ = runCommand("patchelf", with: ["--set-rpath", "$ORIGIN", soPath])
+
+  let needed = Set(runCommand("patchelf", with: ["--print-needed", soPath]).split(separator: "\n").map(\.description))
+  for needs in needed {
+    if let unversioned = renamedSharedObjects[needs] {
+      _ = runCommand("patchelf", with: ["--replace-needed", needs, unversioned, soPath])
+    }
+  }
+}
 
 for repo in swiftRepos {
   print("Checking for \(repo) source")
