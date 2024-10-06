@@ -240,8 +240,7 @@ jobs:
                 "extra-cpp-flags": [ "-lstdc++" ],
                 "extra-swiftc-flags": [
                     "-resource-dir", "${SDK_PATH}/usr/lib/swift",
-                    "-tools-directory", "${NDK_PREBUILT}/bin",
-                    "-L", "${SDK_PATH}/usr/lib"
+                    "-tools-directory", "${NDK_PREBUILT}/bin"
                 ]
             }
           EOF
@@ -261,10 +260,9 @@ jobs:
           repository: apple/swift-argument-parser
           path: swift-argument-parser
       - name: Build Swift Argument Parser package
-        # macOS error: ld.lld: error: --defsym:1: symbol not found: changelog_authors_main
-        if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
           cd swift-argument-parser
+          rm Examples/count-lines/CountLines.swift Tools/changelog-authors/*.swift
           ${TOOLCHAIN}/bin/swift build --build-tests --destination ${ARCH_JSON} -Xlinker -rpath -Xlinker \$ORIGIN/lib/swift/android
       - name: Get Swift crypto package
         uses: actions/checkout@v4
@@ -413,9 +411,8 @@ jobs:
           mkdir -p pack/lib/swift/android
           TARGET="x86_64-unknown-linux-android$ANDROID_API_LEVEL"
 
-          if ${{ startsWith(matrix.os, 'ubuntu') }}; then
-            cp swift-argument-parser/.build/$TARGET/debug/{generate-manual,math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
-            echo 'adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest' >> ~/test-toolchain.sh
+          cp swift-argument-parser/.build/$TARGET/debug/{generate-manual,math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
+          echo 'adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest' >> ~/test-toolchain.sh
 
           wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v2.1.1/elf-cleaner.cpp
           wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v2.1.1/elf.h
@@ -424,7 +421,6 @@ jobs:
           clang -c arghandling.c
           clang -o elf-cleaner arghandling.o elf-cleaner.cpp -DCOPYRIGHT=\"foo\" -DPACKAGE_NAME=\"termux-elf-cleaner\" -DPACKAGE_VERSION=\"2.2.1\"
           ./elf-cleaner --api-level $ANDROID_API_LEVEL pack/{generate-manual,math,repeat,roll} || true
-          fi
 
           cp swift-crypto/.build/$TARGET/debug/swift-cryptoPackageTests.xctest pack
           echo 'adb shell /data/local/tmp/pack/swift-cryptoPackageTests.xctest' >> ~/test-toolchain.sh
