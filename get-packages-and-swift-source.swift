@@ -247,6 +247,10 @@ for soFile in try fmd.contentsOfDirectory(atPath: libPath) {
   }
 }
 
+// Rename ncurses for llbuild and add a symlink for SwiftPM
+try fmd.moveItem(atPath: libPath.appendingPathComponent("libncursesw.so"), toPath: libPath.appendingPathComponent("libcurses.so"))
+try fmd.createSymbolicLink(atPath: libPath.appendingPathComponent("libncurses.so"), withDestinationPath: "libcurses.so")
+
 // update the rpath to be $ORIGIN, set the soname, and update all the "needed" sections for each of the peer libraries
 for soFile in try fmd.contentsOfDirectory(atPath: libPath).filter({ $0.hasSuffix(".so")} ) {
   let soPath = libPath.appendingPathComponent(soFile)

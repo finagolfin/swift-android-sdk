@@ -522,7 +522,7 @@ jobs:
             echo "Creating ${TRIPLE} from ${MERGEDIR}…"
 
             # Remove executables and unused toolchain headers/libraries
-            rm -r usr/bin usr/lib/swift/pm usr/lib/libsqlite3.so usr/lib/libncursesw.so
+            rm -r usr/bin usr/lib/swift/pm usr/lib/libsqlite3.so usr/lib/lib{curses,ncurses}.so
             rm -r usr/include/ncurses* usr/include/sqlite3*.h usr/lib/terminfo usr/share/{tabset,terminfo}
 
             mkdir -p usr/lib/${TRIPLE}
