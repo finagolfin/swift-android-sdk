@@ -97,7 +97,7 @@ jobs:
             TAG="${{ needs.get-latest-toolchain.outputs.trunk-version }}"
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
-          KEY="$TAG-${{ matrix.arch }}-ndk-27b-bump-sdk"
+          KEY="$TAG-${{ matrix.arch }}-ndk-27b-c-ares-sdk"
           echo "key=$KEY" >> $GITHUB_OUTPUT
           if ${{ matrix.arch == 'x86_64' }}; then
             echo "aarch64-key=${KEY/x86_64/aarch64}" >> $GITHUB_OUTPUT
