@@ -218,15 +218,11 @@ if !fmd.fileExists(atPath: sdkPath) {
 }
 
 let libPath = sdkPath.appendingPathComponent("usr/lib")
-/// The path to the shared object file
-func sopath(_ soname: String) -> String {
-  return libPath.appendingPathComponent(soname)
-}
 
 // flatten each of the shared object file links, since Android APKs do not support version-suffixed .so.x.y.z paths
 var renamedSharedObjects: [String: String] = [:]
 for soFile in try fmd.contentsOfDirectory(atPath: libPath) {
-  var parts = soFile.split(separator: ".")
+  let parts = soFile.split(separator: ".")
   guard let soIndex = parts.firstIndex(of: "so") else { continue }
 
   // e.g., for "libtinfo.so.6.5": soBase="libtinfo.so" soVersion="6.5"
@@ -237,8 +233,8 @@ for soFile in try fmd.contentsOfDirectory(atPath: libPath) {
     renamedSharedObjects[soFile] = soBase // libtinfo.so.6.5->libtinfo.so
   }
 
-  let soPath = sopath(soFile)
-  let soBasePath = sopath(soBase)
+  let soPath = libPath.appendingPathComponent(soFile)
+  let soBasePath = libPath.appendingPathComponent(soBase)
   if (try? fmd.destinationOfSymbolicLink(atPath: soPath)) != nil {
     try fmd.removeItem(atPath: soPath) // clear links
   } else if !soVersion.isEmpty {
@@ -253,7 +249,7 @@ for soFile in try fmd.contentsOfDirectory(atPath: libPath) {
 
 // update the rpath to be $ORIGIN, set the soname, and update all the "needed" sections for each of the peer libraries
 for soFile in try fmd.contentsOfDirectory(atPath: libPath).filter({ $0.hasSuffix(".so")} ) {
-  let soPath = sopath(soFile)
+  let soPath = libPath.appendingPathComponent(soFile)
   // fix the soname (e.g., libtinfo.so.6.5->libtinfo.so)
   _ = runCommand("patchelf", with: ["--set-soname", soFile, soPath])
   _ = runCommand("patchelf", with: ["--set-rpath", "$ORIGIN", soPath])
