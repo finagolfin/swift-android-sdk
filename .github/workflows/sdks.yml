@@ -521,13 +521,16 @@ jobs:
 
             echo "Creating ${TRIPLE} from ${MERGEDIR}…"
 
+            # Remove executables and unused toolchain headers/libraries
+            rm -r usr/bin usr/lib/swift/pm usr/lib/libsqlite3.so usr/lib/libncursesw.so
+            rm -r usr/include/ncurses* usr/include/sqlite3*.h usr/lib/terminfo usr/share/{tabset,terminfo}
+
             mkdir -p usr/lib/${TRIPLE}
-            rm -r usr/bin
             mv usr/lib/swift_static/android/*.a usr/lib/swift_static/android/${ARCH}/
             patchelf --set-rpath \$ORIGIN usr/lib/swift/android/lib[FXs]*.so
             mv usr/lib/*.so* usr/lib/swift/android/*.so* usr/lib/${TRIPLE}
             mv usr/lib/pkgconfig usr/lib/${TRIPLE}
-            rm -r usr/lib/swift/pm
+
             # clear the symlink to /home/runner/work/swift-android-sdk/swift-android-sdk/sdk-config/swift-5.10.1-RELEASE-ubuntu22.04/usr/lib/clang/15.0.0
             # we will reference it with an -I flag in the destination.json instead
             rm usr/lib/swift_static/clang
