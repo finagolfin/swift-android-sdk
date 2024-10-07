@@ -97,12 +97,18 @@ jobs:
             TAG="${{ needs.get-latest-toolchain.outputs.trunk-version }}"
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
+          KEY="$TAG-${{ matrix.arch }}-ndk-27b-bump-sdk"
+          echo "key=$KEY" >> $GITHUB_OUTPUT
+          if ${{ matrix.arch == 'x86_64' }}; then
+            echo "aarch64-key=${KEY/x86_64/aarch64}" >> $GITHUB_OUTPUT
+            echo "arm-key=${KEY/x86_64/armv7}" >> $GITHUB_OUTPUT
+          fi
       - name: Get cached SDK
         id: cache-sdk
         uses: actions/cache/restore@v4
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ steps.version.outputs.tag }}-${{ matrix.arch }}-ndk-27b-sdk
+          key: ${{ steps.version.outputs.key }}
       - name: Clone
         uses: actions/checkout@v4
         with:
@@ -189,7 +195,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ~/swift-${{ matrix.version }}-android-${{ matrix.arch }}-*-sdk.tar.xz
-          key: ${{ steps.version.outputs.tag }}-${{ matrix.arch }}-ndk-27b-sdk
+          key: ${{ steps.version.outputs.key }}
       - name: Setup Swift ${{ matrix.version }} Android SDK
         id: sdk-setup
         run: |
@@ -472,21 +478,21 @@ jobs:
           arch: x86_64
           script: ~/test-toolchain.sh
       - name: Get cached SDK (aarch64)
-        if: ${{ matrix.os == 'ubuntu-22.04' && matrix.arch == 'x86_64' }}
+        if: ${{ startsWith(matrix.os, 'ubuntu') && matrix.arch == 'x86_64' }}
         uses: actions/cache/restore@v4
         with:
           path: ~/swift-${{ matrix.version }}-android-aarch64-*-sdk.tar.xz
-          key: ${{ steps.version.outputs.tag }}-aarch64-ndk-27b-sdk
+          key: ${{ steps.version.outputs.aarch64-key }}
           fail-on-cache-miss: true
       - name: Get cached SDK (armv7)
-        if: ${{ matrix.os == 'ubuntu-22.04' && matrix.arch == 'x86_64' }}
+        if: ${{ startsWith(matrix.os, 'ubuntu') && matrix.arch == 'x86_64' }}
         uses: actions/cache/restore@v4
         with:
           path: ~/swift-${{ matrix.version }}-android-armv7-*-sdk.tar.xz
-          key: ${{ steps.version.outputs.tag }}-armv7-ndk-27b-sdk
+          key: ${{ steps.version.outputs.arm-key }}
           fail-on-cache-miss: true
       - name: Assemble SDK
-        if: ${{ matrix.os == 'ubuntu-22.04' && matrix.arch == 'x86_64' }}
+        if: ${{ startsWith(matrix.os, 'ubuntu') && matrix.arch == 'x86_64' }}
         id: assemble-sdk
         run: |
           set -x
@@ -543,7 +549,7 @@ jobs:
           du -skh "${SDK_DIR}".tar.xz
           shasum -a 256 "${SDK_DIR}".tar.xz
       - name: Upload Assembled SDK
-        if: ${{ matrix.os == 'ubuntu-22.04' && matrix.arch == 'x86_64' }}
+        if: ${{ startsWith(matrix.os, 'ubuntu') && matrix.arch == 'x86_64' }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.SDK_DIR }}.tar.xz
