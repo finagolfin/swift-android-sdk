@@ -38,6 +38,19 @@ index 92a1ee38..52273afb 100644
  add_subdirectory(BuildSystem)
 -add_subdirectory(Ninja)
 +#add_subdirectory(Ninja)
+diff --git a/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift b/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift
+--- a/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift
++++ b/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift
+@@ -28,6 +28,9 @@
+ import struct TSCBasic.AbsolutePath
+ import struct TSCBasic.RelativePath
+ import var TSCBasic.localFileSystem
++#if canImport(Android)
++import Android
++#endif
+ 
+ extension AbsolutePath {
+   public init?(argument: String) {
 diff --git a/swiftpm/Sources/Basics/AsyncProcess.swift b/swiftpm/Sources/Basics/AsyncProcess.swift
 --- a/swiftpm/Sources/Basics/AsyncProcess.swift
 +++ b/swiftpm/Sources/Basics/AsyncProcess.swift

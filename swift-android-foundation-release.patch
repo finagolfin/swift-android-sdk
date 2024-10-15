@@ -1,3 +1,27 @@
+commit 3506f58a89de211823dcee98eb698dfcc1414fc5
+Author: Yuta Saito <kateinoigakukun@gmail.com>
+Date:   Wed Aug 7 05:10:42 2024 +0000
+
+    [CMake] Use LIBXML2_INCLUDE_DIR instead of hardcoding /usr/include/libxml2
+    
+    `find_package(LibXml2 REQUIRED)` sets `LIBXML2_INCLUDE_DIR` to the correct
+    include directory for the libxml2 headers. Use this variable instead of
+    hardcoding `/usr/include/libxml2`. This allows the build to work with
+    custom libxml2 builds on WASI.
+
+diff --git a/swift-corelibs-foundation/Sources/_CFXMLInterface/CMakeLists.txt b/swift-corelibs-foundation/Sources/_CFXMLInterface/CMakeLists.txt
+index d6e63a3f..d550a520 100644
+--- a/swift-corelibs-foundation/Sources/_CFXMLInterface/CMakeLists.txt
++++ b/swift-corelibs-foundation/Sources/_CFXMLInterface/CMakeLists.txt
+@@ -20,7 +20,7 @@ target_include_directories(_CFXMLInterface
+         ../CoreFoundation/include
+     PRIVATE
+         ../CoreFoundation/internalInclude
+-        /usr/include/libxml2/)
++        ${LIBXML2_INCLUDE_DIR})
+ 
+ target_compile_options(_CFXMLInterface INTERFACE
+   "$<$<COMPILE_LANGUAGE:Swift>:SHELL:-Xcc -fmodule-map-file=${CMAKE_CURRENT_SOURCE_DIR}/../CoreFoundation/include/module.modulemap>"
 From d7239ae4001af292087c45dd46513285aba4ab34
 Date: Tue, 17 Sep 2024 21:10:40 +0530
 Subject: [PATCH] [Android] Enable more code and tests (#871)
