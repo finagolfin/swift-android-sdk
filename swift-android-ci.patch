@@ -42,19 +42,6 @@ diff --git a/sourcekit-lsp/Sources/SKSupport/Process+Run.swift b/sourcekit-lsp/S
  #endif
  
  extension Process {
-diff --git a/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift b/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift
---- a/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift
-+++ b/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift
-@@ -28,6 +28,9 @@
- import struct TSCBasic.AbsolutePath
- import struct TSCBasic.RelativePath
- import var TSCBasic.localFileSystem
-+#if canImport(Android)
-+import Android
-+#endif
- 
- extension AbsolutePath {
-   public init?(argument: String) {
 diff --git a/sourcekit-lsp/Utilities/build-script-helper.py b/sourcekit-lsp/Utilities/build-script-helper.py
 index bd31bec..4469cab 100755
 --- a/sourcekit-lsp/Utilities/build-script-helper.py

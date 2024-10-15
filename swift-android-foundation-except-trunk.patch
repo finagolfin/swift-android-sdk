@@ -45,30 +45,6 @@ diff --git a/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift 
  #endif
  
  #if os(Windows)
-commit 3506f58a89de211823dcee98eb698dfcc1414fc5
-Author: Yuta Saito <kateinoigakukun@gmail.com>
-Date:   Wed Aug 7 05:10:42 2024 +0000
-
-    [CMake] Use LIBXML2_INCLUDE_DIR instead of hardcoding /usr/include/libxml2
-    
-    `find_package(LibXml2 REQUIRED)` sets `LIBXML2_INCLUDE_DIR` to the correct
-    include directory for the libxml2 headers. Use this variable instead of
-    hardcoding `/usr/include/libxml2`. This allows the build to work with
-    custom libxml2 builds on WASI.
-
-diff --git a/swift-corelibs-foundation/Sources/_CFXMLInterface/CMakeLists.txt b/swift-corelibs-foundation/Sources/_CFXMLInterface/CMakeLists.txt
-index d6e63a3f..d550a520 100644
---- a/swift-corelibs-foundation/Sources/_CFXMLInterface/CMakeLists.txt
-+++ b/swift-corelibs-foundation/Sources/_CFXMLInterface/CMakeLists.txt
-@@ -20,7 +20,7 @@ target_include_directories(_CFXMLInterface
-         ../CoreFoundation/include
-     PRIVATE
-         ../CoreFoundation/internalInclude
--        /usr/include/libxml2/)
-+        ${LIBXML2_INCLUDE_DIR})
- 
- target_compile_options(_CFXMLInterface INTERFACE
-   "$<$<COMPILE_LANGUAGE:Swift>:SHELL:-Xcc -fmodule-map-file=${CMAKE_CURRENT_SOURCE_DIR}/../CoreFoundation/include/module.modulemap>"
 diff --git a/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations+Enumeration.swift b/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations+Enumeration.swift
 --- a/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations+Enumeration.swift
 +++ b/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations+Enumeration.swift

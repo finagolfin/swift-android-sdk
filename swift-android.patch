@@ -67,14 +67,14 @@ diff --git a/swift-corelibs-foundation/CMakeLists.txt b/swift-corelibs-foundatio
 index 7f290d16..95366592 100644
 --- a/swift-corelibs-foundation/CMakeLists.txt
 +++ b/swift-corelibs-foundation/CMakeLists.txt
-@@ -55,6 +55,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+@@ -51,6 +51,7 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL Windows)
+     endif()
+ endif()
+ 
++set(CMAKE_SHARED_LINKER_FLAGS "")
+ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
- set(CMAKE_Swift_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/swift)
-+set(CMAKE_SHARED_LINKER_FLAGS "")
- 
- option(BUILD_SHARED_LIBS "build shared libraries" ON)
- 
 diff --git a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt b/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
 index 016bf294..5c42986a 100644
 --- a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt

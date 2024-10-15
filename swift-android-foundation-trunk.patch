@@ -64,6 +64,21 @@ index 8043ef00..23b602f6 100644
  #elseif os(WASI)
  import WASILibc
  #endif
+diff --git a/swift-corelibs-foundation/Sources/Foundation/Process.swift b/swift-corelibs-foundation/Sources/Foundation/Process.swift
+index 758dd1df..02970992 100644
+--- a/swift-corelibs-foundation/Sources/Foundation/Process.swift
++++ b/swift-corelibs-foundation/Sources/Foundation/Process.swift
+@@ -927,8 +927,8 @@ open class Process: NSObject, @unchecked Sendable {
+         }
+         let useFallbackChdir: Bool
+         if let dir = currentDirectoryURL?.path {
+-            let chdirResult = _CFPosixSpawnFileActionsChdir(fileActions, dir)
+-            useFallbackChdir = chdirResult == ENOSYS
++            // let chdirResult = _CFPosixSpawnFileActionsChdir(fileActions, dir)
++            useFallbackChdir = true ; let chdirResult = ENOSYS
+             if !useFallbackChdir {
+                 try _throwIfPosixError(chdirResult)
+             }
 diff --git a/swift-corelibs-foundation/Sources/Testing/Testing.swift b/swift-corelibs-foundation/Sources/Testing/Testing.swift
 index 712d9dee..2483c14e 100644
 --- a/swift-corelibs-foundation/Sources/Testing/Testing.swift

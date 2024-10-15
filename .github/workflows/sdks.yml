@@ -69,6 +69,27 @@ jobs:
             wget -q https://download.swift.org/$SWIFT_BRANCH/ubuntu2204/$SWIFT_TAG/$SWIFT_TAG-ubuntu22.04.tar.gz
             echo "downloaded latest Ubuntu toolchain: ${SWIFT_TAG}"
           fi
+      - name: Get cached Android NDK sysroot and runtime libraries
+        id: cache-ndk
+        uses: actions/cache@v4
+        with:
+          path: ~/android-sysroot.tar.xz
+          key: android-ndk-27b
+          lookup-only: true
+      - name: Download Android NDK if not cached before
+        if: ${{ steps.cache-ndk.outputs.cache-hit != 'true' }}
+        run: |
+          wget -q https://dl.google.com/android/repository/android-ndk-r27b-linux.zip
+          if [ "$(sha1sum android-ndk-r27b-linux.zip | cut -f1 -d" ")" != '6fc476b2e57d7c01ac0c95817746b927035b9749' ]; then
+            echo "NDK checksum didn't match"
+            exit 1
+          fi
+          unzip -q android-ndk-r27b-linux.zip
+          mv android-ndk-r27b/toolchains/llvm/prebuilt/linux-x86_64/sysroot .
+          rm -r sysroot/usr/{include,lib}/{i686,riscv64}-linux-android
+          mv android-ndk-r27b/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/*/lib/linux sysroot
+          rm -r sysroot/linux/*{i[36]86,riscv64}*
+          tar cJf ~/android-sysroot.tar.xz sysroot
   build-sdk-and-tests:
     runs-on: ${{ matrix.os }}
     needs: get-latest-toolchain
@@ -109,7 +130,7 @@ jobs:
       - name: Get cached SDK bundle
         id: cache-bundle
         uses: actions/cache@v4
-        if: ${{ matrix.version != 'trunk' }}
+        # if: ${{ matrix.version != 'trunk' }}
         with:
           path: ~/${{ steps.version.outputs.tag }}-android-${{ env.ANDROID_API_LEVEL }}-${{ env.BUNDLE_VERSION }}.artifactbundle.tar.gz
           key: ${{ steps.version.outputs.key }}
@@ -148,7 +169,7 @@ jobs:
             tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
             TOOLCHAIN=${PWD}/$SWIFT_TAG-ubuntu22.04/usr
           fi
-          if [ ${{ matrix.version }} != 'devel' ]; then
+          if [ ${{ matrix.version }} == 'release' ]; then
             perl -pi -e 's%canImport\(Bionic%canImport\(Android%' $TOOLCHAIN/bin/swift-package
             perl -pi -e 's%import Bionic%import Android%' $TOOLCHAIN/bin/swift-package
             perl -pi -e 's%TSCBasic, would be%TSCBasic, would %' $TOOLCHAIN/bin/swift-package
@@ -514,6 +535,13 @@ jobs:
           path: ~/swift-${{ matrix.version }}-android-armv7-*-sdk.tar.xz
           key: ${{ steps.version.outputs.arm-key }}
           fail-on-cache-miss: true
+      - name: Get previously cached Android NDK sysroot and runtime libraries
+        if: ${{ steps.cache-bundle.outputs.cache-hit != 'true' && startsWith(matrix.os, 'ubuntu') && matrix.arch == 'x86_64' }}
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/android-sysroot.tar.xz
+          key: android-ndk-${{ env.NDK_VERSION }}
+          fail-on-cache-miss: true
       - name: Assemble SDK bundle
         if: ${{ steps.cache-bundle.outputs.cache-hit != 'true' && startsWith(matrix.os, 'ubuntu') && matrix.arch == 'x86_64' }}
         run: |
@@ -528,11 +556,8 @@ jobs:
           SYSROOT=$SDK_DIR/$ROOT
           mkdir ${SDK_DIR}
 
-          if ${{ matrix.version == 'trunk' }}; then
-            rm $ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/swift
-          fi
-          cp -r $ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot $SYSROOT
-          rm -r $SYSROOT/usr/{include,lib}/{i686,riscv64}-linux-android
+          tar xf ~/android-sysroot.tar.xz
+          mv sysroot $SYSROOT
 
           for SDK_PATH in ~/swift-*-sdk.tar.xz; do
             MERGEDIR=$(basename $SDK_PATH .tar.xz)
@@ -554,6 +579,7 @@ jobs:
             mv lib/libandroid-spawn.a lib/swift_static-${ARCH}/android
 
             patchelf --set-rpath \$ORIGIN:\$ORIGIN/termux-zlib lib/lib{curl,ssh2,xml2}.so
+            cp ../../$SYSROOT/usr/lib/$TRIPLE/libc++_shared.so lib
             mv lib/lib[a-x]*.so lib/swift/android/lib*.so lib/${TRIPLE}/${ANDROID_API_LEVEL}
             mv lib/pkgconfig lib/${TRIPLE}
 
@@ -571,8 +597,7 @@ jobs:
           # Copy necessary headers and libraries from the toolchain and NDK clang resource directories
           mkdir -p $SYSROOT/usr/lib/swift/clang/lib
           cp -r $TOOLCHAIN/lib/clang/*/include $SYSROOT/usr/lib/swift/clang
-          cp -r $ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/*/lib/linux $SYSROOT/usr/lib/swift/clang/lib
-          rm -r $SYSROOT/usr/lib/swift/clang/lib/linux/*{i[36]86,riscv64}*
+          mv $SYSROOT/linux $SYSROOT/usr/lib/swift/clang/lib
           ln -s ../swift/clang $SYSROOT/usr/lib/swift_static-aarch64/clang
           ln -s ../swift/clang $SYSROOT/usr/lib/swift_static-armv7/clang
           ln -s ../swift/clang $SYSROOT/usr/lib/swift_static-x86_64/clang
