@@ -31,6 +31,15 @@ it separately:
 ```
 You can check if it was properly installed by running `swift sdk list`.
 
+You will have to modify SwiftPM 6.0.1 on linux and macOS for a recent regression
+when cross-compiling a package's tests for Android:
+```
+perl -pi -e 's%canImport\(Bionic%canImport\(Android%' swift-6.0.1-RELEASE-ubuntu22.04/usr/bin/swift-package
+perl -pi -e 's%import Bionic%import Android%' swift-6.0.1-RELEASE-ubuntu22.04/usr/bin/swift-package
+perl -pi -e 's%TSCBasic, would be%TSCBasic, would %' swift-6.0.1-RELEASE-ubuntu22.04/usr/bin/swift-package
+```
+This is fixed in the upcoming 6.0.2 patch release.
+
 Now you're ready to cross-compile a Swift package and run its tests on Android.
 I'll demonstrate with the swift-argument-parser package:
 ```
