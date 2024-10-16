@@ -21,6 +21,14 @@ download it:
 ```
 swift sdk install https://github.com/finagolfin/swift-android-sdk/releases/download/6.0.1/swift-6.0.1-RELEASE-android-24-0.1.artifactbundle.tar.gz --checksum 28d019e91902681e04bf62b9535888441aa7c0cc96902940964013f29020d100
 ```
+or alternately, download the SDK bundle with your favorite downloader and install
+it separately:
+```
+> wget https://github.com/finagolfin/swift-android-sdk/releases/download/6.0.1/swift-6.0.1-RELEASE-android-24-0.1.artifactbundle.tar.gz
+> sha256sum swift-6.0.1-RELEASE-android-24-0.1.artifactbundle.tar.gz
+28d019e91902681e04bf62b9535888441aa7c0cc96902940964013f29020d100  swift-6.0.1-RELEASE-android-24-0.1.artifactbundle.tar.gz
+> swift sdk install swift-6.0.1-RELEASE-android-24-0.1.artifactbundle.tar.gz
+```
 You can check if it was properly installed by running `swift sdk list`.
 
 Now you're ready to cross-compile a Swift package and run its tests on Android.
