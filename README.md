@@ -7,7 +7,7 @@ the Swift toolchain for AArch64, armv7, and x86_64, builds several Swift
 packages against those SDKs, and then runs their tests in the Android x86_64
 emulator](https://github.com/finagolfin/swift-android-sdk/blob/main/.github/workflows/sdks.yml).
 
-## Cross-compiling and testing Swift packages with the Android SDK buhdle
+## Cross-compiling and testing Swift packages with the Android SDK bundle
 
 To build with the Swift 6 SDK bundle, first download [the official open-source
 Swift 6.0.1 toolchain for linux or macOS](https://swift.org/download/#releases)
@@ -71,8 +71,8 @@ scp yourname@192.168.1.1:{lib*.so,swift-argument-parserPackageTests.xctest,color
 I've tried several Swift packages, including some mostly written in C or C++,
 and all the cross-compiled tests passed. Note that while this SDK bundle is
 compiled against Android API 24, there was a regression in Swift 6 so that
-Foundation can only be run on Android API 29 or later, #175. I will update the
-SDK bundle when I find a fix for that new issue.
+Foundation can only be run on Android API 29 or later, finagolfin/swift-android-sdk#175.
+I will update the SDK bundle when I find a fix for that new issue.
 
 You can even run armv7 tests on an aarch64 device, though Termux may require
 running `unset LD_PRELOAD` before invoking an armv7 test runner on aarch64.
@@ -200,8 +200,7 @@ extra Foundation libraries.
 This Swift SDK for Android could be built without using any prebuilt Termux
 packages, by compiling against a more recent Android API that doesn't need the
 `libandroid-spawn` backport, and by cross-compiling libcurl/libxml2 and their
-dependencies yourself or not using FoundationNetworking and FoundationXML, by
-disabling their build.
+dependencies yourself or not using FoundationNetworking and FoundationXML.
 
 Finally, it gets [the 6.0.1 source](https://github.com/swiftlang/swift/releases/tag/swift-6.0.1-RELEASE)
 tarballs for ten Swift repos and renames them to `llvm-project/`, `swift/`,
