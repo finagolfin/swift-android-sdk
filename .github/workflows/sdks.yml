@@ -15,6 +15,8 @@ jobs:
       devel-version: ${{ steps.check.outputs.devel-tag }}
       trunk-version: ${{ steps.check.outputs.trunk-tag }}
       new-devel-tag: ${{ steps.download.outputs.devel-updated == 'true' }}
+    env:
+      NDK_VERSION: 27b
     steps:
       - name: Check for latest Swift ${{ matrix.version }} toolchain
         id: check
@@ -74,20 +76,20 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/android-sysroot.tar.xz
-          key: android-ndk-27b
+          key: android-ndk-${{ env.NDK_VERSION }}
           lookup-only: true
       - name: Download Android NDK if not cached before
         if: ${{ steps.cache-ndk.outputs.cache-hit != 'true' }}
         run: |
-          wget -q https://dl.google.com/android/repository/android-ndk-r27b-linux.zip
-          if [ "$(sha1sum android-ndk-r27b-linux.zip | cut -f1 -d" ")" != '6fc476b2e57d7c01ac0c95817746b927035b9749' ]; then
+          wget -q https://dl.google.com/android/repository/android-ndk-r$NDK_VERSION-linux.zip
+          if [ "$(sha1sum android-ndk-r$NDK_VERSION-linux.zip | cut -f1 -d" ")" != '6fc476b2e57d7c01ac0c95817746b927035b9749' ]; then
             echo "NDK checksum didn't match"
             exit 1
           fi
-          unzip -q android-ndk-r27b-linux.zip
-          mv android-ndk-r27b/toolchains/llvm/prebuilt/linux-x86_64/sysroot .
+          unzip -q android-ndk-r$NDK_VERSION-linux.zip
+          mv android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/sysroot .
           rm -r sysroot/usr/{include,lib}/{i686,riscv64}-linux-android
-          mv android-ndk-r27b/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/*/lib/linux sysroot
+          mv android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/*/lib/linux sysroot
           rm -r sysroot/linux/*{i[36]86,riscv64}*
           tar cJf ~/android-sysroot.tar.xz sysroot
   build-sdk-and-tests:
@@ -130,7 +132,7 @@ jobs:
       - name: Get cached SDK bundle
         id: cache-bundle
         uses: actions/cache@v4
-        # if: ${{ matrix.version != 'trunk' }}
+        if: ${{ matrix.version != 'trunk' }}
         with:
           path: ~/${{ steps.version.outputs.tag }}-android-${{ env.ANDROID_API_LEVEL }}-${{ env.BUNDLE_VERSION }}.artifactbundle.tar.gz
           key: ${{ steps.version.outputs.key }}
