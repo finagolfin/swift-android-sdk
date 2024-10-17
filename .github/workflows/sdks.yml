@@ -112,6 +112,7 @@ jobs:
       BUNDLE_VERSION: 0.1
       NDK_VERSION: 27b
       UVERSION: ${{ matrix.version == 'release' && '24.04' || '22.04' }}
+      TEST_ARCH: ${{ startsWith(matrix.os, 'ubuntu') && 'x86_64' || 'aarch64' }}
     steps:
       - name: Extract the latest version string
         id: version
@@ -424,17 +425,17 @@ jobs:
           perl -pi -e 's%url: .*$%path: \"../swift-numerics\"),%' Package.swift
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_FLAGS}
       - name: Get cached Termux debug app for NIO tests
-        if: ${{ matrix.arch == 'x86_64' }}
+        if: ${{ matrix.arch == env.TEST_ARCH }}
         id: cache-termux
         uses: actions/cache@v4
         with:
           path: ~/termux-debug.apk
-          key: termux-app
-      - name: Get Termux debug app if not cached
-        if: ${{ (matrix.arch == 'x86_64') && (steps.cache-termux.outputs.cache-hit != 'true') }}
-        run: wget -O ~/termux-debug.apk https://github.com/termux/termux-app/releases/download/v0.118.0/termux-app_v0.118.0+github-debug_x86_64.apk
+          key: termux-app-${{env.TEST_ARCH}}
+      - name: Get Termux ${{env.TEST_ARCH}} debug app if not cached
+        if: ${{ (matrix.arch == env.TEST_ARCH) && (steps.cache-termux.outputs.cache-hit != 'true') }}
+        run: wget -O ~/termux-debug.apk https://github.com/termux/termux-app/releases/download/v0.118.0/termux-app_v0.118.0+github-debug_${{env.TEST_ARCH == 'x86_64' && 'x86_64' || 'arm64-v8a'}}.apk
       - name: Prepare Android emulator test package
-        if: ${{ matrix.arch == 'x86_64' }}
+        if: ${{ matrix.arch == env.TEST_ARCH }}
         run: |
           set -x
           # create the test runner script
@@ -451,7 +452,7 @@ jobs:
           EOF
 
           mkdir pack
-          TARGET="x86_64-unknown-linux-android$ANDROID_API_LEVEL"
+          TARGET="$TEST_ARCH-unknown-linux-android$ANDROID_API_LEVEL"
 
           cp swift-argument-parser/.build/$TARGET/debug/{generate-manual,math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
           echo 'adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest' >> ~/test-toolchain.sh
@@ -519,12 +520,12 @@ jobs:
             sudo udevadm trigger --name-match=kvm
           fi
 
-      - name: Run tests on Android x86_64 emulator
-        if: ${{ matrix.arch == 'x86_64' }}
+      - name: Run tests on Android ${{env.TEST_ARCH}} emulator
+        if: ${{ matrix.arch == env.TEST_ARCH }}
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
-          arch: x86_64
+          arch: ${{env.TEST_ARCH == 'x86_64' && 'x86_64' || 'arm64-v8a'}}
           script: ~/test-toolchain.sh
       - name: Get cached aarch64 SDK on x86_64 runner
         if: ${{ steps.cache-bundle.outputs.cache-hit != 'true' && startsWith(matrix.os, 'ubuntu') && matrix.arch == 'x86_64' }}
