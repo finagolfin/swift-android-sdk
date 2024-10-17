@@ -17,6 +17,7 @@ jobs:
       new-devel-tag: ${{ steps.download.outputs.devel-updated == 'true' }}
     env:
       NDK_VERSION: 27b
+      UVERSION: ${{ matrix.version == 'release' && '24.04' || '22.04' }}
     steps:
       - name: Check for latest Swift ${{ matrix.version }} toolchain
         id: check
@@ -39,8 +40,8 @@ jobs:
         id: cache-toolchain-ubuntu
         uses: actions/cache@v4
         with:
-          path: ~/${{ steps.check.outputs.latest-tag }}-ubuntu22.04.tar.gz
-          key: swift-ubuntu-22.04-${{ steps.check.outputs.latest-tag }}-toolchain
+          path: ~/${{ steps.check.outputs.latest-tag }}-ubuntu${{ env.UVERSION }}.tar.gz
+          key: swift-ubuntu-24.04-${{ steps.check.outputs.latest-tag }}-toolchain
           lookup-only: true
       - name: Get cached macOS toolchain
         id: cache-toolchain-macos
@@ -68,7 +69,7 @@ jobs:
             echo "downloaded latest macOS toolchain: ${SWIFT_TAG}"
           fi
           if [[ "${{ steps.cache-toolchain-ubuntu.outputs.cache-hit }}" != 'true' ]]; then
-            wget -q https://download.swift.org/$SWIFT_BRANCH/ubuntu2204/$SWIFT_TAG/$SWIFT_TAG-ubuntu22.04.tar.gz
+            wget -q https://download.swift.org/$SWIFT_BRANCH/ubuntu${UVERSION/\./}/$SWIFT_TAG/$SWIFT_TAG-ubuntu$UVERSION.tar.gz
             echo "downloaded latest Ubuntu toolchain: ${SWIFT_TAG}"
           fi
       - name: Get cached Android NDK sysroot and runtime libraries
@@ -100,7 +101,7 @@ jobs:
       matrix:
         version: [release, devel, trunk]
         arch: [x86_64, aarch64, armv7]
-        os: [ubuntu-22.04, macos-13]
+        os: [ubuntu-24.04, macos-latest]
         exclude:
           - os: macos-13
             version: trunk
@@ -110,10 +111,13 @@ jobs:
       ANDROID_API_LEVEL: 24
       BUNDLE_VERSION: 0.1
       NDK_VERSION: 27b
+      UVERSION: ${{ matrix.version == 'release' && '24.04' || '22.04' }}
+      TEST_ARCH: ${{ startsWith(matrix.os, 'ubuntu') && 'x86_64' || 'aarch64' }}
     steps:
       - name: Extract the latest version string
         id: version
         run: |
+          echo "got new devel tag? ${{ needs.get-latest-toolchain.outputs.new-devel-tag }}"
           if [[ ${{ matrix.version }} = 'release' ]]; then
             TAG="${{ needs.get-latest-toolchain.outputs.release-version }}"
           elif [ ${{ matrix.version }} = 'devel' ]; then
@@ -122,9 +126,9 @@ jobs:
             TAG="${{ needs.get-latest-toolchain.outputs.trunk-version }}"
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
-          KEY="$TAG-${{ matrix.arch }}-ndk-${NDK_VERSION}-arch-sdk"
+          KEY="$TAG-${{ matrix.arch }}-ndk-${NDK_VERSION}-arch-sdk${{startsWith(matrix.os, 'ubuntu') && 'bump' || ''}}"
           echo "arch-key=$KEY" >> $GITHUB_OUTPUT
-          echo "key=$TAG-ndk-${NDK_VERSION}-bundle" >> $GITHUB_OUTPUT
+          echo "key=$TAG-ndk-${NDK_VERSION}-bundle${{startsWith(matrix.os, 'ubuntu') && 'bump' || ''}}" >> $GITHUB_OUTPUT
           if ${{ matrix.arch == 'x86_64' }}; then
             echo "aarch64-key=${KEY/x86_64/aarch64}" >> $GITHUB_OUTPUT
             echo "arm-key=${KEY/x86_64/armv7}" >> $GITHUB_OUTPUT
@@ -151,8 +155,8 @@ jobs:
         id: cache-toolchain
         uses: actions/cache/restore@v4
         with:
-          path: ~/${{ steps.version.outputs.tag }}-${{ startsWith(matrix.os, 'macos') && 'osx.pkg' || 'ubuntu22.04.tar.gz' }}
-          key: swift-${{ matrix.os }}-${{ steps.version.outputs.tag }}-toolchain
+          path: ~/${{ steps.version.outputs.tag }}-${{ startsWith(matrix.os, 'macos') && 'osx.pkg' || format('ubuntu{0}.tar.gz', env.UVERSION) }}
+          key: swift-${{ startsWith(matrix.os, 'macos') && 'macos-13' || matrix.os }}-${{ steps.version.outputs.tag }}-toolchain
           fail-on-cache-miss: true
       - name: Setup Swift Toolchain
         env:
@@ -168,8 +172,8 @@ jobs:
             TOOLCHAIN=${PWD}/usr
             popd
           elif ${{ startsWith(matrix.os, 'ubuntu') }}; then
-            tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
-            TOOLCHAIN=${PWD}/$SWIFT_TAG-ubuntu22.04/usr
+            tar xf ~/$SWIFT_TAG-ubuntu$UVERSION.tar.gz
+            TOOLCHAIN=${PWD}/$SWIFT_TAG-ubuntu$UVERSION/usr
           fi
           if [ ${{ matrix.version }} == 'release' ]; then
             perl -pi -e 's%canImport\(Bionic%canImport\(Android%' $TOOLCHAIN/bin/swift-package
@@ -421,17 +425,17 @@ jobs:
           perl -pi -e 's%url: .*$%path: \"../swift-numerics\"),%' Package.swift
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_FLAGS}
       - name: Get cached Termux debug app for NIO tests
-        if: ${{ matrix.arch == 'x86_64' }}
+        if: ${{ matrix.arch == env.TEST_ARCH }}
         id: cache-termux
         uses: actions/cache@v4
         with:
           path: ~/termux-debug.apk
-          key: termux-app
-      - name: Get Termux debug app if not cached
-        if: ${{ (matrix.arch == 'x86_64') && (steps.cache-termux.outputs.cache-hit != 'true') }}
-        run: wget -O ~/termux-debug.apk https://github.com/termux/termux-app/releases/download/v0.118.0/termux-app_v0.118.0+github-debug_x86_64.apk
+          key: termux-app-${{env.TEST_ARCH}}
+      - name: Get Termux ${{env.TEST_ARCH}} debug app if not cached
+        if: ${{ (matrix.arch == env.TEST_ARCH) && (steps.cache-termux.outputs.cache-hit != 'true') }}
+        run: wget -O ~/termux-debug.apk https://github.com/termux/termux-app/releases/download/v0.118.0/termux-app_v0.118.0+github-debug_${{env.TEST_ARCH == 'x86_64' && 'x86_64' || 'arm64-v8a'}}.apk
       - name: Prepare Android emulator test package
-        if: ${{ matrix.arch == 'x86_64' }}
+        if: ${{ matrix.arch == env.TEST_ARCH }}
         run: |
           set -x
           # create the test runner script
@@ -448,7 +452,7 @@ jobs:
           EOF
 
           mkdir pack
-          TARGET="x86_64-unknown-linux-android$ANDROID_API_LEVEL"
+          TARGET="$TEST_ARCH-unknown-linux-android$ANDROID_API_LEVEL"
 
           cp swift-argument-parser/.build/$TARGET/debug/{generate-manual,math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
           echo 'adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest' >> ~/test-toolchain.sh
@@ -503,7 +507,7 @@ jobs:
           fi
           # need to free up some space or else the emulator fails to launch:
           # ERROR   | Not enough space to create userdata partition. Available: 6086.191406 MB at /home/runner/.android/avd/../avd/test.avd, need 7372.800000 MB.
-          rm -rf sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/{bin,lib/*swift*} */.build
+          rm -rf sdk-config/${{ steps.version.outputs.tag }}-ubuntu$UVERSION/usr/{bin,lib/*swift*} */.build
 
           chmod +x ~/test-toolchain.sh
 
@@ -516,12 +520,12 @@ jobs:
             sudo udevadm trigger --name-match=kvm
           fi
 
-      - name: Run tests on Android x86_64 emulator
-        if: ${{ matrix.arch == 'x86_64' }}
+      - name: Run tests on Android ${{env.TEST_ARCH}} emulator
+        if: ${{ matrix.arch == env.TEST_ARCH }}
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
-          arch: x86_64
+          arch: ${{env.TEST_ARCH == 'x86_64' && 'x86_64' || 'arm64-v8a'}}
           script: ~/test-toolchain.sh
       - name: Get cached aarch64 SDK on x86_64 runner
         if: ${{ steps.cache-bundle.outputs.cache-hit != 'true' && startsWith(matrix.os, 'ubuntu') && matrix.arch == 'x86_64' }}
