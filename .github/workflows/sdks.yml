@@ -134,7 +134,6 @@ jobs:
       - name: Get cached SDK bundle
         id: cache-bundle
         uses: actions/cache@v4
-        if: ${{ matrix.version != 'trunk' }}
         with:
           path: ~/${{ steps.version.outputs.tag }}-android-${{ env.ANDROID_API_LEVEL }}-${{ env.BUNDLE_VERSION }}.artifactbundle.tar.gz
           key: ${{ steps.version.outputs.key }}
@@ -297,6 +296,9 @@ jobs:
             ${TOOLCHAIN}/bin/swift sdk install ~/${{ steps.version.outputs.tag }}-android-*.artifactbundle.tar.gz
             ${TOOLCHAIN}/bin/swift sdk configure --show-configuration ${{ steps.version.outputs.tag }}-android-${ANDROID_API_LEVEL}-${BUNDLE_VERSION} $ARCH_TARGET
             FLAGS="--swift-sdk ${ARCH_TARGET}"
+            if ${{ matrix.version  == 'trunk' }}; then
+              FLAGS+=" -Xswiftc -disallow-use-new-driver"
+            fi
           fi
 
           echo "SWIFTPM_FLAGS=${FLAGS}" >> $GITHUB_ENV
