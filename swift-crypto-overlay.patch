@@ -1,0 +1,15 @@
+diff --git a/swift-crypto/Sources/_CryptoExtras/Key Derivation/Scrypt/BoringSSL/Scrypt_boring.swift b/swift-crypto/Sources/_CryptoExtras/Key Derivation/Scrypt/BoringSSL/Scrypt_boring.swift
+index 1076de1..421db76 100644
+--- a/swift-crypto/Sources/_CryptoExtras/Key Derivation/Scrypt/BoringSSL/Scrypt_boring.swift
++++ b/swift-crypto/Sources/_CryptoExtras/Key Derivation/Scrypt/BoringSSL/Scrypt_boring.swift
+@@ -21,6 +21,10 @@ import Foundation
+ @_implementationOnly import CCryptoBoringSSL
+ @_implementationOnly import CCryptoBoringSSLShims
+ 
++#if canImport(Android)
++import Android
++#endif
++
+ internal struct BoringSSLScrypt {
+     /// Derives a secure key using the provided passphrase and salt.
+     ///
