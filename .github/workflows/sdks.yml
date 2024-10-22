@@ -315,7 +315,6 @@ jobs:
           path: swift-crypto
       - name: Build Swift crypto package
         run: |
-          git apply sdk-config/swift-crypto.patch sdk-config/swift-crypto-overlay.patch
           cd swift-crypto
           perl -pi -e 's%\\\\(testsDirectory)/.*Vectors%/data/local/tmp/pack/crypto-vectors%' Tests/{Crypto,_CryptoExtras}Tests/Utils/{RFCVector,Wycheproof}.swift
           perl -pi -e 's%#file%"/data/local/tmp/pack/crypto-vectors"%;s%../_CryptoExtrasVectors/%%' Tests/_CryptoExtrasTests/TestRSABlindSigning.swift
