@@ -14,7 +14,7 @@ jobs:
       release-version: ${{ steps.check.outputs.release-tag }}
       devel-version: ${{ steps.check.outputs.devel-tag }}
       trunk-version: ${{ steps.check.outputs.trunk-tag }}
-      new-devel-tag: ${{ steps.download.outputs.devel-updated == 'true' }}
+      new-devel-tag: ${{ steps.download.outputs.devel-updated }}
     env:
       NDK_VERSION: 27b
     steps:
@@ -58,7 +58,7 @@ jobs:
             SWIFT_BRANCH="swift-$(echo ${{ steps.check.outputs.release-tag }} | cut -d- -f2)-release"
           elif [ ${{ matrix.version }} = 'devel' ]; then
             SWIFT_BRANCH="swift-6.0-branch"
-            echo "devel-updated='true'" >> $GITHUB_OUTPUT
+            echo "devel-updated=true" >> $GITHUB_OUTPUT
           else
             SWIFT_BRANCH="development"
           fi
