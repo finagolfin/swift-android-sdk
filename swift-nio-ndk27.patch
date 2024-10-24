@@ -118,8 +118,8 @@ index 66ed1171..5253a650 100644
 --- a/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
 +++ b/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
 @@ -17,6 +17,10 @@
- import SystemPackage
  import XCTest
+ @_spi(Testing) import _NIOFileSystem
  
 +#if canImport(Android)
 +import Android
