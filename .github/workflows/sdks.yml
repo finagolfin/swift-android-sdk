@@ -15,6 +15,7 @@ jobs:
       devel-version: ${{ steps.check.outputs.devel-tag }}
       trunk-version: ${{ steps.check.outputs.trunk-tag }}
       new-devel-tag: ${{ steps.download.outputs.devel-updated }}
+      new-trunk-tag: ${{ steps.download.outputs.trunk-updated }}
     env:
       NDK_VERSION: 27b
     steps:
@@ -61,6 +62,7 @@ jobs:
             echo "devel-updated=true" >> $GITHUB_OUTPUT
           else
             SWIFT_BRANCH="development"
+            echo "trunk-updated=true" >> $GITHUB_OUTPUT
           fi
           cd
           if [[ "${{ steps.cache-toolchain-macos.outputs.cache-hit }}" != 'true' ]]; then
@@ -103,7 +105,7 @@ jobs:
         os: [ubuntu-22.04, macos-13]
         exclude:
           - os: macos-13
-            version: trunk
+            version: ${{ needs.get-latest-toolchain.outputs.new-trunk-tag == 'true' && 'trunk' || 'none' }}
           - os: macos-13
             version: ${{ needs.get-latest-toolchain.outputs.new-devel-tag == 'true' && 'devel' || 'none' }}
     env:
