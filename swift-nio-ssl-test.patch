@@ -1,9 +1,9 @@
 diff --git a/Tests/NIOSSLTests/NIOSSLTestHelpers.swift b/Tests/NIOSSLTests/NIOSSLTestHelpers.swift
-index ac8ef96..9472460 100644
+index 494186e..090ceb8 100644
 --- a/Tests/NIOSSLTests/NIOSSLTestHelpers.swift
 +++ b/Tests/NIOSSLTests/NIOSSLTestHelpers.swift
-@@ -18,6 +18,10 @@ import NIOCore
- import NIOEmbedded
+@@ -19,6 +19,10 @@ import NIOEmbedded
+ 
  @testable import NIOSSL
  
 +#if canImport(Android)
@@ -11,14 +11,14 @@ index ac8ef96..9472460 100644
 +#endif
 +
  let samplePemCert = """
- -----BEGIN CERTIFICATE-----
- MIIGGzCCBAOgAwIBAgIJAJ/X0Fo0ynmEMA0GCSqGSIb3DQEBCwUAMIGjMQswCQYD
+     -----BEGIN CERTIFICATE-----
+     MIIGGzCCBAOgAwIBAgIJAJ/X0Fo0ynmEMA0GCSqGSIb3DQEBCwUAMIGjMQswCQYD
 diff --git a/Tests/NIOSSLTests/SSLCertificateTest.swift b/Tests/NIOSSLTests/SSLCertificateTest.swift
-index ebf04dd..eb5dac8 100644
+index 18d3a1a..9bbd447 100644
 --- a/Tests/NIOSSLTests/SSLCertificateTest.swift
 +++ b/Tests/NIOSSLTests/SSLCertificateTest.swift
-@@ -17,6 +17,10 @@ import XCTest
- import NIOCore
+@@ -18,6 +18,10 @@ import XCTest
+ 
  @testable import NIOSSL
  
 +#if canImport(Android)
@@ -26,28 +26,28 @@ index ebf04dd..eb5dac8 100644
 +#endif
 +
  let multiSanCert = """
- -----BEGIN CERTIFICATE-----
- MIIDEzCCAfugAwIBAgIURiMaUmhI1Xr0mZ4p+JmI0XjZTaIwDQYJKoZIhvcNAQEL
+     -----BEGIN CERTIFICATE-----
+     MIIDEzCCAfugAwIBAgIURiMaUmhI1Xr0mZ4p+JmI0XjZTaIwDQYJKoZIhvcNAQEL
 diff --git a/Tests/NIOSSLTests/SSLPKCS12BundleTest.swift b/Tests/NIOSSLTests/SSLPKCS12BundleTest.swift
-index 12803f9..a9649dc 100644
+index 609b7c3..4e6accc 100644
 --- a/Tests/NIOSSLTests/SSLPKCS12BundleTest.swift
 +++ b/Tests/NIOSSLTests/SSLPKCS12BundleTest.swift
-@@ -17,6 +17,9 @@ import XCTest
- import NIOCore
- @testable import NIOSSL
- 
+@@ -11,6 +11,9 @@
+ // SPDX-License-Identifier: Apache-2.0
+ //
+ //===----------------------------------------------------------------------===//
 +#if canImport(Android)
 +import Android
 +#endif
  
- /// This is a base64-PKCS12 file that contains only samplePemCert and
- /// samplePemKey, no extra certs. The passphrase is
+ import Foundation
+ import NIOCore
 diff --git a/Tests/NIOSSLTests/SSLPrivateKeyTests.swift b/Tests/NIOSSLTests/SSLPrivateKeyTests.swift
-index 9dd8d61..1abd9df 100644
+index 7ef2dfd..a8c6ac1 100644
 --- a/Tests/NIOSSLTests/SSLPrivateKeyTests.swift
 +++ b/Tests/NIOSSLTests/SSLPrivateKeyTests.swift
-@@ -17,6 +17,10 @@ import XCTest
- import NIOCore
+@@ -18,6 +18,10 @@ import XCTest
+ 
  @testable import NIOSSL
  
 +#if canImport(Android)
