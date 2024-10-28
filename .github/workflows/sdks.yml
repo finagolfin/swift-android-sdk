@@ -17,7 +17,7 @@ jobs:
       new-devel-tag: ${{ steps.download.outputs.devel-updated }}
       new-trunk-tag: ${{ steps.download.outputs.trunk-updated }}
     env:
-      NDK_VERSION: 27b
+      NDK_VERSION: 27c
     steps:
       - name: Check for latest Swift ${{ matrix.version }} toolchain
         id: check
@@ -73,6 +73,22 @@ jobs:
             wget -q https://download.swift.org/$SWIFT_BRANCH/ubuntu2204/$SWIFT_TAG/$SWIFT_TAG-ubuntu22.04.tar.gz
             echo "downloaded latest Ubuntu toolchain: ${SWIFT_TAG}"
           fi
+      - name: Get cached Android NDK
+        id: ndk
+        uses: actions/cache@v4
+        with:
+          path: ~/android-ndk-r${{ env.NDK_VERSION }}-linux.zip
+          key: android-ndk-${{ env.NDK_VERSION }}-full
+          lookup-only: true
+      - name: Download Android NDK if not cached before
+        if: ${{ steps.ndk.outputs.cache-hit != 'true' }}
+        run: |
+          wget -q https://dl.google.com/android/repository/android-ndk-r$NDK_VERSION-linux.zip
+          if [ "$(sha1sum android-ndk-r$NDK_VERSION-linux.zip | cut -f1 -d" ")" != '090e8083a715fdb1a3e402d0763c388abb03fb4e' ]; then
+            echo "NDK checksum didn't match"
+            exit 1
+          fi
+          mv android-ndk-r$NDK_VERSION-linux.zip ~
       - name: Get cached Android NDK sysroot and runtime libraries
         id: cache-ndk
         uses: actions/cache@v4
@@ -80,15 +96,10 @@ jobs:
           path: ~/android-sysroot.tar.xz
           key: android-ndk-${{ env.NDK_VERSION }}
           lookup-only: true
-      - name: Download Android NDK if not cached before
+      - name: Download Android NDK sysroot if not cached before
         if: ${{ steps.cache-ndk.outputs.cache-hit != 'true' }}
         run: |
-          wget -q https://dl.google.com/android/repository/android-ndk-r$NDK_VERSION-linux.zip
-          if [ "$(sha1sum android-ndk-r$NDK_VERSION-linux.zip | cut -f1 -d" ")" != '6fc476b2e57d7c01ac0c95817746b927035b9749' ]; then
-            echo "NDK checksum didn't match"
-            exit 1
-          fi
-          unzip -q android-ndk-r$NDK_VERSION-linux.zip
+          unzip -q ~/android-ndk-r$NDK_VERSION-linux.zip
           mv android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/sysroot .
           rm -r sysroot/usr/{include,lib}/{i686,riscv64}-linux-android
           mv android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/*/lib/linux sysroot
@@ -111,7 +122,7 @@ jobs:
     env:
       ANDROID_API_LEVEL: 24
       BUNDLE_VERSION: 0.1
-      NDK_VERSION: 27b
+      NDK_VERSION: 27c
     steps:
       - name: Extract the latest version string
         id: version
@@ -155,6 +166,12 @@ jobs:
           path: ~/${{ steps.version.outputs.tag }}-${{ startsWith(matrix.os, 'macos') && 'osx.pkg' || 'ubuntu22.04.tar.gz' }}
           key: swift-${{ matrix.os }}-${{ steps.version.outputs.tag }}-toolchain
           fail-on-cache-miss: true
+      - name: Get cached Android NDK
+        uses: actions/cache/restore@v4
+        if: ${{ (steps.cache-bundle.outputs.cache-hit != 'true') && startsWith(matrix.os, 'ubuntu') }}
+        with:
+          path: ~/android-ndk-r${{ env.NDK_VERSION }}-linux.zip
+          key: android-ndk-${{ env.NDK_VERSION }}-full
       - name: Setup Swift Toolchain
         env:
           SWIFT_TAG: ${{ steps.version.outputs.tag }}
@@ -171,6 +188,9 @@ jobs:
           elif ${{ startsWith(matrix.os, 'ubuntu') }}; then
             tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
             TOOLCHAIN=${PWD}/$SWIFT_TAG-ubuntu22.04/usr
+            if ${{ steps.cache-bundle.outputs.cache-hit != 'true' }}; then
+              unzip -q ~/android-ndk-r$NDK_VERSION-linux.zip
+            fi
           fi
 
           echo "TOOLCHAIN=${TOOLCHAIN}" >> $GITHUB_ENV
@@ -210,13 +230,13 @@ jobs:
             fi
           fi
 
-          perl -pi -e 's%r26%ndk/27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
+          perl -pi -e 's%r26%r27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
           perl -pi -e "s%/data/data/com.termux/files%$SDK%g" $SDK/usr/lib/pkgconfig/sqlite3.pc
           perl -pi -e 's%String\(cString: getpass%\"fake\" //%' swiftpm/Sources/PackageRegistryCommand/PackageRegistryCommand+Auth.swift
 
-          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_LATEST_HOME --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=${TOOLCHAIN}/bin --native-clang-tools-path=${TOOLCHAIN}/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --skip-early-swift-driver --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --sourcekit-lsp --skip-early-swiftsyntax
+          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk android-ndk-r$NDK_VERSION --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=${TOOLCHAIN}/bin --native-clang-tools-path=${TOOLCHAIN}/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --skip-early-swift-driver --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --sourcekit-lsp --skip-early-swiftsyntax
 
-          cp $ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$(echo ${{ matrix.arch }} | sed "s/v7//")-linux-android*/libc++_shared.so $SDK/usr/lib
+          cp android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$(echo ${{ matrix.arch }} | sed "s/v7//")-linux-android*/libc++_shared.so $SDK/usr/lib
           patchelf --set-rpath \$ORIGIN $SDK/usr/lib/swift/android/lib[dFXs]*.so
 
           # Remove executables and unused toolchain headers/libraries
@@ -260,7 +280,7 @@ jobs:
 
             ARCH_JSON="$PWD/android-${{ matrix.arch }}.json"
 
-            NDK_PREBUILT=${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/${{ startsWith(matrix.os, 'macos') && 'darwin' || 'linux' }}-x86_64
+            NDK_PREBUILT=android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/${{ startsWith(matrix.os, 'macos') && 'darwin' || 'linux' }}-x86_64
             if ${{ startsWith(matrix.os, 'macos') }}; then
               cp -r ${NDK_PREBUILT}/lib/clang/*/lib/linux ${SDK_PATH}/usr/lib/swift/clang/lib
             else
@@ -496,7 +516,7 @@ jobs:
           fi
           # need to free up some space or else the emulator fails to launch:
           # ERROR   | Not enough space to create userdata partition. Available: 6086.191406 MB at /home/runner/.android/avd/../avd/test.avd, need 7372.800000 MB.
-          rm -rf sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/{bin,lib/*swift*} */.build
+          rm -rf sdk-config/${{ steps.version.outputs.tag }}-ubuntu22.04/usr/{bin,lib/*swift*} */.build sdk-config/android-ndk-r$NDK_VERSION ~/android-ndk-r$NDK_VERSION-linux.zip
 
           chmod +x ~/test-toolchain.sh
 
@@ -641,7 +661,7 @@ jobs:
           cat > $BUNDLE_DIR/$SYSROOT/SDKSettings.json << EOF
           {
               "DisplayName": "Android NDK ${NDK_VERSION} sysroot with ${VERSION} runtime libraries for API 24",
-              "Version": "27.1.12297006",
+              "Version": "27.2.12479018",
               "VersionMap": {},
               "CanonicalName": "${VERSION}-android24"
           }
