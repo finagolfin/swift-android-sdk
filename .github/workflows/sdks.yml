@@ -172,15 +172,9 @@ jobs:
             tar xf ~/$SWIFT_TAG-ubuntu22.04.tar.gz
             TOOLCHAIN=${PWD}/$SWIFT_TAG-ubuntu22.04/usr
           fi
-          if [ ${{ matrix.version }} == 'release' ]; then
-            perl -pi -e 's%canImport\(Bionic%canImport\(Android%' $TOOLCHAIN/bin/swift-package
-            perl -pi -e 's%import Bionic%import Android%' $TOOLCHAIN/bin/swift-package
-            perl -pi -e 's%TSCBasic, would be%TSCBasic, would %' $TOOLCHAIN/bin/swift-package
-          fi
 
           echo "TOOLCHAIN=${TOOLCHAIN}" >> $GITHUB_ENV
           ${TOOLCHAIN}/bin/swift --version
-
       - name: Build Swift ${{ matrix.version }} Android SDK if not the latest
         # build-script currently only works on ubuntu
         if: ${{ (steps.cache-bundle.outputs.cache-hit != 'true') && (steps.cache-sdk.outputs.cache-hit != 'true') && startsWith(matrix.os, 'ubuntu') }}
