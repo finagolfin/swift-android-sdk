@@ -135,9 +135,9 @@ jobs:
             TAG="${{ needs.get-latest-toolchain.outputs.trunk-version }}"
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
-          KEY="$TAG-${{ matrix.arch }}-ndk-${NDK_VERSION}-arch-sdk"
+          KEY="$TAG-${{ matrix.arch }}-ndk-${NDK_VERSION}-cxx-sdk"
           echo "arch-key=$KEY" >> $GITHUB_OUTPUT
-          echo "key=$TAG-ndk-${NDK_VERSION}-bundle" >> $GITHUB_OUTPUT
+          echo "key=$TAG-ndk-${NDK_VERSION}-cxx-bundle" >> $GITHUB_OUTPUT
           if ${{ matrix.arch == 'x86_64' }}; then
             echo "aarch64-key=${KEY/x86_64/aarch64}" >> $GITHUB_OUTPUT
             echo "arm-key=${KEY/x86_64/armv7}" >> $GITHUB_OUTPUT
@@ -235,7 +235,7 @@ jobs:
           perl -pi -e "s%/data/data/com.termux/files%$SDK%g" $SDK/usr/lib/pkgconfig/sqlite3.pc
           perl -pi -e 's%String\(cString: getpass%\"fake\" //%' swiftpm/Sources/PackageRegistryCommand/PackageRegistryCommand+Auth.swift
 
-          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk android-ndk-r$NDK_VERSION --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=${TOOLCHAIN}/bin --native-clang-tools-path=${TOOLCHAIN}/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --skip-early-swift-driver --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --sourcekit-lsp --skip-early-swiftsyntax
+          ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk android-ndk-r$NDK_VERSION --android-arch ${{ matrix.arch }} --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=${TOOLCHAIN}/bin --native-clang-tools-path=${TOOLCHAIN}/bin --cross-compile-hosts=android-${{ matrix.arch }} --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --skip-early-swift-driver --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='compiler;clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild --sourcekit-lsp --skip-early-swiftsyntax
 
           cp android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$(echo ${{ matrix.arch }} | sed "s/v7//")-linux-android*/libc++_shared.so $SDK/usr/lib
           patchelf --set-rpath \$ORIGIN $SDK/usr/lib/swift/android/lib[dFXs]*.so
@@ -592,6 +592,7 @@ jobs:
             patchelf --set-rpath \$ORIGIN:\$ORIGIN/termux-zlib lib/lib{curl,ssh2,xml2}.so
             cp ../../$SYSROOT/usr/lib/$TRIPLE/libc++_shared.so lib
             mv lib/lib[a-x]*.so lib/swift/android/lib*.so lib/${TRIPLE}/${ANDROID_API_LEVEL}
+            mv lib/swift/android/libswiftCxx{,Stdlib}.a lib/${TRIPLE}
             mv lib/pkgconfig lib/${TRIPLE}
 
             mkdir lib/${TRIPLE}/${ANDROID_API_LEVEL}/termux-zlib
