@@ -219,6 +219,7 @@ jobs:
 
           git apply swift-android.patch swift-android-foundation.patch swift-android-ci.patch swift-crypto.patch swift-system.patch
           if [ ${{ matrix.version }} = 'trunk' ]; then
+            unset ANDROID_NDK_ROOT
             git apply swift-android-ci-trunk.patch swift-android-foundation-trunk.patch
           else
             git apply swift-android-ci-except-trunk.patch swift-android-foundation-except-trunk.patch
@@ -302,17 +303,13 @@ jobs:
             cat ${ARCH_JSON}
 
             FLAGS="--destination ${ARCH_JSON}"
-            if ${{ matrix.version  == 'trunk' }}; then
-              ln -sf $PWD/$SDK_PATH/usr/lib/swift $NDK_PREBUILT/sysroot/usr/lib/swift
-              FLAGS="-Xswiftc -use-ld=lld --destination ${ARCH_JSON}"
-            fi
           else
             ${TOOLCHAIN}/bin/swift sdk install ~/${{ steps.version.outputs.tag }}-android-*.artifactbundle.tar.gz
             ${TOOLCHAIN}/bin/swift sdk configure --show-configuration ${{ steps.version.outputs.tag }}-android-${ANDROID_API_LEVEL}-${BUNDLE_VERSION} $ARCH_TARGET
             FLAGS="--swift-sdk ${ARCH_TARGET}"
-            if ${{ matrix.version  == 'trunk' }}; then
-              FLAGS+=" -Xswiftc -disallow-use-new-driver"
-            fi
+          fi
+          if ${{ matrix.version  == 'trunk' }}; then
+            FLAGS+=" -Xswiftc -disallow-use-new-driver"
           fi
 
           echo "SWIFTPM_FLAGS=${FLAGS}" >> $GITHUB_ENV
