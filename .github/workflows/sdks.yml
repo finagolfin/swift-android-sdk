@@ -420,7 +420,6 @@ jobs:
         if: ${{ matrix.arch != 'armv7' }}
         run: |
           cd snh
-          git apply ../sdk-config/swift-nio-http2-test.patch
           perl -pi -e 's%url: .*swift-([a-z]*)\.git.*$%path: \"../swift-\1\"),%g' Package.swift
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_FLAGS}
       - name: Get Swift Algorithms package
