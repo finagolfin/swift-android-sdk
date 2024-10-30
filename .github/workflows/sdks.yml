@@ -638,17 +638,17 @@ jobs:
           {
               "schemaVersion": "4.0",
               "targetTriples": {
-                  "aarch64-unknown-linux-android24": {
+                  "aarch64-unknown-linux-android${ANDROID_API_LEVEL}": {
                       "sdkRootPath": "${ROOT}",
                       "swiftResourcesPath": "${ROOT}/usr/lib/swift",
                       "swiftStaticResourcesPath": "${ROOT}/usr/lib/swift_static-aarch64"
                   },
-                  "x86_64-unknown-linux-android24": {
+                  "x86_64-unknown-linux-android${ANDROID_API_LEVEL}": {
                       "sdkRootPath": "${ROOT}",
                       "swiftResourcesPath": "${ROOT}/usr/lib/swift",
                       "swiftStaticResourcesPath": "${ROOT}/usr/lib/swift_static-x86_64"
                   },
-                  "armv7-unknown-linux-androideabi24": {
+                  "armv7-unknown-linux-androideabi${ANDROID_API_LEVEL}": {
                       "sdkRootPath": "${ROOT}",
                       "swiftResourcesPath": "${ROOT}/usr/lib/swift",
                       "swiftStaticResourcesPath": "${ROOT}/usr/lib/swift_static-armv7"
@@ -659,10 +659,10 @@ jobs:
 
           cat > $BUNDLE_DIR/$SYSROOT/SDKSettings.json << EOF
           {
-              "DisplayName": "Android NDK ${NDK_VERSION} sysroot with ${VERSION} runtime libraries for API 24",
+              "DisplayName": "Android NDK ${NDK_VERSION} sysroot with ${VERSION} runtime libraries for API ${ANDROID_API_LEVEL}",
               "Version": "27.2.12479018",
               "VersionMap": {},
-              "CanonicalName": "${VERSION}-android24"
+              "CanonicalName": "${VERSION}-android${ANDROID_API_LEVEL}"
           }
           EOF
 
