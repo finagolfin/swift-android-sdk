@@ -40,6 +40,12 @@ cd swift-argument-parser/
 
 swift build --build-tests --swift-sdk aarch64-unknown-linux-android24
 ```
+
+Note: On macOS, building for Android requires specifying an OSS toolchain like so:
+```
+swift build --build-tests --swift-sdk aarch64-unknown-linux-android24 --toolchain <PATH_TO_OSS_TOOLCHAIN>
+```
+
 This will cross-compile the package for Android aarch64 at API 24 and produce a
 test runner executable with the `.xctest` extension, in this case at
 `.build/aarch64-unknown-linux-android24/debug/swift-argument-parserPackageTests.xctest`.
