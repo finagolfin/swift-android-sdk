@@ -45,24 +45,6 @@ index 16e05052609..114e768bdbb 100755
                      echo "Skipping Foundation on OS X -- Foundation does not build for this platform"
                      continue
                  fi
-diff --git a/swift/utils/swift_build_support/swift_build_support/targets.py b/swift/utils/swift_build_support/swift_build_support/targets.py
-index 9932b854cb6..ad3ac757665 100644
---- a/swift/utils/swift_build_support/swift_build_support/targets.py
-+++ b/swift/utils/swift_build_support/swift_build_support/targets.py
-@@ -167,9 +167,10 @@ class AndroidPlatform(Platform):
-         options = cmake.CMakeOptions()
-         options.define('CMAKE_SYSTEM_NAME', 'Android')
-         options.define('CMAKE_SYSTEM_VERSION' , args.android_api_level)
--        options.define('CMAKE_SYSTEM_PROCESSOR', args.android_arch if not
--                       args.android_arch == 'armv7'
--                       else 'armv7-a')
-+        arm_arch_to_abi = { 'armv7' : 'armeabi-v7a', 'aarch64' : 'arm64-v8a' }
-+        options.define('CMAKE_ANDROID_ARCH_ABI', args.android_arch if not
-+                       args.android_arch.startswith('a')
-+                       else arm_arch_to_abi[args.android_arch])
-         options.define('CMAKE_ANDROID_NDK:PATH', args.android_ndk)
-         return options
- 
 diff --git a/swift-corelibs-foundation/CMakeLists.txt b/swift-corelibs-foundation/CMakeLists.txt
 index 7f290d16..95366592 100644
 --- a/swift-corelibs-foundation/CMakeLists.txt
