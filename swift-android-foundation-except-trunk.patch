@@ -45,6 +45,21 @@ diff --git a/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift 
  #endif
  
  #if os(Windows)
+diff --git a/swift-corelibs-foundation/Sources/Foundation/Process.swift b/swift-corelibs-foundation/Sources/Foundation/Process.swift
+index 758dd1df..02970992 100644
+--- a/swift-corelibs-foundation/Sources/Foundation/Process.swift
++++ b/swift-corelibs-foundation/Sources/Foundation/Process.swift
+@@ -927,8 +927,8 @@ open class Process: NSObject, @unchecked Sendable {
+         }
+         let useFallbackChdir: Bool
+         if let dir = currentDirectoryURL?.path {
+-            let chdirResult = _CFPosixSpawnFileActionsChdir(fileActions, dir)
+-            useFallbackChdir = chdirResult == ENOSYS
++            // let chdirResult = _CFPosixSpawnFileActionsChdir(fileActions, dir)
++            useFallbackChdir = true ; let chdirResult = ENOSYS
+             if !useFallbackChdir {
+                 try _throwIfPosixError(chdirResult)
+             }
 diff --git a/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations+Enumeration.swift b/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations+Enumeration.swift
 --- a/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations+Enumeration.swift
 +++ b/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations+Enumeration.swift
