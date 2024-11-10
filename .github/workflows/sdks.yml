@@ -310,6 +310,8 @@ jobs:
           fi
           if ${{ matrix.version  == 'trunk' }}; then
             FLAGS+=" -Xswiftc -disallow-use-new-driver"
+          else
+            FLAGS+=" -Xswiftc -use-ld=lld"
           fi
 
           echo "SWIFTPM_FLAGS=${FLAGS}" >> $GITHUB_ENV
