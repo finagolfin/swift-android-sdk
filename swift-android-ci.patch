@@ -30,18 +30,6 @@ index 9d5a714b..3f8f8c1d 100644
 +  )
 +endif()
  endif()
-diff --git a/sourcekit-lsp/Sources/SKSupport/Process+Run.swift b/sourcekit-lsp/Sources/SKSupport/Process+Run.swift
---- a/sourcekit-lsp/Sources/SKSupport/Process+Run.swift
-+++ b/sourcekit-lsp/Sources/SKSupport/Process+Run.swift
-@@ -22,6 +22,8 @@
- 
- #if os(Windows)
- import WinSDK
-+#elseif canImport(Android)
-+import Android
- #endif
- 
- extension Process {
 diff --git a/sourcekit-lsp/Utilities/build-script-helper.py b/sourcekit-lsp/Utilities/build-script-helper.py
 index bd31bec..4469cab 100755
 --- a/sourcekit-lsp/Utilities/build-script-helper.py

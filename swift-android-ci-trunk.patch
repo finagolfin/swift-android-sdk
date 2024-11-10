@@ -8,21 +8,6 @@ index 92a1ee38..52273afb 100644
  add_subdirectory(BuildSystem)
 -add_subdirectory(Ninja)
 +#add_subdirectory(Ninja)
-diff --git a/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift b/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift
-index 28374f36..514b8a88 100644
---- a/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift
-+++ b/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift
-@@ -26,6 +26,10 @@ import SourceKitLSP
- import SwiftExtensions
- import ToolchainRegistry
- 
-+#if canImport(Android)
-+import Android
-+#endif
-+
- public import struct TSCBasic.AbsolutePath
- public import struct TSCBasic.RelativePath
- public import var TSCBasic.localFileSystem
 diff --git a/swiftpm/Package.swift b/swiftpm/Package.swift
 --- a/swiftpm/Package.swift
 +++ b/swiftpm/Package.swift

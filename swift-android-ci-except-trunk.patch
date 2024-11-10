@@ -38,6 +38,18 @@ index 92a1ee38..52273afb 100644
  add_subdirectory(BuildSystem)
 -add_subdirectory(Ninja)
 +#add_subdirectory(Ninja)
+diff --git a/sourcekit-lsp/Sources/SKSupport/Process+Run.swift b/sourcekit-lsp/Sources/SKSupport/Process+Run.swift
+--- a/sourcekit-lsp/Sources/SKSupport/Process+Run.swift
++++ b/sourcekit-lsp/Sources/SKSupport/Process+Run.swift
+@@ -22,6 +22,8 @@
+ 
+ #if os(Windows)
+ import WinSDK
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ extension Process {
 diff --git a/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift b/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift
 --- a/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift
 +++ b/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift
