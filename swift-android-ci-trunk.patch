@@ -8,6 +8,20 @@ index 92a1ee38..52273afb 100644
  add_subdirectory(BuildSystem)
 -add_subdirectory(Ninja)
 +#add_subdirectory(Ninja)
+diff --git a/sourcekit-lsp/Sources/LanguageServerProtocolJSONRPC/JSONRPCConnection.swift b/sourcekit-lsp/Sources/LanguageServerProtocolJSONRPC/JSONRPCConnection.swift
+index 0be22ce8..33ca7ee5 100644
+--- a/sourcekit-lsp/Sources/LanguageServerProtocolJSONRPC/JSONRPCConnection.swift
++++ b/sourcekit-lsp/Sources/LanguageServerProtocolJSONRPC/JSONRPCConnection.swift
+@@ -16,6 +16,9 @@ public import Foundation
+ public import LanguageServerProtocol
+ import SKLogging
+ import SwiftExtensions
++#if canImport(Android)
++import Android
++#endif
+ #else
+ import Dispatch
+ import Foundation
 diff --git a/swiftpm/Package.swift b/swiftpm/Package.swift
 --- a/swiftpm/Package.swift
 +++ b/swiftpm/Package.swift
