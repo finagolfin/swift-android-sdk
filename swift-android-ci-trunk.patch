@@ -34,15 +34,3 @@ diff --git a/swiftpm/Package.swift b/swiftpm/Package.swift
                  .product(name: "SwiftToolchainCSQLite", package: "swift-toolchain-sqlite", condition: .when(platforms: [.windows])),
                  .product(name: "DequeModule", package: "swift-collections"),
                  .product(name: "OrderedCollections", package: "swift-collections"),
-diff --git a/swiftpm/Sources/Basics/Concurrency/AsyncProcess.swift b/swiftpm/Sources/Basics/Concurrency/AsyncProcess.swift
---- a/swiftpm/Sources/Basics/Concurrency/AsyncProcess.swift
-+++ b/swiftpm/Sources/Basics/Concurrency/AsyncProcess.swift
-@@ -14,6 +14,8 @@
- 
- #if os(Windows)
- import TSCLibc
-+#elseif canImport(Android)
-+import Android
- #endif
- 
- #if os(Linux)

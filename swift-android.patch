@@ -1,20 +1,3 @@
-diff --git a/swift/stdlib/public/Platform/android.modulemap b/swift/stdlib/public/Platform/android.modulemap
-index 78e7bda9976..dc25e5c3668 100644
---- a/swift/stdlib/public/Platform/android.modulemap
-+++ b/swift/stdlib/public/Platform/android.modulemap
-@@ -556,6 +556,12 @@ module _bits_sa_family_t [system] {
-   header "bits/sa_family_t.h"
-   export *
- }
-+
-+module _bits_sockaddr_storage [system] {
-+    header "bits/sockaddr_storage.h"
-+    export *
-+}
-+
- module _bits_stdatomic [system] {
-   // Note: this module is not part of 'stdatomic'
-   // as it depends on libc++ and forcing it to
 diff --git a/swift/utils/build-script-impl b/swift/utils/build-script-impl
 index 16e05052609..114e768bdbb 100755
 --- a/swift/utils/build-script-impl
