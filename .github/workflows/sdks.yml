@@ -27,8 +27,8 @@ jobs:
             SWIFT_TAG="swift-${LATEST_TOOLCHAIN_VERSION}-RELEASE"
             echo "release-tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
           elif [ ${{ matrix.version }} = 'devel' ]; then
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-6.0-DEV | cut -d- -f8-10)
-            SWIFT_TAG="swift-6.0-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
+            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-6.1-DEV | cut -d- -f8-10)
+            SWIFT_TAG="swift-6.1-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
             echo "devel-tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
           else
             LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-DEV | cut -d- -f7-9)
@@ -58,7 +58,7 @@ jobs:
           if [ ${{ matrix.version }} = 'release' ]; then
             SWIFT_BRANCH="swift-$(echo ${{ steps.check.outputs.release-tag }} | cut -d- -f2)-release"
           elif [ ${{ matrix.version }} = 'devel' ]; then
-            SWIFT_BRANCH="swift-6.0-branch"
+            SWIFT_BRANCH="swift-6.1-branch"
             echo "devel-updated=true" >> $GITHUB_OUTPUT
           else
             SWIFT_BRANCH="development"
@@ -135,9 +135,9 @@ jobs:
             TAG="${{ needs.get-latest-toolchain.outputs.trunk-version }}"
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
-          KEY="$TAG-${{ matrix.arch }}-ndk-${NDK_VERSION}-cxx-sdk"
+          KEY="$TAG-${{ matrix.arch }}-ndk-${NDK_VERSION}-branch-sdk"
           echo "arch-key=$KEY" >> $GITHUB_OUTPUT
-          echo "key=$TAG-ndk-${NDK_VERSION}-cxx-bundle" >> $GITHUB_OUTPUT
+          echo "key=$TAG-ndk-${NDK_VERSION}-branch-bundle" >> $GITHUB_OUTPUT
           if ${{ matrix.arch == 'x86_64' }}; then
             echo "aarch64-key=${KEY/x86_64/aarch64}" >> $GITHUB_OUTPUT
             echo "arm-key=${KEY/x86_64/armv7}" >> $GITHUB_OUTPUT
@@ -209,16 +209,10 @@ jobs:
           SDK=`pwd`/$SDK_NAME
 
           git apply swift-android.patch swift-android-foundation.patch swift-android-ci.patch swift-crypto.patch swift-system.patch
-          if [ ${{ matrix.version }} = 'trunk' ]; then
-            git apply swift-android-ci-trunk.patch swift-android-foundation-trunk.patch
+          if [ ${{ matrix.version }} = 'release' ]; then
+              git apply swift-android-ci-release.patch swift-android-foundation-release.patch
           else
-            git apply swift-android-ci-except-trunk.patch swift-android-foundation-except-trunk.patch
-            git apply -C1 swift-android-foundation-armv7-except-trunk.patch
-            if [ ${{ matrix.version }} = 'devel' ]; then
-              perl -pi -e 's%Musl%Bionic%g' swift-corelibs-foundation/Sources/Testing/Testing.swift
-            else
-              git apply swift-android-foundation-release.patch
-            fi
+            git apply swift-android-ci-except-release.patch swift-android-foundation-except-release.patch
           fi
 
           perl -pi -e 's%r26%ndk/27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
@@ -298,7 +292,7 @@ jobs:
             ${TOOLCHAIN}/bin/swift sdk configure --show-configuration ${{ steps.version.outputs.tag }}-android-${ANDROID_API_LEVEL}-${BUNDLE_VERSION} $ARCH_TARGET
             FLAGS="--swift-sdk ${ARCH_TARGET}"
           fi
-          if ${{ matrix.version  == 'trunk' }}; then
+          if ${{ matrix.version  != 'release' }}; then
             FLAGS+=" -Xswiftc -disallow-use-new-driver"
           else
             FLAGS+=" -Xswiftc -Xclang-linker -Xswiftc -fuse-ld=lld"
