@@ -10,7 +10,7 @@ emulator](https://github.com/finagolfin/swift-android-sdk/blob/main/.github/work
 ## Cross-compiling and testing Swift packages with the Android SDK bundle
 
 To build with the Swift 6 SDK bundle, first download [the official open-source
-Swift 6.0.2 toolchain for linux or macOS](https://swift.org/download/#releases)
+Swift 6.0.2 toolchain for linux or macOS](https://swift.org/install)
 (make sure to install the Swift dependencies linked there). Install the OSS
 toolchain on macOS as detailed in [the instructions for using the static linux
 Musl SDK bundle at swift.org](https://www.swift.org/documentation/articles/static-linux-getting-started.html).
@@ -133,7 +133,7 @@ Download the Swift 6.0.2 compiler as above and Android NDK 27c (only building
 the Android SDKs on linux works for now). Check out this repo and run
 `SWIFT_TAG=swift-6.0.2-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
 to get some prebuilt Android libraries and the Swift source to build an AArch64
-SDK. If you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2024-10-08-a`
+SDK. If you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2024-11-19-a`
 for the latest Swift trunk snapshot and pass in the path to the corresponding
 prebuilt Swift toolchain to `build-script` below, you can build a Swift trunk
 SDK too, as seen on the CI.
