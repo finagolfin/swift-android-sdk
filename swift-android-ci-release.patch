@@ -63,6 +63,19 @@ diff --git a/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift b/sourcekit-
  
  extension AbsolutePath {
    public init?(argument: String) {
+diff --git a/swift-tools-support-core/Sources/TSCUtility/Tracing.swift b/swift-tools-support-core/Sources/TSCUtility/Tracing.swift
+--- a/swift-tools-support-core/Sources/TSCUtility/Tracing.swift
++++ b/swift-tools-support-core/Sources/TSCUtility/Tracing.swift
+@@ -9,6 +9,9 @@
+  */
+ 
+ import Foundation
++#if canImport(Android)
++import Android
++#endif
+ 
+ public enum TracingEventType: String, Codable, Sendable {
+     case asyncBegin
 diff --git a/swiftpm/Sources/Basics/AsyncProcess.swift b/swiftpm/Sources/Basics/AsyncProcess.swift
 --- a/swiftpm/Sources/Basics/AsyncProcess.swift
 +++ b/swiftpm/Sources/Basics/AsyncProcess.swift

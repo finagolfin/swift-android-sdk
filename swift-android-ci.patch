@@ -86,19 +86,6 @@ diff --git a/swift-certificates/Sources/X509/Verifier/RFC5280/URIConstraints.swi
  #elseif canImport(Darwin)
  import Darwin
  #endif
-diff --git a/swift-tools-support-core/Sources/TSCUtility/Tracing.swift b/swift-tools-support-core/Sources/TSCUtility/Tracing.swift
---- a/swift-tools-support-core/Sources/TSCUtility/Tracing.swift
-+++ b/swift-tools-support-core/Sources/TSCUtility/Tracing.swift
-@@ -9,6 +9,9 @@
-  */
- 
- import Foundation
-+#if canImport(Android)
-+import Android
-+#endif
- 
- public enum TracingEventType: String, Codable, Sendable {
-     case asyncBegin
 diff --git a/yams/Sources/Yams/Representer.swift b/yams/Sources/Yams/Representer.swift
 index a749c52..b74ef8e 100644
 --- a/yams/Sources/Yams/Representer.swift
