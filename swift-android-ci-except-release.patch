@@ -26,14 +26,17 @@ diff --git a/swiftpm/Package.swift b/swiftpm/Package.swift
 index 48cd98431..6eaacae00 100644
 --- a/swiftpm/Package.swift
 +++ b/swiftpm/Package.swift
-@@ -76,7 +76,7 @@ let swiftPMProduct = (
+@@ -76,7 +77,10 @@ let includeDynamicLibrary: Bool = false
  let systemSQLitePkgConfig: String? = nil
  #else
  let includeDynamicLibrary: Bool = true
 -let systemSQLitePkgConfig: String? = "sqlite3"
-+let systemSQLitePkgConfig: String? = nil
++var systemSQLitePkgConfig: String? = "sqlite3"
++if ProcessInfo.processInfo.environment["SWIFTCI_INSTALL_RPATH_OS"] == "android" {
++    systemSQLitePkgConfig = nil
++}
  #endif
-
+ 
  /** An array of products which have two versions listed: one dynamically linked, the other with the
 @@ -199,7 +203,7 @@ let package = Package(
              dependencies: [
