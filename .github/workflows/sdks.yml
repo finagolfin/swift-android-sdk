@@ -208,7 +208,7 @@ jobs:
           SDK_NAME=$(ls | grep swift-${{ matrix.version }}-android-${{ matrix.arch }})
           SDK=`pwd`/$SDK_NAME
 
-          git apply swift-android.patch swift-android-foundation.patch swift-android-ci.patch swift-crypto.patch swift-system.patch
+          git apply swift-android.patch swift-android-ci.patch swift-crypto.patch swift-system.patch
           if [ ${{ matrix.version }} = 'release' ]; then
               git apply swift-android-ci-release.patch swift-android-foundation-release.patch
           else

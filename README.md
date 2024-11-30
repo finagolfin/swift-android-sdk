@@ -138,12 +138,12 @@ for the latest Swift trunk snapshot and pass in the path to the corresponding
 prebuilt Swift toolchain to `build-script` below, you can build a Swift trunk
 SDK too, as seen on the CI.
 
-Next, apply a patch to the Swift source, `swift-android.patch` from this repo,
-plus two more patches that make modifications for NDK 27 and [the Foundation
-rewrite in Swift 6 that was merged this summer](https://www.swift.org/blog/foundation-preview-now-available/)
-and substitute a string for NDK 27:
+Next, apply two patches from this repo to the Swift source, which make
+modifications for NDK 27 and [the Foundation rewrite in Swift 6 that was merged
+this summer](https://www.swift.org/blog/foundation-preview-now-available/), and
+substitute a string for NDK 27:
 ```
-git apply swift-android.patch swift-android-foundation.patch swift-android-foundation-release.patch
+git apply swift-android.patch swift-android-foundation-release.patch
 perl -pi -e 's%r26%r27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
 ```
 
