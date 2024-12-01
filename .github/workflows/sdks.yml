@@ -328,7 +328,7 @@ jobs:
       - name: Build Swift NIO package
         run: |
           cd swift-nio
-          git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem.patch ../sdk-config/swift-nio-ndk27.patch
+          git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem.patch
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_FLAGS}
       - name: Get Swift Numerics package
         uses: actions/checkout@v4

@@ -24,28 +24,28 @@ diff --git a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift b/Source
 index 1e9c1661..2a4935e7 100644
 --- a/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift
 +++ b/Sources/NIOFileSystem/Internal/System Calls/Syscalls.swift
-@@ -454,12 +454,21 @@ internal func libc_confstr(
+@@ -452,12 +452,21 @@ internal func libc_confstr(
+ #endif
  
  /// fts(3)
- #if os(Android)
-+#if compiler(>=6.1)
++#if compiler(<6.1)
 +internal func libc_fts_open(
-+    _ path: [UnsafeMutablePointer<CInterop.PlatformChar>?],
++    _ path: [UnsafeMutablePointer<CInterop.PlatformChar>],
 +    _ options: CInt
 +) -> UnsafeMutablePointer<CInterop.FTS> {
 +    fts_open(path, options, nil)!
 +}
 +#else
  internal func libc_fts_open(
-     _ path: [UnsafeMutablePointer<CInterop.PlatformChar>],
+     _ path: [UnsafeMutablePointer<CInterop.PlatformChar>?],
      _ options: CInt
  ) -> UnsafeMutablePointer<CInterop.FTS> {
      fts_open(path, options, nil)!
  }
 +#endif
- #else
- internal func libc_fts_open(
-     _ path: [UnsafeMutablePointer<CInterop.PlatformChar>?],
+ 
+ /// fts(3)
+ internal func libc_fts_read(
 diff --git a/Sources/NIOFileSystem/Internal/SystemFileHandle.swift b/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
 index 3dc51872..49aeeeca 100644
 --- a/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
@@ -247,3 +247,18 @@ index f24736a7..310d9691 100644
              let info = try await handle.info()
              let size = info.size
  
+diff --git a/Tests/NIOFileSystemTests/Internal/SyscallTests.swift b/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
+index 66ed1171..5253a650 100644
+--- a/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
++++ b/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
+@@ -17,6 +17,10 @@
+ import XCTest
+ @_spi(Testing) import _NIOFileSystem
+ 
++#if canImport(Android)
++import Android
++#endif
++
+ #if ENABLE_MOCKING
+ final class SyscallTests: XCTestCase {
+     func test_openat() throws {
