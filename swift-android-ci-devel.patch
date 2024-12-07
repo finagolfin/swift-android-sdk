@@ -12,19 +12,3 @@ index 0be22ce8..33ca7ee5 100644
  #else
  import Dispatch
  import Foundation
-From 355649608eb168652ff103d2a2029ba9539eea4b
-From: Jake Petroules <jake.petroules@apple.com>
-Date: Sun, 17 Nov 2024 02:21:37 -0800
-Subject: [PATCH] Fix the Android build
-diff --git a/swift-tools-support-core/Sources/TSCUtility/Tracing.swift b/swift-tools-support-core/Sources/TSCUtility/Tracing.swift
-index b53d26ca..418d4f84 100644
---- a/swift-tools-support-core/Sources/TSCUtility/Tracing.swift
-+++ b/swift-tools-support-core/Sources/TSCUtility/Tracing.swift
-@@ -9,6 +9,7 @@
-  */
- 
- import Foundation
-+import TSCLibc
- 
- public enum TracingEventType: String, Codable, Sendable {
-     case asyncBegin
