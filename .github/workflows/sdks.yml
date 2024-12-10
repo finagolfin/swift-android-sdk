@@ -499,8 +499,7 @@ jobs:
             cp sdk-config/swift-*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/lib*so pack
             cp sdk-config/swift-*-android-x86_64-*${ANDROID_API_LEVEL}-sdk/usr/lib/swift/android/lib*so pack
           else
-            cp ~/.${{ startsWith(matrix.os, 'ubuntu') && 'config/' || '' }}swiftpm/swift-sdks/${{ steps.version.outputs.tag }}-android-${ANDROID_API_LEVEL}-*.artifactbundle/swift*sdk/android*sysroot/usr/lib/$(echo ${{ matrix.arch }} | sed "s/v7//")-linux-android*/${ANDROID_API_LEVEL}/lib*so pack
-            rm pack/lib{c,dl,log,m}.so
+            cp ~/.${{ startsWith(matrix.os, 'ubuntu') && 'config/' || '' }}swiftpm/swift-sdks/${{ steps.version.outputs.tag }}-android-${ANDROID_API_LEVEL}-*.artifactbundle/swift*sdk/android*sysroot/usr/lib/$(echo ${{ matrix.arch }} | sed "s/v7//")-linux-android*/lib*so pack
           fi
           # need to free up some space or else the emulator fails to launch:
           # ERROR   | Not enough space to create userdata partition. Available: 6086.191406 MB at /home/runner/.android/avd/../avd/test.avd, need 7372.800000 MB.
@@ -577,19 +576,12 @@ jobs:
 
             echo "Creating ${TRIPLE} from ${MERGEDIR}…"
 
-            mkdir -p lib/${TRIPLE}/${ANDROID_API_LEVEL}
+            mkdir -p lib/${TRIPLE}
             mv lib/swift_static lib/swift_static-${ARCH}
             mv lib/libandroid-spawn.a lib/swift_static-${ARCH}/android
 
-            patchelf --set-rpath \$ORIGIN:\$ORIGIN/termux-zlib lib/lib{curl,ssh2,xml2}.so
-            cp ../../$SYSROOT/usr/lib/$TRIPLE/libc++_shared.so lib
-            mv lib/lib[a-x]*.so lib/swift/android/lib*.so lib/${TRIPLE}/${ANDROID_API_LEVEL}
-            mv lib/swift/android/libswiftCxx{,Stdlib}.a lib/${TRIPLE}
-            mv lib/pkgconfig lib/${TRIPLE}
-
-            mkdir lib/${TRIPLE}/${ANDROID_API_LEVEL}/termux-zlib
-            mv lib/libz.so lib/${TRIPLE}/${ANDROID_API_LEVEL}/termux-zlib
-
+            rm lib/libc++_shared.so
+            mv lib/lib[a-z]*.so lib/pkgconfig lib/swift/android/lib*.{a,so} lib/${TRIPLE}
             rm lib/swift{,_static-$ARCH}/clang
 
             popd

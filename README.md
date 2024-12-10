@@ -64,12 +64,10 @@ or put them on an Android device with [a terminal emulator app like Termux](http
 I test aarch64 with Termux so I'll show how to run the test runner there, but
 the process is similar with adb, [as can be seen on the CI](https://github.com/finagolfin/swift-android-sdk/blob/6.0.2/.github/workflows/sdks.yml#L453).
 
-Copy the test executables to the same directory as the Swift 6 runtime libraries,
-removing a few Android stub libraries that aren't needed:
+Copy the test executables to the same directory as the Swift 6 runtime libraries:
 ```
 cp .build/aarch64-unknown-linux-android24/debug/{swift-argument-parserPackageTests.xctest,color,generate-manual,math,repeat,roll} ..
-cp ~/.swiftpm/swift-sdks/swift-6.0.2-RELEASE-android-24-0.1.artifactbundle/swift-6.0.2-release-android-24-sdk/android-27c-sysroot/usr/lib/aarch64-linux-android/24/lib*.so ..
-rm ../lib{c,dl,log,m,z}.so
+cp ~/.swiftpm/swift-sdks/swift-6.0.2-RELEASE-android-24-0.1.artifactbundle/swift-6.0.2-release-android-24-sdk/android-27c-sysroot/usr/lib/aarch64-linux-android/lib*.so ..
 ```
 You can copy the test executables and Swift 6 runtime libraries to Termux using
 scp from OpenSSH, run these commands in Termux on the Android device:
