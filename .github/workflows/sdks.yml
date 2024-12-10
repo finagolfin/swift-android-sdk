@@ -135,9 +135,9 @@ jobs:
             TAG="${{ needs.get-latest-toolchain.outputs.trunk-version }}"
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
-          KEY="$TAG-${{ matrix.arch }}-ndk-${NDK_VERSION}-branch-sdk"
+          KEY="$TAG-${{ matrix.arch }}-ndk-${NDK_VERSION}-nowbranch-sdk"
           echo "arch-key=$KEY" >> $GITHUB_OUTPUT
-          echo "key=$TAG-ndk-${NDK_VERSION}-branch-bundle" >> $GITHUB_OUTPUT
+          echo "key=$TAG-ndk-${NDK_VERSION}-nowbranch-bundle" >> $GITHUB_OUTPUT
           if ${{ matrix.arch == 'x86_64' }}; then
             echo "aarch64-key=${KEY/x86_64/aarch64}" >> $GITHUB_OUTPUT
             echo "arm-key=${KEY/x86_64/armv7}" >> $GITHUB_OUTPUT
