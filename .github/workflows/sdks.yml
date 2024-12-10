@@ -598,6 +598,11 @@ jobs:
           ln -s ../swift/clang $SYSROOT/usr/lib/swift_static-armv7/clang
           ln -s ../swift/clang $SYSROOT/usr/lib/swift_static-x86_64/clang
 
+          # Patch a single libc++ header to work around a Swift compiler bug
+          cd $SYSROOT
+          git apply ../../sdk-config/libc++-stdlib.h.patch
+          cd ../..
+
           BUNDLE=${{ steps.version.outputs.tag }}-android-${ANDROID_API_LEVEL}-${BUNDLE_VERSION}
           BUNDLE_DIR=$BUNDLE.artifactbundle
           mkdir ${BUNDLE_DIR}
