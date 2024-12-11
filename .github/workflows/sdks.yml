@@ -229,7 +229,10 @@ jobs:
 
           # Remove executables and unused toolchain headers/libraries
           pushd $SDK_NAME/usr
-          rm -r bin lib/swift/pm lib/libsqlite3.so lib/lib{curses,ncurses}.so lib/terminfo share/{tabset,terminfo}
+          rm -r bin lib/libsqlite3.so lib/lib{curses,ncurses}.so lib/terminfo share/{tabset,terminfo}
+          if [ ${{ matrix.version }} != 'trunk' ]; then
+            rm -r lib/swift/pm
+          fi
           mv include/curl include/libxml2 include/spawn.h .
           rm -r include/*
           mv curl libxml2 spawn.h include/
