@@ -236,6 +236,7 @@ jobs:
           mv include/curl include/libxml2 include/spawn.h .
           rm -r include/*
           mv curl libxml2 spawn.h include/
+          cp -r ../../swift/lib/ClangImporter/SwiftBridging/{module.modulemap,swift} include/
           popd
 
           tar cJf ~/$SDK_NAME.tar.xz $SDK_NAME
