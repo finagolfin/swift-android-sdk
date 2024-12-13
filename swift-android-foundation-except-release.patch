@@ -10,47 +10,6 @@ index 16e05052609..7ab8cebfab8 100755
  
                    cmake_options=(
                      -DENABLE_SWIFT=YES
-diff --git a/swift-corelibs-foundation/Package.swift b/swift-corelibs-foundation/Package.swift
-index 2b5b5e05..60f1dde8 100644
---- a/swift-corelibs-foundation/Package.swift
-+++ b/swift-corelibs-foundation/Package.swift
-@@ -245,7 +245,8 @@ let package = Package(
-                 "BlockRuntime",
-                 "CMakeLists.txt"
-             ],
--            cSettings: coreFoundationBuildSettings
-+            cSettings: coreFoundationBuildSettings,
-+            linkerSettings: [.linkedLibrary("log", .when(platforms: [.android]))]
-         ),
-         .target(
-             name: "BlocksRuntime",
-@@ -262,7 +263,7 @@ let package = Package(
-             name: "_CFXMLInterface",
-             dependencies: [
-                 "CoreFoundation",
--                .target(name: "Clibxml2", condition: .when(platforms: [.linux])),
-+                .target(name: "Clibxml2", condition: .when(platforms: [.linux, .android])),
-             ],
-             path: "Sources/_CFXMLInterface",
-             exclude: [
-@@ -275,7 +276,7 @@ let package = Package(
-             name: "_CFURLSessionInterface",
-             dependencies: [
-                 "CoreFoundation",
--                .target(name: "Clibcurl", condition: .when(platforms: [.linux])),
-+                .target(name: "Clibcurl", condition: .when(platforms: [.linux, .android])),
-             ],
-             path: "Sources/_CFURLSessionInterface",
-             exclude: [
-@@ -348,7 +349,7 @@ let package = Package(
-                 "FoundationNetworking",
-                 "XCTest",
-                 "Testing",
--                .target(name: "xdgTestHelper", condition: .when(platforms: [.linux]))
-+                .target(name: "xdgTestHelper", condition: .when(platforms: [.linux, .android]))
-             ],
-             resources: [
-                 .copy("Foundation/Resources")
 diff --git a/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift b/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift
 index 8043ef00..23b602f6 100644
 --- a/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift
