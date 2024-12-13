@@ -284,18 +284,20 @@ for repo in swiftRepos {
 
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
   for repo in extraSwiftRepos {
-    let tag = repoTags[repo] ?? SWIFT_TAG
-    var repoOrg = "swiftlang"
-    if repo == "Yams" {
-      repoOrg = "jpsim"
-    } else if appleRepos.contains(repo) {
-      repoOrg = "apple"
+    if !fmd.fileExists(atPath: cwd.appendingPathComponent(renameRepos[repo] ?? repo)) {
+      let tag = repoTags[repo] ?? SWIFT_TAG
+      var repoOrg = "swiftlang"
+      if repo == "Yams" {
+        repoOrg = "jpsim"
+      } else if appleRepos.contains(repo) {
+        repoOrg = "apple"
+      }
+      _ = runCommand("curl", with: ["-f", "-L", "-O",
+                "https://github.com/\(repoOrg)/\(repo)/archive/refs/tags/\(tag).tar.gz"])
+      _ = runCommand("tar", with: ["xf", "\(tag).tar.gz"])
+      try fmd.moveItem(atPath: cwd.appendingPathComponent("\(repo)-\(tag)"),
+                       toPath: cwd.appendingPathComponent(renameRepos[repo] ?? repo))
+      try fmd.removeItem(atPath: cwd.appendingPathComponent("\(tag).tar.gz"))
     }
-    _ = runCommand("curl", with: ["-f", "-L", "-O",
-              "https://github.com/\(repoOrg)/\(repo)/archive/refs/tags/\(tag).tar.gz"])
-    _ = runCommand("tar", with: ["xf", "\(tag).tar.gz"])
-    try fmd.moveItem(atPath: cwd.appendingPathComponent("\(repo)-\(tag)"),
-                     toPath: cwd.appendingPathComponent(renameRepos[repo] ?? repo))
-    try fmd.removeItem(atPath: cwd.appendingPathComponent("\(tag).tar.gz"))
   }
 }
