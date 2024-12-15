@@ -39,3 +39,24 @@ index 2b5b5e05..60f1dde8 100644
              ],
              resources: [
                  .copy("Foundation/Resources")
+commit 4339393f2c1f3bceaf20bc2c25ee828a2e0394aa
+Author: Alex Lorenz <arphaman@gmail.com>
+Date:   Thu Dec 12 07:34:34 2024 -0800
+
+    [android] fix 32-bit build (#1086)
+    
+    Regression after bb3fccfa360d00f63999ac8faf6ba37224ce5174
+
+diff --git a/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations.swift b/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations.swift
+index 9136123..418f5cf 100644
+--- a/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations.swift
++++ b/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations.swift
+@@ -995,7 +995,7 @@ enum _FileOperations {
+             }
+             
+             // Copy permissions
+-            if fchmod(dstFD, statInfo.st_mode) != 0 {
++            if fchmod(dstFD, mode_t(statInfo.st_mode)) != 0 {
+                 try delegate.throwIfNecessary(errno, srcPath(), dstPath())
+             }
+         } else {
