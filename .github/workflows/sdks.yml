@@ -214,6 +214,8 @@ jobs:
           else
             if [ ${{ matrix.version }} = 'devel' ]; then
               git apply swift-android-foundation-devel.patch
+            else
+              git apply swift-android-foundation-trunk.patch
             fi
             git apply swift-android-ci-except-release.patch swift-android-foundation-except-release.patch
           fi

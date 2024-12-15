@@ -10,19 +10,6 @@ index 16e05052609..7ab8cebfab8 100755
  
                    cmake_options=(
                      -DENABLE_SWIFT=YES
-diff --git a/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift b/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift
-index 8043ef00..23b602f6 100644
---- a/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift
-+++ b/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift
-@@ -10,6 +10,8 @@
- @_implementationOnly import CoreFoundation
- #if os(Windows)
- import WinSDK
-+#elseif canImport(Android)
-+import Android
- #elseif os(WASI)
- import WASILibc
- #endif
 diff --git a/swift-corelibs-foundation/Sources/Foundation/Process.swift b/swift-corelibs-foundation/Sources/Foundation/Process.swift
 index 758dd1df..02970992 100644
 --- a/swift-corelibs-foundation/Sources/Foundation/Process.swift
