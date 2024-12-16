@@ -79,23 +79,6 @@ jobs:
 
           echo "TOOLCHAIN=${TOOLCHAIN}" >> $GITHUB_ENV
           ${TOOLCHAIN}/bin/swift --version
-      - name: Get cached Android NDK
-        id: ndk
-        uses: actions/cache@v4
-        if: ${{ steps.cache-bundle.outputs.cache-hit != 'true' && startsWith(matrix.os, 'ubuntu') }}
-        with:
-          path: ~/android-ndk-r${{ env.NDK_VERSION }}-linux.zip
-          key: android-ndk-${{ env.NDK_VERSION }}-full
-          lookup-only: true
-      - name: Download Android NDK if not cached before
-        if: ${{ steps.cache-bundle.outputs.cache-hit != 'true' && steps.ndk.outputs.cache-hit != 'true' && startsWith(matrix.os, 'ubuntu') }}
-        run: |
-          wget -q https://dl.google.com/android/repository/android-ndk-r$NDK_VERSION-linux.zip
-          if [ "$(sha1sum android-ndk-r$NDK_VERSION-linux.zip | cut -f1 -d" ")" != '090e8083a715fdb1a3e402d0763c388abb03fb4e' ]; then
-            echo "NDK checksum didn't match"
-            exit 1
-          fi
-          mv android-ndk-r$NDK_VERSION-linux.zip ~
       - name: Get cached Android NDK sysroot and runtime libraries
         id: cache-ndk
         uses: actions/cache@v4
@@ -106,11 +89,17 @@ jobs:
       - name: Extract Android NDK sysroot if not cached before
         if: ${{ steps.cache-bundle.outputs.cache-hit != 'true' && steps.cache-ndk.outputs.cache-hit != 'true' && startsWith(matrix.os, 'ubuntu') }}
         run: |
-          unzip -q ~/android-ndk-r$NDK_VERSION-linux.zip
+          wget -q https://dl.google.com/android/repository/android-ndk-r$NDK_VERSION-linux.zip
+          if [ "$(sha1sum android-ndk-r$NDK_VERSION-linux.zip | cut -f1 -d" ")" != '090e8083a715fdb1a3e402d0763c388abb03fb4e' ]; then
+            echo "NDK checksum didn't match"
+            exit 1
+          fi
+          unzip -q android-ndk-r$NDK_VERSION-linux.zip
+          rm android-ndk-r$NDK_VERSION-linux.zip
           mv android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/sysroot .
           rm -r sysroot/usr/{include,lib}/{i686,riscv64}-linux-android
           mv android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/*/lib/linux sysroot
-          rm -r sysroot/linux/*{i[36]86,riscv64}*
+          rm -r sysroot/linux/*{i[36]86,riscv64}* android-ndk-r$NDK_VERSION
           tar cJf ~/android-sysroot.tar.xz sysroot
       - name: Clone
         uses: actions/checkout@v4
