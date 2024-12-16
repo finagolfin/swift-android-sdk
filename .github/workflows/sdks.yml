@@ -387,7 +387,6 @@ jobs:
         with:
           repository: apple/swift-nio-ssh
           path: sns
-          ref: 5b4f9041e850e8b32e48f3a5b94ae6430a973616
       - name: Build Swift NIO SSH package
         run: |
           cd sns
