@@ -38,34 +38,3 @@ index 712d9dee..2483c14e 100644
  #elseif os(WASI)
  import WASILibc
  #elseif canImport(CRT)
-diff --git a/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations.swift b/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations.swift
-index 9567f65..06f51b6 100644
---- a/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations.swift
-+++ b/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations.swift
-@@ -986,14 +986,26 @@ enum _FileOperations {
-             }
-             
-             // Copy modification date
-+          #if canImport(Android)
-+            let value = statInfo.st_mtim
-+          #else
-             let value = timeval(tv_sec: statInfo.st_mtim.tv_sec, tv_usec: statInfo.st_mtim.tv_nsec / 1000)
-+          #endif
-             var tv = (value, value)
-             try withUnsafePointer(to: &tv) {
-+              #if canImport(Android)
-+                try $0.withMemoryRebound(to: timespec.self, capacity: 2) {
-+                    if futimens(dstFD, $0) != 0 {
-+                        try delegate.throwIfNecessary(errno, srcPath(), dstPath())
-+                    }
-+                }
-+              #else
-                 try $0.withMemoryRebound(to: timeval.self, capacity: 2) {
-                     if futimes(dstFD, $0) != 0 {
-                         try delegate.throwIfNecessary(errno, srcPath(), dstPath())
-                     }
-                 }
-+              #endif
-             }
-             
-             // Copy permissions
