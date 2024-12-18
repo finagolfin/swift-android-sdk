@@ -388,6 +388,43 @@ index d515a63f..fb037e24 100644
  #endif
  
  enum HelperCheckStatus : Int32 {
+From 7e0817f4c7dbc748fc70c45c20edd5acc98a34d7
+From: Yuta Saito <kateinoigakukun@gmail.com>
+Date: Tue, 17 Dec 2024 04:19:39 +0900
+Subject: [PATCH] Follow-up fixes to make it work with wasi-libc (#1095)
+
+* Use `futimens` instead of legacy `futimes`
+
+wasi-libc does not provide `futimes` as it is a legacy function.
+https://github.com/WebAssembly/wasi-libc/blob/574b88da481569b65a237cb80daf9a2d5aeaf82d/libc-top-half/musl/include/sys/time.h#L34
+
+diff --git a/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations.swift b/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations.swift
+index ce4de44a..96ee566d 100644
+--- a/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations.swift
++++ b/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations.swift
+@@ -940,17 +940,19 @@ enum _FileOperations {
+         #endif
+         var statInfo = stat()
+         if fstat(srcFD, &statInfo) == 0 {
++            #if !os(WASI) // WASI doesn't have fchown for now
+             // Copy owner/group
+             if fchown(dstFD, statInfo.st_uid, statInfo.st_gid) != 0 {
+                 try delegate.throwIfNecessary(errno, srcPath(), dstPath())
+             }
++            #endif
+             
+             // Copy modification date
+-            let value = timeval(tv_sec: statInfo.st_mtim.tv_sec, tv_usec: statInfo.st_mtim.tv_nsec / 1000)
++            let value = statInfo.st_mtim
+             var tv = (value, value)
+             try withUnsafePointer(to: &tv) {
+-                try $0.withMemoryRebound(to: timeval.self, capacity: 2) {
+-                    if futimes(dstFD, $0) != 0 {
++                try $0.withMemoryRebound(to: timespec.self, capacity: 2) {
++                    if futimens(dstFD, $0) != 0 {
+                         try delegate.throwIfNecessary(errno, srcPath(), dstPath())
+                     }
+                 }
 commit 4339393f2c1f3bceaf20bc2c25ee828a2e0394aa
 Author: Alex Lorenz <arphaman@gmail.com>
 Date:   Thu Dec 12 07:34:34 2024 -0800
