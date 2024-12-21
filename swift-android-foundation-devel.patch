@@ -402,16 +402,8 @@ diff --git a/swift-foundation/Sources/FoundationEssentials/FileManager/FileOpera
 index ce4de44a..96ee566d 100644
 --- a/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations.swift
 +++ b/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations.swift
-@@ -940,17 +940,19 @@ enum _FileOperations {
-         #endif
-         var statInfo = stat()
-         if fstat(srcFD, &statInfo) == 0 {
-+            #if !os(WASI) // WASI doesn't have fchown for now
-             // Copy owner/group
-             if fchown(dstFD, statInfo.st_uid, statInfo.st_gid) != 0 {
-                 try delegate.throwIfNecessary(errno, srcPath(), dstPath())
+@@ -944,11 +944,11 @@ enum _FileOperations {
              }
-+            #endif
              
              // Copy modification date
 -            let value = timeval(tv_sec: statInfo.st_mtim.tv_sec, tv_usec: statInfo.st_mtim.tv_nsec / 1000)
