@@ -25,16 +25,3 @@ index 758dd1df..02970992 100644
              if !useFallbackChdir {
                  try _throwIfPosixError(chdirResult)
              }
-diff --git a/swift-corelibs-foundation/Sources/Testing/Testing.swift b/swift-corelibs-foundation/Sources/Testing/Testing.swift
-index 712d9dee..2483c14e 100644
---- a/swift-corelibs-foundation/Sources/Testing/Testing.swift
-+++ b/swift-corelibs-foundation/Sources/Testing/Testing.swift
-@@ -11,6 +11,8 @@
- import Glibc
- #elseif canImport(Musl)
- import Musl
-+#elseif canImport(Bionic)
-+import Bionic
- #elseif os(WASI)
- import WASILibc
- #elseif canImport(CRT)

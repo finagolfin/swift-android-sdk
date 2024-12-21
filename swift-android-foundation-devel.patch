@@ -361,6 +361,19 @@ index e0d1cbbd..237c1daf 100644
  #endif
  
  public struct HTTPCookiePropertyKey : RawRepresentable, Equatable, Hashable, Sendable {
+diff --git a/swift-corelibs-foundation/Sources/Testing/Testing.swift b/swift-corelibs-foundation/Sources/Testing/Testing.swift
+index 712d9dee..2483c14e 100644
+--- a/swift-corelibs-foundation/Sources/Testing/Testing.swift
++++ b/swift-corelibs-foundation/Sources/Testing/Testing.swift
+@@ -11,6 +11,8 @@
+ import Glibc
+ #elseif canImport(Musl)
+ import Musl
++#elseif canImport(Bionic)
++import Bionic
+ #elseif os(WASI)
+ import WASILibc
+ #elseif canImport(CRT)
 diff --git a/swift-corelibs-foundation/Sources/plutil/main.swift b/swift-corelibs-foundation/Sources/plutil/main.swift
 index 29316d16..29584596 100644
 --- a/swift-corelibs-foundation/Sources/plutil/main.swift
