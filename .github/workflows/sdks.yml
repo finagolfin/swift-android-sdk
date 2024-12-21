@@ -128,16 +128,17 @@ jobs:
           git apply swift-android.patch swift-android-ci.patch swift-crypto.patch swift-system.patch
           if [ ${{ matrix.version }} = 'release' ]; then
             git apply swift-android-ci-release.patch swift-android-foundation-release.patch
+            perl -pi -e 's%r26%ndk/27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
           else
             if [ ${{ matrix.version }} = 'devel' ]; then
               git apply swift-android-foundation-devel.patch
+              perl -pi -e 's%r26%ndk/27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
             else
               git apply swift-android-foundation-trunk.patch
             fi
             git apply swift-android-ci-except-release.patch swift-android-foundation-except-release.patch
           fi
 
-          perl -pi -e 's%r26%ndk/27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
           perl -pi -e 's%String\(cString: getpass%\"fake\" //%' swiftpm/Sources/PackageRegistryCommand/PackageRegistryCommand+Auth.swift
 
           VERSION="$(echo ${{ steps.version.outputs.tag }} | cut -f1,2 -d-)-${{ matrix.version }}"
