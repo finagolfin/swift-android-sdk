@@ -278,10 +278,6 @@ jobs:
 
           if ${{ matrix.version != 'release' }}; then
             FLAGS="-Xswiftc -disallow-use-new-driver"
-            if [ ${{ matrix.version }} != 'devel' ]; then
-              ln -s swiftc-legacy-driver ${TOOLCHAIN}/bin/swiftc-legacy-driver.
-              ln -s swift-legacy-driver ${TOOLCHAIN}/bin/swift-legacy-driver.
-            fi
           else
             FLAGS="-Xswiftc -Xclang-linker -Xswiftc -fuse-ld=lld"
           fi
