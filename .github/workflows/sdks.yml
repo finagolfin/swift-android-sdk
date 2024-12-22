@@ -73,8 +73,9 @@ jobs:
             TOOLCHAIN=${PWD}/usr
             popd
           elif ${{ startsWith(matrix.os, 'ubuntu') }}; then
-            tar xf ~/$SWIFT_TAG-ubuntu24.04.tar.gz
-            TOOLCHAIN=${PWD}/$SWIFT_TAG-ubuntu24.04/usr
+            SWIFT_TOOLS=$SWIFT_TAG-$(echo ${{ matrix.os }} | tr -d - )
+            tar xf ~/$SWIFT_TOOLS.tar.gz
+            TOOLCHAIN=${PWD}/$SWIFT_TOOLS/usr
           fi
 
           echo "TOOLCHAIN=${TOOLCHAIN}" >> $GITHUB_ENV
@@ -500,7 +501,7 @@ jobs:
 
           # need to free up some space or else the emulator fails to launch:
           # ERROR   | Not enough space to create userdata partition. Available: 6086.191406 MB at /home/runner/.android/avd/../avd/test.avd, need 7372.800000 MB.
-          rm -rf ${{ steps.version.outputs.tag }}-ubuntu24.04/ */.build
+          rm -rf ${{ steps.version.outputs.tag }}-$(echo ${{ matrix.os }} | tr -d - )/ */.build
 
           chmod +x ~/test-toolchain.sh
 
