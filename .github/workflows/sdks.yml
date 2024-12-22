@@ -364,7 +364,7 @@ jobs:
         with:
           repository: apple/swift-atomics
           path: swift-atomics
-          ref: 1.1.0
+          ref: 1.2.0
       - name: Get Swift NIO SSH package
         uses: actions/checkout@v4
         with:
