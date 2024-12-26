@@ -63,6 +63,19 @@ diff --git a/sourcekit-lsp/Sources/sourcekit-lsp/SourceKitLSP.swift b/sourcekit-
  
  extension AbsolutePath {
    public init?(argument: String) {
+diff --git a/sourcekit-lsp/Utilities/build-script-helper.py b/sourcekit-lsp/Utilities/build-script-helper.py
+index bd31bec..4469cab 100755
+--- a/sourcekit-lsp/Utilities/build-script-helper.py
++++ b/sourcekit-lsp/Utilities/build-script-helper.py
+@@ -129,7 +129,7 @@ def get_swiftpm_options(swift_exec: str, args: argparse.Namespace) -> List[str]:
+         swiftpm_args += [
+             '-Xlinker', '-rpath', '-Xlinker', '$ORIGIN/../lib/swift/android',
+             # SwiftPM will otherwise try to compile against GNU strerror_r on
+-            '-Xlinker', '-landroid-spawn',
++            '-Xlinker', '-landroid-spawn', '--pkg-config-path', os.path.join(os.path.split(args.cross_compile_config)[0], 'lib/pkgconfig'),
+             # Android and fail.
+             '-Xswiftc', '-Xcc', '-Xswiftc', '-U_GNU_SOURCE',
+         ]
 From 355649608eb168652ff103d2a2029ba9539eea4b
 From: Jake Petroules <jake.petroules@apple.com>
 Date: Sun, 17 Nov 2024 02:21:37 -0800

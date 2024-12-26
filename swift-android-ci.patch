@@ -38,7 +38,7 @@ index bd31bec..4469cab 100755
          swiftpm_args += [
              '-Xlinker', '-rpath', '-Xlinker', '$ORIGIN/../lib/swift/android',
              # SwiftPM will otherwise try to compile against GNU strerror_r on
-+            '-Xlinker', '-landroid-spawn', '--pkg-config-path', os.path.join(os.path.split(args.cross_compile_config)[0], 'lib/pkgconfig'),
++            '-Xlinker', '-landroid-spawn',
              # Android and fail.
              '-Xswiftc', '-Xcc', '-Xswiftc', '-U_GNU_SOURCE',
          ]
