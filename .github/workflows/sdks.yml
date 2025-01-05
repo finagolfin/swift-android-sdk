@@ -31,7 +31,7 @@ jobs:
             SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
           fi
           echo "tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
-          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-lld-bundle" >> $GITHUB_OUTPUT
+          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-pic-bundle" >> $GITHUB_OUTPUT
       - name: Get cached SDK bundle
         id: cache-bundle
         uses: actions/cache/restore@v4
@@ -249,6 +249,7 @@ jobs:
 
           cat > $BUNDLE_DIR/$SDK_DIR/swift-toolset.json << EOF
           {
+              "cCompiler": { "extraCLIOptions": ["-fPIC"] },
               "swiftCompiler": { "extraCLIOptions": ["-Xclang-linker", "-fuse-ld=lld"] },
               "schemaVersion": "1.0"
           }
