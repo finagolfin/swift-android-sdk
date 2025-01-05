@@ -31,7 +31,7 @@ jobs:
             SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
           fi
           echo "tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
-          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-nosql-bundle" >> $GITHUB_OUTPUT
+          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-lld-bundle" >> $GITHUB_OUTPUT
       - name: Get cached SDK bundle
         id: cache-bundle
         uses: actions/cache/restore@v4
@@ -228,19 +228,29 @@ jobs:
                   "aarch64-unknown-linux-android${ANDROID_API_LEVEL}": {
                       "sdkRootPath": "${ROOT}",
                       "swiftResourcesPath": "${ROOT}/usr/lib/swift",
-                      "swiftStaticResourcesPath": "${ROOT}/usr/lib/swift_static-aarch64"
+                      "swiftStaticResourcesPath": "${ROOT}/usr/lib/swift_static-aarch64",
+                      "toolsetPaths": ["swift-toolset.json"]
                   },
                   "x86_64-unknown-linux-android${ANDROID_API_LEVEL}": {
                       "sdkRootPath": "${ROOT}",
                       "swiftResourcesPath": "${ROOT}/usr/lib/swift",
-                      "swiftStaticResourcesPath": "${ROOT}/usr/lib/swift_static-x86_64"
+                      "swiftStaticResourcesPath": "${ROOT}/usr/lib/swift_static-x86_64",
+                      "toolsetPaths": ["swift-toolset.json"]
                   },
                   "armv7-unknown-linux-androideabi${ANDROID_API_LEVEL}": {
                       "sdkRootPath": "${ROOT}",
                       "swiftResourcesPath": "${ROOT}/usr/lib/swift",
-                      "swiftStaticResourcesPath": "${ROOT}/usr/lib/swift_static-armv7"
+                      "swiftStaticResourcesPath": "${ROOT}/usr/lib/swift_static-armv7",
+                      "toolsetPaths": ["swift-toolset.json"]
                   }
               }
+          }
+          EOF
+
+          cat > $BUNDLE_DIR/$SDK_DIR/swift-toolset.json << EOF
+          {
+              "swiftCompiler": { "extraCLIOptions": ["-Xclang-linker", "-fuse-ld=lld"] },
+              "schemaVersion": "1.0"
           }
           EOF
 
@@ -281,8 +291,6 @@ jobs:
 
           if ${{ matrix.version != 'release' }}; then
             FLAGS="-Xswiftc -disallow-use-new-driver"
-          else
-            FLAGS="-Xswiftc -Xclang-linker -Xswiftc -fuse-ld=lld"
           fi
 
           SFLAGS="--swift-sdk aarch64-unknown-linux-android${ANDROID_API_LEVEL} ${FLAGS}"
