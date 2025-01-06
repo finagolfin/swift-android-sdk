@@ -11,11 +11,11 @@ index 9136123..418f5cf 100644
 --- a/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations.swift
 +++ b/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations.swift
 @@ -995,7 +995,7 @@ enum _FileOperations {
-             }
              
+             #if !os(WASI) // WASI doesn't have fchmod for now
              // Copy permissions
 -            if fchmod(dstFD, statInfo.st_mode) != 0 {
 +            if fchmod(dstFD, mode_t(statInfo.st_mode)) != 0 {
                  try delegate.throwIfNecessary(errno, srcPath(), dstPath())
              }
-         } else {
+             #endif
