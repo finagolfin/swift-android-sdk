@@ -19,14 +19,14 @@ On linux, simply download the toolchain, unpack it, and add it to your `PATH`.
 Next, install the Android SDK bundle by having the Swift toolchain directly
 download it:
 ```
-swift sdk install https://github.com/finagolfin/swift-android-sdk/releases/download/6.0.3/swift-6.0.3-RELEASE-android-24-0.1.artifactbundle.tar.gz --checksum d75615eac3e614131133c7cc2076b0b8fb4327d89dce802c25cd53e75e1881f4
+swift sdk install https://github.com/finagolfin/swift-android-sdk/releases/download/6.0.3/swift-6.0.3-RELEASE-android-24-0.1.artifactbundle.tar.gz --checksum 4566f23ae2d36dc5c02e915cd67d83b2af971faca4b2595fdd75cf0286acfac1
 ```
 or alternately, download the SDK bundle with your favorite downloader and install
 it separately:
 ```
 > wget https://github.com/finagolfin/swift-android-sdk/releases/download/6.0.3/swift-6.0.3-RELEASE-android-24-0.1.artifactbundle.tar.gz
 > sha256sum swift-6.0.3-RELEASE-android-24-0.1.artifactbundle.tar.gz
-d75615eac3e614131133c7cc2076b0b8fb4327d89dce802c25cd53e75e1881f4 swift-6.0.3-RELEASE-android-24-0.1.artifactbundle.tar.gz
+4566f23ae2d36dc5c02e915cd67d83b2af971faca4b2595fdd75cf0286acfac1 swift-6.0.3-RELEASE-android-24-0.1.artifactbundle.tar.gz
 > swift sdk install swift-6.0.3-RELEASE-android-24-0.1.artifactbundle.tar.gz
 ```
 You can check if it was properly installed by running `swift sdk list`.
