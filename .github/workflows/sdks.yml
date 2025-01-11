@@ -528,6 +528,6 @@ jobs:
       - name: Run tests on Android x86_64 emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 29
+          api-level: ${{ matrix.version != 'trunk' && '29' || env.ANDROID_API_LEVEL }}
           arch: x86_64
           script: ~/test-toolchain.sh
