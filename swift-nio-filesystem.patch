@@ -1,25 +1,3 @@
-diff --git a/Sources/NIOFileSystem/FileSystem.swift b/Sources/NIOFileSystem/FileSystem.swift
-index 3fc7d561..50e0482a 100644
---- a/Sources/NIOFileSystem/FileSystem.swift
-+++ b/Sources/NIOFileSystem/FileSystem.swift
-@@ -17,6 +17,7 @@
- import NIOCore
- import NIOPosix
- import SystemPackage
-+import class Foundation.FileManager
- 
- #if canImport(Darwin)
- import Darwin
-@@ -626,7 +627,8 @@ public struct FileSystem: Sendable, FileSystemProtocol {
-                 }.get()
-             }
-             #elseif os(Android)
--            return "/data/local/tmp"
-+            //return "/data/local/tmp"
-+            return FilePath(FileManager.default.temporaryDirectory.path)
-             #else
-             return "/tmp"
-             #endif
 diff --git a/Sources/NIOFileSystem/Internal/SystemFileHandle.swift b/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
 index 3dc51872..49aeeeca 100644
 --- a/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
