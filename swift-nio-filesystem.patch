@@ -135,7 +135,7 @@ index f24736a7..310d9691 100644
 +/*    func testCopyLargeFile() async throws {
          let sourcePath = try await self.fs.temporaryFilePath()
          let destPath = try await self.fs.temporaryFilePath()
-         self.addTeardownBlock {
+         self.addTeardownBlock { [fs] in
 @@ -584,7 +584,7 @@ final class FileSystemTests: XCTestCase {
          try await self.fs.copyItem(at: sourcePath, to: destPath)
          let destInfo = try await self.fs.info(forFileAt: destPath)
