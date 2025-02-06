@@ -1,0 +1,34 @@
+diff --git a/swiftpm/Sources/Workspace/Workspace+Prebuilts.swift b/swiftpm/Sources/Workspace/Workspace+Prebuilts.swift
+index a091ed979..db95ad1da 100644
+--- a/swiftpm/Sources/Workspace/Workspace+Prebuilts.swift
++++ b/swiftpm/Sources/Workspace/Workspace+Prebuilts.swift
+@@ -104,6 +104,7 @@ extension Workspace {
+             public enum Arch: String {
+                 case x86_64
+                 case aarch64
++                case armv7
+             }
+ 
+             public enum OS {
+@@ -599,6 +600,8 @@ extension Workspace.PrebuiltsManifest.Platform {
+         arch = .aarch64
+ #elseif arch(x86_64)
+         arch = .x86_64
++#elseif arch(arm)
++        arch = .armv7
+ #endif
+         guard let arch else {
+             return nil
+diff --git a/swiftpm/Sources/swift-build-prebuilts/BuildPrebuilts.swift b/swiftpm/Sources/swift-build-prebuilts/BuildPrebuilts.swift
+index 9df715a6c..f8f097dbe 100644
+--- a/swiftpm/Sources/swift-build-prebuilts/BuildPrebuilts.swift
++++ b/swiftpm/Sources/swift-build-prebuilts/BuildPrebuilts.swift
+@@ -322,6 +322,8 @@ extension Workspace.PrebuiltsManifest.Platform.Arch {
+             return "linux/arm64"
+         case .x86_64:
+             return "linux/amd64"
++        case .armv7:
++            return "linux/armv7"
+         }
+     }
+ }
