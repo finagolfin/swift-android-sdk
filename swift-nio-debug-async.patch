@@ -1,0 +1,97 @@
+diff --git a/Tests/NIOCoreTests/AsyncSequences/NIOAsyncWriterTests.swift b/Tests/NIOCoreTests/AsyncSequences/NIOAsyncWriterTests.swift
+index 848c65f8..768e24f1 100644
+--- a/Tests/NIOCoreTests/AsyncSequences/NIOAsyncWriterTests.swift
++++ b/Tests/NIOCoreTests/AsyncSequences/NIOAsyncWriterTests.swift
+@@ -120,7 +120,7 @@ final class NIOAsyncWriterTests: XCTestCase {
+         )
+     }
+ 
+-    func testMultipleConcurrentWrites() async throws {
++/*    func testMultipleConcurrentWrites() async throws {
+         var elements = 0
+         self.delegate.didYieldHandler = { elements += $0.count }
+         let task1 = Task { [writer] in
+@@ -605,51 +605,72 @@ final class NIOAsyncWriterTests: XCTestCase {
+ 
+         self.assert(suspendCallCount: 1, yieldCallCount: 1, terminateCallCount: 1)
+     }
+-
++*/
+     func testSuspendingBufferedYield_whenWriterFinished() async throws {
+         self.sink.setWritability(to: false)
+ 
+         let bothSuspended = expectation(description: "suspended on both yields")
+         let suspendedAgain = ConditionLock(value: false)
+         self.delegate.didSuspendHandler = {
++print("inside suspendHandler: \(ContinuousClock.now)\n")
+             if self.delegate.didSuspendCallCount == 2 {
++print("inside suspendHandler before fulfil: \(ContinuousClock.now)\n")
+                 bothSuspended.fulfill()
+             } else if self.delegate.didSuspendCallCount > 2 {
++print("inside suspendHandler before lock: \(ContinuousClock.now)\n")
+                 suspendedAgain.lock()
+                 suspendedAgain.unlock(withValue: true)
++print("inside suspendHandler after unlock: \(ContinuousClock.now)\n")
+             }
+         }
+ 
+         self.delegate.didYieldHandler = { _ in
++print("inside yieldHandler: \(ContinuousClock.now)\n")
+             if self.delegate.didYieldCallCount == 1 {
++print("inside yieldHandler before lock: \(ContinuousClock.now)\n")
+                 // Delay this yield until the other yield is suspended again.
+                 suspendedAgain.lock(whenValue: true)
+                 suspendedAgain.unlock()
++print("inside yieldHandler after unlock: \(ContinuousClock.now)\n")
+             }
+         }
+ 
++print("before running tasks: \(ContinuousClock.now)\n")
+         let task1 = Task { [writer] in
++print("inside task1: \(ContinuousClock.now)\n")
+             try await writer!.yield("message1")
++print("inside task1 after yield: \(ContinuousClock.now)\n")
+         }
++print("before running task2: \(ContinuousClock.now)\n")
+         let task2 = Task { [writer] in
++print("inside task2: \(ContinuousClock.now)\n")
+             try await writer!.yield("message2")
++print("inside task2 after yield: \(ContinuousClock.now)\n")
+         }
+ 
++print("after running tasks: \(ContinuousClock.now)\n")
+         await fulfillment(of: [bothSuspended], timeout: 1)
++print("after awaiting fulfillment: \(ContinuousClock.now)\n")
+         self.writer.finish()
+ 
++print("before assert on both suspended: \(ContinuousClock.now)\n")
+         self.assert(suspendCallCount: 2, yieldCallCount: 0, terminateCallCount: 0)
+ 
++print("before setting write to true: \(ContinuousClock.now)\n")
+         // We have to become writable again to unbuffer the yields
+         // The first call to didYield will pause, so that the other yield will be suspended again.
+         self.sink.setWritability(to: true)
+ 
++print("before awaiting tasks: \(ContinuousClock.now)\n")
+         await XCTAssertNoThrow(try await task1.value)
++print("before awaiting task2: \(ContinuousClock.now)\n")
+         await XCTAssertNoThrow(try await task2.value)
+ 
++print("after awaiting tasks: \(ContinuousClock.now)\n")
+         self.assert(suspendCallCount: 3, yieldCallCount: 2, terminateCallCount: 1)
++print("after final assert: \(ContinuousClock.now)\n")
+     }
+-
++/*
+     func testWriterFinish_whenFinished() {
+         // This tests just checks that finishing again is a no-op
+         self.writer.finish()
+@@ -707,7 +728,7 @@ final class NIOAsyncWriterTests: XCTestCase {
+ 
+         self.assert(suspendCallCount: 0, yieldCallCount: 0, terminateCallCount: 1)
+     }
+-}
++*/}
+ 
+ #if !canImport(Darwin) && swift(<5.9.2)
+ extension XCTestCase {
