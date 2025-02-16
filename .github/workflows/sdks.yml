@@ -134,7 +134,6 @@ jobs:
             LSP_BUILD="--sourcekit-lsp"
           else
             if [ ${{ matrix.version }} = 'devel' ]; then
-              git apply swift-android-ci-devel.patch
               perl -pi -e 's%r26%ndk/27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
               LSP_BUILD="--sourcekit-lsp"
             fi
