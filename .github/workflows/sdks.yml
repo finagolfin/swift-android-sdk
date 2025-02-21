@@ -292,7 +292,7 @@ jobs:
           ${TOOLCHAIN}/bin/swift sdk install ~/${{ steps.version.outputs.tag }}-android-*.artifactbundle.tar.gz
           ${TOOLCHAIN}/bin/swift sdk configure --show-configuration ${{ steps.version.outputs.tag }}-android-${ANDROID_API_LEVEL}-${BUNDLE_VERSION} armv7-unknown-linux-androideabi${ANDROID_API_LEVEL}
 
-          if ${{ matrix.version != 'release' }}; then
+          if ${{ matrix.version == 'devel' }}; then
             FLAGS="-Xswiftc -disallow-use-new-driver"
           fi
 
