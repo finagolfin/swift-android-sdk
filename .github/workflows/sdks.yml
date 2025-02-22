@@ -294,6 +294,8 @@ jobs:
 
           if ${{ matrix.version == 'devel' }}; then
             FLAGS="-Xswiftc -disallow-use-new-driver"
+          elif ${{ matrix.version == 'trunk' }}; then
+            echo "ANDROID_NDK_ROOT=" >> $GITHUB_ENV
           fi
 
           SFLAGS="--swift-sdk aarch64-unknown-linux-android${ANDROID_API_LEVEL} ${FLAGS}"
