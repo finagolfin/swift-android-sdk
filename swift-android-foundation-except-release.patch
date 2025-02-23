@@ -1,15 +1,3 @@
-diff --git a/swift/utils/build-script-impl b/swift/utils/build-script-impl
-index 16e05052609..7ab8cebfab8 100755
---- a/swift/utils/build-script-impl
-+++ b/swift/utils/build-script-impl
-@@ -2622,6 +2622,7 @@ for host in "${ALL_HOSTS[@]}"; do
-                     echo "Cleaning the libdispatch build directory"
-                     call rm -rf "${LIBDISPATCH_BUILD_DIR}"
-                   fi
-+                  call ln -sf "${SWIFT_BUILD_PATH}/lib/swift" "${ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib"
- 
-                   cmake_options=(
-                     -DENABLE_SWIFT=YES
 diff --git a/swift/utils/swift_build_support/swift_build_support/products/swift_testing.py b/swift/utils/swift_build_support/swift_build_support/products/swift_testing.py
 index 324d1a77eea..e88601a8701 100644
 --- a/swift/utils/swift_build_support/swift_build_support/products/swift_testing.py
