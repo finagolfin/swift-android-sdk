@@ -28,7 +28,7 @@ jobs:
             SWIFT_TAG="swift-6.1-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
           else
             LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-DEV | cut -d- -f7-9)
-            SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
+            SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-2025-02-26-a" # ${LATEST_TOOLCHAIN_VERSION}-a"
           fi
           echo "tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
           echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-testing-bundle" >> $GITHUB_OUTPUT
