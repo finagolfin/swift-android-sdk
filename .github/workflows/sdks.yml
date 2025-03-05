@@ -142,6 +142,7 @@ jobs:
             fi
             TESTING_BUILD="--swift-testing --install-swift-testing"
             git apply swift-android-ci-except-release.patch swift-android-foundation-except-release.patch
+            unset ANDROID_NDK_ROOT
           fi
 
           perl -pi -e 's%String\(cString: getpass%\"fake\" //%' swiftpm/Sources/PackageRegistryCommand/PackageRegistryCommand+Auth.swift
