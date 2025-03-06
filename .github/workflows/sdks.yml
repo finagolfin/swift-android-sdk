@@ -138,7 +138,7 @@ jobs:
               LSP_BUILD="--sourcekit-lsp"
               git apply swift-android-testing-devel.patch
             else
-              git apply swift-android-testing-trunk.patch swift-android-foundation-trunk.patch
+              git apply swift-android-testing-trunk.patch
             fi
             TESTING_BUILD="--swift-testing --install-swift-testing"
             git apply swift-android-ci-except-release.patch swift-android-foundation-except-release.patch

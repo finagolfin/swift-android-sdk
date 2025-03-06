@@ -62,6 +62,15 @@ index 758dd1df..02970992 100644
              if !useFallbackChdir {
                  try _throwIfPosixError(chdirResult)
              }
+@@ -944,7 +944,7 @@ open class Process: NSObject, @unchecked Sendable {
+         var spawnAttrs: posix_spawnattr_t = posix_spawnattr_t()
+ #endif
+         try _throwIfPosixError(posix_spawnattr_init(&spawnAttrs))
+-#if os(Android)
++#if os(Windows)
+         guard var spawnAttrs else {
+             throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno),
+                           userInfo: [NSURLErrorKey:self.executableURL!])
 diff --git a/swift-testing/CMakeLists.txt b/swift-testing/CMakeLists.txt
 index 1be9a4b..bd7b1bd 100644
 --- a/swift-testing/CMakeLists.txt
