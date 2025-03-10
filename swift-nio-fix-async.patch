@@ -1,0 +1,209 @@
+diff --git a/Package.swift b/Package.swift
+index 472db349..f4a3568f 100644
+--- a/Package.swift
++++ b/Package.swift
+@@ -441,6 +441,7 @@ let package = Package(
+                 "NIOCore",
+                 "NIOEmbedded",
+                 "NIOFoundationCompat",
++                "NIOTestUtils",
+                 swiftAtomics,
+             ],
+             swiftSettings: strictConcurrencySettings
+diff --git a/Sources/NIOTestUtils/NIOThreadPoolTaskExecutor.swift b/Sources/NIOTestUtils/NIOThreadPoolTaskExecutor.swift
+new file mode 100644
+index 0000000000..34d0888751
+--- /dev/null
++++ b/Sources/NIOTestUtils/NIOThreadPoolTaskExecutor.swift
+@@ -0,0 +1,92 @@
++#if compiler(>=6)
++
++import NIOPosix
++
++/// Run a `NIOThreadPool` based `TaskExecutor` while executing the given `body`.
++///
++/// Example usage:
++/// ```swift
++///     await withNIOThreadPoolTaskExecutor(numberOfThreads: 1) { taskExecutor in
++///         Task(executorPreference: taskExecutor) { ... }
++///     }
++/// ```
++///
++/// - warning: Do not escape the task executor from the closure for later use.
++///            This function does not return until the task executor is deinitialized.
++///            Any task using the executor will keep the executor alive. In other words, this
++///            function will not return until all tasks running on the executor are finished.
++///
++/// - warning: In case of cancellation, this function will wait for all tasks running on the
++///            executor to finish. Note that cancellation does not propagate to unstructured tasks.
++///
++/// - Parameters:
++///   - numberOfThreads: The number of threads in the pool.
++///   - body: The closure that will accept the task executor.
++///
++/// - Throws: When `body` throws.
++///
++/// - Returns: The value returned by `body`.
++///
++public func withNIOThreadPoolTaskExecutor<T, Failure>(
++    numberOfThreads: Int,
++    body: (any TaskExecutor) async throws(Failure) -> T
++) async throws(Failure) -> T {
++    let nioThreadPool = NIOThreadPool(numberOfThreads: numberOfThreads)
++    nioThreadPool.start()
++
++    // Use AsyncStream as an easy way to wait for the deinit of the task executor.
++    let (deinitStream, deinitContinuation) = AsyncStream.makeStream(of: Void.self)
++    var deinitStreamIterator = deinitStream.makeAsyncIterator()
++
++    let result: Result<T, Failure>
++    do {
++        let taskExecutor = NIOThreadPoolTaskExecutor(nioThreadPool, deinitContinuation)
++        result = .success(try await body(taskExecutor))
++    } catch {
++        result = .failure(error)
++    }
++
++    // Cancellation shield
++    await Task {
++        // Wait for task executor to deinitialize. This makes sure all tasks are finished.
++        // Our own reference to taskExecutor must be dropped by now in order to not keep it alive.
++        await deinitStreamIterator.next()
++        do {
++            try await nioThreadPool.shutdownGracefully()
++        } catch {
++            fatalError("Failed to shutdown NIOThreadPool")
++        }
++    }.value
++
++    return try result.get()
++}
++
++final class NIOThreadPoolTaskExecutor: TaskExecutor {
++    let nioThreadPool: NIOThreadPool
++    let deinitContinuation: AsyncStream<Void>.Continuation
++
++    init(
++        _ nioThreadPool: NIOThreadPool,
++        _ deinitContinuation: AsyncStream<Void>.Continuation
++    ) {
++        self.nioThreadPool = nioThreadPool
++        self.deinitContinuation = deinitContinuation
++    }
++
++    func enqueue(_ job: consuming ExecutorJob) {
++        let unownedJob = UnownedJob(job)
++        self.nioThreadPool.submit { shouldRun in
++            guard case shouldRun = NIOThreadPool.WorkItemState.active else {
++                // Should never happen. We keep the thread pool running until self is deinitialized.
++                fatalError("Thread pool stopped unexpectedly")
++            }
++            unownedJob.runSynchronously(on: self.asUnownedTaskExecutor())
++        }
++    }
++
++    deinit {
++        self.deinitContinuation.finish()
++    }
++}
++
++#endif  // compiler(>=6)
+diff --git a/Tests/NIOCoreTests/AsyncSequences/NIOAsyncWriterTests.swift b/Tests/NIOCoreTests/AsyncSequences/NIOAsyncWriterTests.swift
+index 848c65f869..2e2980f93d 100644
+--- a/Tests/NIOCoreTests/AsyncSequences/NIOAsyncWriterTests.swift
++++ b/Tests/NIOCoreTests/AsyncSequences/NIOAsyncWriterTests.swift
+@@ -14,6 +14,7 @@
+ 
+ import DequeModule
+ import NIOConcurrencyHelpers
++import NIOTestUtils
+ import XCTest
+ 
+ @testable import NIOCore
+@@ -607,47 +608,54 @@ final class NIOAsyncWriterTests: XCTestCase {
+     }
+ 
+     func testSuspendingBufferedYield_whenWriterFinished() async throws {
+-        self.sink.setWritability(to: false)
+-
+-        let bothSuspended = expectation(description: "suspended on both yields")
+-        let suspendedAgain = ConditionLock(value: false)
+-        self.delegate.didSuspendHandler = {
+-            if self.delegate.didSuspendCallCount == 2 {
+-                bothSuspended.fulfill()
+-            } else if self.delegate.didSuspendCallCount > 2 {
+-                suspendedAgain.lock()
+-                suspendedAgain.unlock(withValue: true)
++        #if compiler(>=6)
++        try await withNIOThreadPoolTaskExecutor(numberOfThreads: 2) { taskExecutor in
++            self.sink.setWritability(to: false)
++
++            let bothSuspended = expectation(description: "suspended on both yields")
++            let suspendedAgain = ConditionLock(value: false)
++            self.delegate.didSuspendHandler = {
++                if self.delegate.didSuspendCallCount == 2 {
++                    bothSuspended.fulfill()
++                } else if self.delegate.didSuspendCallCount > 2 {
++                    suspendedAgain.lock()
++                    suspendedAgain.unlock(withValue: true)
++                }
+             }
+-        }
+ 
+-        self.delegate.didYieldHandler = { _ in
+-            if self.delegate.didYieldCallCount == 1 {
+-                // Delay this yield until the other yield is suspended again.
+-                suspendedAgain.lock(whenValue: true)
+-                suspendedAgain.unlock()
++            self.delegate.didYieldHandler = { _ in
++                if self.delegate.didYieldCallCount == 1 {
++                    // Delay this yield until the other yield is suspended again.
++                    if suspendedAgain.lock(whenValue: true, timeoutSeconds: 5) {
++                        suspendedAgain.unlock()
++                    } else {
++                        XCTFail("Timeout while waiting for other yield to suspend again.")
++                    }
++                }
+             }
+-        }
+ 
+-        let task1 = Task { [writer] in
+-            try await writer!.yield("message1")
+-        }
+-        let task2 = Task { [writer] in
+-            try await writer!.yield("message2")
+-        }
++            let task1 = Task(executorPreference: taskExecutor) { [writer] in
++                try await writer!.yield("message1")
++            }
++            let task2 = Task(executorPreference: taskExecutor) { [writer] in
++                try await writer!.yield("message2")
++            }
+ 
+-        await fulfillment(of: [bothSuspended], timeout: 1)
+-        self.writer.finish()
++            await fulfillment(of: [bothSuspended], timeout: 5)
++            self.writer.finish()
+ 
+-        self.assert(suspendCallCount: 2, yieldCallCount: 0, terminateCallCount: 0)
++            self.assert(suspendCallCount: 2, yieldCallCount: 0, terminateCallCount: 0)
+ 
+-        // We have to become writable again to unbuffer the yields
+-        // The first call to didYield will pause, so that the other yield will be suspended again.
+-        self.sink.setWritability(to: true)
++            // We have to become writable again to unbuffer the yields
++            // The first call to didYield will pause, so that the other yield will be suspended again.
++            self.sink.setWritability(to: true)
+ 
+-        await XCTAssertNoThrow(try await task1.value)
+-        await XCTAssertNoThrow(try await task2.value)
++            await XCTAssertNoThrow(try await task1.value)
++            await XCTAssertNoThrow(try await task2.value)
+ 
+-        self.assert(suspendCallCount: 3, yieldCallCount: 2, terminateCallCount: 1)
++            self.assert(suspendCallCount: 3, yieldCallCount: 2, terminateCallCount: 1)
++        }
++        #endif  // compiler(>=6)
+     }
+ 
+     func testWriterFinish_whenFinished() {

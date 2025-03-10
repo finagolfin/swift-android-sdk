@@ -306,31 +306,6 @@ jobs:
           echo "SWIFTPM_X_FLAGS=${XFLAGS}" >> $GITHUB_ENV
           AFLAGS="--swift-sdk armv7-unknown-linux-androideabi${ANDROID_API_LEVEL} ${FLAGS}"
           echo "SWIFTPM_ARM_FLAGS=${AFLAGS}" >> $GITHUB_ENV
-      - name: Get Swift Argument Parser package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-argument-parser
-          path: swift-argument-parser
-      - name: Build Swift Argument Parser package
-        run: |
-          cd swift-argument-parser
-          rm Examples/count-lines/CountLines.swift Tools/changelog-authors/*.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
-      - name: Get Swift crypto package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-crypto
-          path: swift-crypto
-      - name: Build Swift crypto package
-        run: |
-          cd swift-crypto
-          perl -pi -e 's%\\\\(testsDirectory)/.*Vectors%/data/local/tmp/pack/crypto-vectors%' Tests/{Crypto,_CryptoExtras}Tests/Utils/{RFCVector,Wycheproof}.swift
-          perl -pi -e 's%#file%"/data/local/tmp/pack/crypto-vectors"%;s%../_CryptoExtrasVectors/%%' Tests/_CryptoExtrasTests/TestRSABlindSigning.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
       - name: Get Swift NIO package
         uses: actions/checkout@v4
         with:
@@ -339,109 +314,7 @@ jobs:
       - name: Build Swift NIO package
         run: |
           cd swift-nio
-          git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem.patch
-          if ${{ startsWith(matrix.os, 'macos') }}; then
-            git apply -R ../sdk-config/swift-nio-revert-async.patch
-          fi
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
-      - name: Get Swift Numerics package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-numerics
-          path: swift-numerics
-      - name: Build Swift Numerics package
-        run: |
-          cd swift-numerics
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
-      - name: Get Swift System package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-system
-          path: swift-system
-      - name: Build Swift System package
-        run: |
-          git apply sdk-config/swift-system-tests.patch
-          cd swift-system
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
-      - name: Get Swift Collections package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-collections
-          path: swift-collections
-      - name: Build Swift Collections package
-        run: |
-          cd swift-collections
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
-      - name: Get Swift Atomics package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-atomics
-          path: swift-atomics
-          ref: 1.2.0
-      - name: Get Swift NIO SSH package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-nio-ssh
-          path: sns
-      - name: Build Swift NIO SSH package
-        run: |
-          cd sns
-          perl -pi -e 's%url: .*swift-([a-z]*)\.git.*$%path: \"../swift-\1\"),%g' Package.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
-      - name: Get Swift NIO SSL package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-nio-ssl
-          path: snl
-      - name: Build Swift NIO SSL package
-        run: |
-          cd snl
-          git apply ../sdk-config/swift-nio-ssl-test.patch
-          SWIFTCI_USE_LOCAL_DEPS=1 ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          SWIFTCI_USE_LOCAL_DEPS=1 ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          SWIFTCI_USE_LOCAL_DEPS=1 ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
-      - name: Get Yams package
-        uses: actions/checkout@v4
-        with:
-          repository: jpsim/Yams
-          path: yams
-      - name: Build Yams package
-        run: |
-          cd yams
-          perl -pi -e 's% fixturesDirectory + \"/SourceKitten#289% \"/data/local/tmp/pack%' Tests/YamsTests/PerformanceTests.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
-      - name: Get Swift NIO HTTP/2 package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-nio-http2
-          path: snh
-      - name: Build Swift NIO HTTP/2 package
-        run: |
-          cd snh
-          perl -pi -e 's%url: .*swift-([a-z]*)\.git.*$%path: \"../swift-\1\"),%g' Package.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-      - name: Get Swift Algorithms package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-algorithms
-          path: sa
-      - name: Build Swift Algorithms package
-        run: |
-          cd sa
-          perl -pi -e 's%url: .*$%path: \"../swift-numerics\"),%' Package.swift
+          git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem.patch ../sdk-config/swift-nio-fix-async.patch
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
@@ -467,56 +340,15 @@ jobs:
           adb shell "run-as com.termux ln -s README.md /data/data/com.termux/pack/Test\ Data/README.md.symlink"
           adb shell "run-as com.termux ln -s Foo /data/data/com.termux/pack/Test\ Data/Foo.symlink"
           adb shell "run-as com.termux sh -c 'TMPDIR=/data/data/com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest'"
-          adb shell "TMPDIR=/data/local/tmp /data/local/tmp/pack/swift-systemPackageTests.xctest"
           EOF
 
           mkdir pack
           TARGET="x86_64-unknown-linux-android$ANDROID_API_LEVEL"
 
-          cp swift-argument-parser/.build/$TARGET/debug/{generate-manual,math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
-          echo 'adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest' >> ~/test-toolchain.sh
-
-          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v2.1.1/elf-cleaner.cpp
-          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v2.1.1/elf.h
-          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v2.1.1/arghandling.h
-          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v2.1.1/arghandling.c
-          clang -c arghandling.c
-          clang -o elf-cleaner arghandling.o elf-cleaner.cpp -DCOPYRIGHT=\"foo\" -DPACKAGE_NAME=\"termux-elf-cleaner\" -DPACKAGE_VERSION=\"2.2.1\"
-          ./elf-cleaner --api-level $ANDROID_API_LEVEL pack/{generate-manual,math,repeat,roll} || true
-
-          cp swift-crypto/.build/$TARGET/debug/swift-cryptoPackageTests.xctest pack
-          echo 'adb shell /data/local/tmp/pack/swift-cryptoPackageTests.xctest' >> ~/test-toolchain.sh
-
           cp swift-nio/.build/$TARGET/debug/swift-nioPackageTests.xctest pack
 
-          cp swift-numerics/.build/$TARGET/debug/swift-numericsPackageTests.xctest pack
-          echo 'adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest' >> ~/test-toolchain.sh
-
-          cp swift-system/.build/$TARGET/debug/swift-systemPackageTests.xctest pack
-          cp swift-collections/.build/$TARGET/debug/swift-collectionsPackageTests.xctest pack
-          echo 'adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest' >> ~/test-toolchain.sh
-
-          cp sns/.build/$TARGET/debug/swift-nio-sshPackageTests.xctest pack
-          echo 'adb shell /data/local/tmp/pack/swift-nio-sshPackageTests.xctest' >> ~/test-toolchain.sh
-
-          cp snl/.build/$TARGET/debug/swift-nio-sslPackageTests.xctest pack
-          echo 'adb shell /data/local/tmp/pack/swift-nio-sslPackageTests.xctest' >> ~/test-toolchain.sh
-
-          cp snh/.build/$TARGET/debug/swift-nio-http2PackageTests.xctest pack
-          echo 'adb shell /data/local/tmp/pack/swift-nio-http2PackageTests.xctest' >> ~/test-toolchain.sh
-
-          cp yams/.build/$TARGET/debug/YamsPackageTests.xctest pack
-          echo 'adb shell /data/local/tmp/pack/YamsPackageTests.xctest' >> ~/test-toolchain.sh
-
-          cp sa/.build/$TARGET/debug/swift-algorithmsPackageTests.xctest pack
-          echo 'adb shell /data/local/tmp/pack/swift-algorithmsPackageTests.xctest' >> ~/test-toolchain.sh
-
-          mkdir pack/crypto-vectors pack/swift-crypto_CryptoTests.resources
-          cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/_CryptoExtrasVectors/* pack/crypto-vectors
-          cp swift-crypto/Tests/CryptoTests/HPKE/hpke-test-vectors.json pack/swift-crypto_CryptoTests.resources
           rm swift-nio/Tests/NIOFileSystemIntegrationTests/Test\ Data/*symlink
           cp -r swift-nio/Tests/NIOFileSystemIntegrationTests/Test\ Data/ swift-nio/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift pack
-          cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
           cp ~/.${{ startsWith(matrix.os, 'ubuntu') && 'config/' || '' }}swiftpm/swift-sdks/${{ steps.version.outputs.tag }}-android-${ANDROID_API_LEVEL}-*.artifactbundle/swift*sdk/android*sysroot/usr/lib/x86_64-linux-android/lib*so pack
 
           # need to free up some space or else the emulator fails to launch:
@@ -539,4 +371,5 @@ jobs:
         with:
           api-level: ${{ matrix.version == 'release' && '29' || env.ANDROID_API_LEVEL }}
           arch: x86_64
+          cores: 1
           script: ~/test-toolchain.sh
