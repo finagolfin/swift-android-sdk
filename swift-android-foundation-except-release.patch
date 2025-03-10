@@ -99,21 +99,6 @@ index e40cb1b..ff2f920 100644
    endif()
    target_link_libraries(Testing PUBLIC
      Foundation)
-diff --git a/swift-testing/cmake/modules/SwiftModuleInstallation.cmake b/swift-testing/cmake/modules/SwiftModuleInstallation.cmake
-index 1553725..d9f9e5b 100644
---- a/swift-testing/cmake/modules/SwiftModuleInstallation.cmake
-+++ b/swift-testing/cmake/modules/SwiftModuleInstallation.cmake
-@@ -75,6 +75,10 @@ function(_swift_testing_install_target module)
-     set(module_triple_command "${CMAKE_Swift_COMPILER}" -print-target-info)
-     if(CMAKE_Swift_COMPILER_TARGET)
-       list(APPEND module_triple_command -target ${CMAKE_Swift_COMPILER_TARGET})
-+    else()
-+      set(arg_list ${CMAKE_Swift_FLAGS})
-+      separate_arguments(arg_list)
-+      list(APPEND module_triple_command ${arg_list})
-     endif()
-     execute_process(COMMAND ${module_triple_command} OUTPUT_VARIABLE target_info_json)
-     string(JSON module_triple GET "${target_info_json}" "target" "moduleTriple")
 diff --git a/swift-testing/cmake/modules/TargetTriple.cmake b/swift-testing/cmake/modules/TargetTriple.cmake
 index e087cc4..02f3a95 100644
 --- a/swift-testing/cmake/modules/TargetTriple.cmake

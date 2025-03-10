@@ -29,3 +29,18 @@ index 78227e3..e0db2e9 100644
        initializedCount = .init(clamping: backtrace(addresses.baseAddress!, .init(clamping: addresses.count)))
  #elseif os(Windows)
        initializedCount = Int(clamping: RtlCaptureStackBackTrace(0, ULONG(clamping: addresses.count), addresses.baseAddress!, nil))
+diff --git a/swift-testing/cmake/modules/SwiftModuleInstallation.cmake b/swift-testing/cmake/modules/SwiftModuleInstallation.cmake
+index 1553725..d9f9e5b 100644
+--- a/swift-testing/cmake/modules/SwiftModuleInstallation.cmake
++++ b/swift-testing/cmake/modules/SwiftModuleInstallation.cmake
+@@ -75,6 +75,10 @@ function(_swift_testing_install_target module)
+     set(module_triple_command "${CMAKE_Swift_COMPILER}" -print-target-info)
+     if(CMAKE_Swift_COMPILER_TARGET)
+       list(APPEND module_triple_command -target ${CMAKE_Swift_COMPILER_TARGET})
++    else()
++      set(arg_list ${CMAKE_Swift_FLAGS})
++      separate_arguments(arg_list)
++      list(APPEND module_triple_command ${arg_list})
+     endif()
+     execute_process(COMMAND ${module_triple_command} OUTPUT_VARIABLE target_info_json)
+     string(JSON module_triple GET "${target_info_json}" "target" "moduleTriple")
