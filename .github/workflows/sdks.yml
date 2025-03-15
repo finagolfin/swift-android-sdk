@@ -167,6 +167,10 @@ jobs:
 
             ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_HOME --android-arch $arch --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=${TOOLCHAIN}/bin --native-clang-tools-path=${TOOLCHAIN}/bin --cross-compile-hosts=android-$arch --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='compiler;clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b -p --install-llbuild $LSP_BUILD $TESTING_BUILD
 
+            if [ ${{ matrix.version }} != 'release' ]; then
+              rm $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/swift
+            fi
+
             pushd ${SDK_NAME}/usr
 
             patchelf --set-rpath \$ORIGIN lib/swift/android/lib[dFXs]*.so
