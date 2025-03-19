@@ -1,3 +1,16 @@
+diff --git a/swiftpm/Sources/PackagePlugin/Plugin.swift b/swiftpm/Sources/PackagePlugin/Plugin.swift
+index 232543b66..5589c2346 100644
+--- a/swiftpm/Sources/PackagePlugin/Plugin.swift
++++ b/swiftpm/Sources/PackagePlugin/Plugin.swift
+@@ -595,7 +595,7 @@ fileprivate enum Library: Sendable {
+         return LibraryHandle(rawValue: handle)
+         #else
+         guard let handle = dlopen(nil, RTLD_NOW | RTLD_LOCAL) else {
+-            throw LibraryOpenError(message: String(cString: dlerror()))
++            throw LibraryOpenError(message: String(cString: dlerror()!))
+         }
+         return LibraryHandle(rawValue: handle)
+         #endif
 diff --git a/swift-corelibs-xctest/cmake/modules/PlatformInfo.cmake b/swift-corelibs-xctest/cmake/modules/PlatformInfo.cmake
 index 468dc61..a90ae3d 100644
 --- a/swift-corelibs-xctest/cmake/modules/PlatformInfo.cmake
