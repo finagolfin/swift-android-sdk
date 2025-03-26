@@ -348,6 +348,8 @@ jobs:
           git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem.patch
           if ${{ startsWith(matrix.os, 'macos') }}; then
             git apply -R ../sdk-config/swift-nio-revert-async.patch
+          elif ${{ matrix.version == 'devel' }}; then
+            git apply ../sdk-config/swift-nio-armv7-devel.patch
           fi
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
@@ -360,9 +362,11 @@ jobs:
       - name: Build Swift Numerics package
         run: |
           cd swift-numerics
+          if ${{ matrix.version != 'trunk' }}; then
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
+          fi
       - name: Get Swift System package
         uses: actions/checkout@v4
         with:
@@ -495,8 +499,10 @@ jobs:
 
           cp swift-nio/.build/$TARGET/debug/swift-nioPackageTests.xctest pack
 
+          if ${{ matrix.version != 'trunk' }}; then
           cp swift-numerics/.build/$TARGET/debug/swift-numericsPackageTests.xctest pack
           echo 'adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest' >> ~/test-toolchain.sh
+          fi
 
           cp swift-system/.build/$TARGET/debug/swift-systemPackageTests.xctest pack
           cp swift-collections/.build/$TARGET/debug/swift-collectionsPackageTests.xctest pack

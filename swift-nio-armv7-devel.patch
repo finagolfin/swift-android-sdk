@@ -1,0 +1,51 @@
+From 4ab1c1cd40412b137c9981d8215d815fe18c9fd5
+From: George Barnett <gbarnett@apple.com>
+Date: Mon, 24 Mar 2025 09:56:01 +0000
+Subject: [PATCH] Use overflow addition in tests to avoid compilation failures
+
+Motivation:
+
+A few tests are failing to compiler on 32-bit platforms with recently
+nightly toolchains. These tests are skipped if `Int` is 32 bits wide but
+the compiler doesn't know that.
+
+Modifications:
+
+- Use overflow addition to stop the compiler from complaining; the
+  addition won't ever actually overflow because of the runtime check
+  done ahead of time.
+
+Result:
+
+- Tests compile again
+- Resolves #3154
+---
+ Tests/NIOPosixTests/NonBlockingFileIOTest.swift | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/Tests/NIOPosixTests/NonBlockingFileIOTest.swift b/Tests/NIOPosixTests/NonBlockingFileIOTest.swift
+index 4e452b1f12..6595f50d8e 100644
+--- a/Tests/NIOPosixTests/NonBlockingFileIOTest.swift
++++ b/Tests/NIOPosixTests/NonBlockingFileIOTest.swift
+@@ -323,7 +323,9 @@ class NonBlockingFileIOTest: XCTestCase {
+             { (filehandle, path) -> Void in
+                 let content = try self.fileIO.read(
+                     fileHandle: filehandle,
+-                    byteCount: Int(Int32.max) + 10,
++                    // There's a runtime check above, use overflow addition to stop the compilation
++                    // from failing on 32-bit platforms.
++                    byteCount: Int(Int32.max) &+ 10,
+                     allocator: .init(),
+                     eventLoop: self.eventLoop
+                 ).wait()
+@@ -1404,7 +1406,9 @@ extension NonBlockingFileIOTest {
+             { (filehandle, path) -> Void in
+                 let content = try await self.fileIO.read(
+                     fileHandle: filehandle,
+-                    byteCount: Int(Int32.max) + 10,
++                    // There's a runtime check above, use overflow addition to stop the compilation
++                    // from failing on 32-bit platforms.
++                    byteCount: Int(Int32.max) &+ 10,
+                     allocator: .init()
+                 )
+                 XCTAssertEqual(String(buffer: content), "some-dummy-content")
