@@ -133,6 +133,7 @@ jobs:
             perl -pi -e 's%r26%ndk/27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
             LSP_BUILD="--sourcekit-lsp"
           else
+            git apply swift-android-ci-except-release.patch swift-android-foundation-except-release.patch
             if [ ${{ matrix.version }} = 'devel' ]; then
               perl -pi -e 's%r26%ndk/27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
               LSP_BUILD="--sourcekit-lsp"
@@ -141,7 +142,6 @@ jobs:
               git apply swift-android-testing-trunk.patch
             fi
             TESTING_BUILD="--swift-testing --install-swift-testing"
-            git apply swift-android-ci-except-release.patch swift-android-foundation-except-release.patch
           fi
 
           perl -pi -e 's%String\(cString: getpass%\"fake\" //%' swiftpm/Sources/PackageRegistryCommand/PackageRegistryCommand+Auth.swift

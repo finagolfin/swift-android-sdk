@@ -1,3 +1,19 @@
+diff --git a/sourcekit-lsp/Utilities/build-script-helper.py b/sourcekit-lsp/Utilities/build-script-helper.py
+index 88141cdd..d264f10c 100755
+--- a/sourcekit-lsp/Utilities/build-script-helper.py
++++ b/sourcekit-lsp/Utilities/build-script-helper.py
+@@ -136,9 +136,6 @@ def get_swiftpm_options(swift_exec: str, args: argparse.Namespace, suppress_verb
+     if '-android' in build_target:
+         swiftpm_args += [
+             '-Xlinker', '-rpath', '-Xlinker', '$ORIGIN/../lib/swift/android',
++            '-Xlinker', '-landroid-spawn',
+-            # SwiftPM will otherwise try to compile against GNU strerror_r on
+-            '-Xlinker', '-landroid-spawn',
+-            # Android and fail.
+-            '-Xswiftc', '-Xcc', '-Xswiftc', '-U_GNU_SOURCE',
+         ]
+     elif not build_os.startswith('macosx'):
+         # Library rpath for swift, dispatch, Foundation, etc. when installing
 diff --git a/swiftpm/Sources/PackagePlugin/Plugin.swift b/swiftpm/Sources/PackagePlugin/Plugin.swift
 index 232543b66..5589c2346 100644
 --- a/swiftpm/Sources/PackagePlugin/Plugin.swift
@@ -11,6 +27,22 @@ index 232543b66..5589c2346 100644
          }
          return LibraryHandle(rawValue: handle)
          #endif
+diff --git a/swiftpm/Utilities/bootstrap b/swiftpm/Utilities/bootstrap
+index 156bf002a..d891da556 100755
+--- a/swiftpm/Utilities/bootstrap
++++ b/swiftpm/Utilities/bootstrap
+@@ -934,10 +934,7 @@ def get_swiftpm_flags(args):
+         build_flags.extend(["-Xcc", "-I/usr/local/include"])
+         build_flags.extend(["-Xlinker", "-L/usr/local/lib"])
+ 
+-    # Don't use GNU strerror_r on Android.
+-    if '-android' in args.build_target:
+-        build_flags.extend(["-Xswiftc", "-Xcc", "-Xswiftc", "-U_GNU_SOURCE"])
+-        build_flags.extend(["-Xlinker", "-landroid-spawn"])
++    build_flags.extend(["-Xlinker", "-landroid-spawn"])
+ 
+     cross_compile_hosts = args.cross_compile_hosts
+     if cross_compile_hosts:
 diff --git a/swift-corelibs-xctest/cmake/modules/PlatformInfo.cmake b/swift-corelibs-xctest/cmake/modules/PlatformInfo.cmake
 index 468dc61..a90ae3d 100644
 --- a/swift-corelibs-xctest/cmake/modules/PlatformInfo.cmake
@@ -26,6 +58,20 @@ index 468dc61..a90ae3d 100644
  endif()
  execute_process(COMMAND ${print_target_info_invocation} OUTPUT_VARIABLE target_info_json)
  message(CONFIGURE_LOG "Swift Target Info: ${print_target_info_invocation}\n"
+diff --git a/swift-driver/Utilities/build-script-helper.py b/swift-driver/Utilities/build-script-helper.py
+index 6e62b127..5504095b 100755
+--- a/swift-driver/Utilities/build-script-helper.py
++++ b/swift-driver/Utilities/build-script-helper.py
+@@ -104,9 +104,6 @@ def get_swiftpm_options(args):
+     if '-android' in args.build_target:
+       swiftpm_args += [
+         '-Xlinker', '-rpath', '-Xlinker', '$ORIGIN/../lib/swift/android',
+-        # SwiftPM will otherwise try to compile against GNU strerror_r on
+-        # Android and fail.
+-        '-Xswiftc', '-Xcc', '-Xswiftc', '-U_GNU_SOURCE',
+       ]
+     else:
+       # Library rpath for swift, dispatch, Foundation, etc. when installing
 diff --git a/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift b/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift
 index 78227e3..e0db2e9 100644
 --- a/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift
