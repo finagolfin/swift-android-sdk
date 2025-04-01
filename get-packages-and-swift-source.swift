@@ -53,8 +53,6 @@ if tagExtract.numberOfMatches(in: SWIFT_TAG, range: tagRange) == 1 {
 }
 
 if swiftBranch == "RELEASE" {
-  repoTags["swift-argument-parser"] = "1.2.3"
-  repoTags["swift-collections"] = "1.1.2"
   sdkDir = "swift-release-android-\(ANDROID_ARCH)-24-sdk"
 } else {
   sdkDir = "swift-\(swiftVersion == "" ? "trunk" : "devel")-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"

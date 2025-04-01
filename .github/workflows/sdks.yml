@@ -21,7 +21,7 @@ jobs:
         id: version
         run: |
           if [ ${{ matrix.version }} = 'release' ]; then
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-6.0 | cut -d- -f2)
+            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-6.1 | cut -d- -f2)
             SWIFT_TAG="swift-${LATEST_TOOLCHAIN_VERSION}-RELEASE"
           elif [ ${{ matrix.version }} = 'devel' ]; then
             LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-6.1-DEV | cut -d- -f8-10)
@@ -31,7 +31,7 @@ jobs:
             SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
           fi
           echo "tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
-          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-testing-bundle" >> $GITHUB_OUTPUT
+          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-patch-bundle" >> $GITHUB_OUTPUT
       - name: Get cached SDK bundle
         id: cache-bundle
         uses: actions/cache/restore@v4
@@ -128,26 +128,18 @@ jobs:
 
           git apply swift-android.patch swift-crypto.patch swift-system.patch
           git apply -C1 swift-android-ci.patch
-          if [ ${{ matrix.version }} = 'release' ]; then
-            git apply swift-android-ci-release.patch swift-android-foundation-release.patch
+          if [ ${{ matrix.version }} != 'trunk' ]; then
             perl -pi -e 's%r26%ndk/27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
             LSP_BUILD="-p --sourcekit-lsp"
+            git apply swift-android-testing-devel.patch
           else
-            git apply swift-android-ci-except-release.patch swift-android-foundation-except-release.patch
-            if [ ${{ matrix.version }} = 'devel' ]; then
-              perl -pi -e 's%r26%ndk/27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
-              LSP_BUILD="-p --sourcekit-lsp"
-              git apply swift-android-testing-devel.patch
-            else
-              git apply swift-android-testing-trunk.patch
-            fi
-            TESTING_BUILD="--swift-testing --install-swift-testing"
+            git apply swift-android-trunk.patch
           fi
 
           perl -pi -e 's%String\(cString: getpass%\"fake\" //%' swiftpm/Sources/PackageRegistryCommand/PackageRegistryCommand+Auth.swift
           VERSION="$(echo ${{ steps.version.outputs.tag }} | cut -f1,2 -d-)-${{ matrix.version }}"
 
-          # e.g. swift-6.0.1-release-android-24-sdk
+          # e.g. swift-6.1-release-android-24-sdk
           SDK_DIR=$VERSION-android-${ANDROID_API_LEVEL}-sdk
           ROOT=android-${NDK_VERSION}-sysroot
           SYSROOT=$SDK_DIR/$ROOT
@@ -159,26 +151,19 @@ jobs:
           for arch in aarch64 x86_64 armv7; do
             SDK_NAME=$(ls | grep swift-${{ matrix.version }}-android-$arch)
             SDK=`pwd`/$SDK_NAME
-            if [ ${{ matrix.version }} = 'release' ]; then
-              perl -pi -e "s%/data/data/com.termux/files%$SDK%g" $SDK/usr/lib/pkgconfig/sqlite3.pc
-            elif [ ${{ matrix.version }} = 'trunk' ]; then
+            if [ ${{ matrix.version }} = 'trunk' ]; then
               cp $SDK/usr/include/execinfo.h $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include
             fi
 
-            ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_HOME --android-arch $arch --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=${TOOLCHAIN}/bin --native-clang-tools-path=${TOOLCHAIN}/bin --cross-compile-hosts=android-$arch --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='compiler;clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b --install-llbuild $LSP_BUILD $TESTING_BUILD
+            ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_HOME --android-arch $arch --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=${TOOLCHAIN}/bin --native-clang-tools-path=${TOOLCHAIN}/bin --cross-compile-hosts=android-$arch --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='compiler;clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b --install-llbuild --swift-testing --install-swift-testing $LSP_BUILD
 
-            if [ ${{ matrix.version }} != 'release' ]; then
-              rm $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/swift
-            fi
+            rm $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/swift
 
             pushd ${SDK_NAME}/usr
 
             patchelf --set-rpath \$ORIGIN lib/swift/android/lib[dFXs]*.so
             # Remove executables and unused toolchain headers/libraries
             rm -r bin lib/libsqlite3.so lib/lib{curses,ncurses}.so lib/terminfo share/{tabset,terminfo}
-            if [ ${{ matrix.version }} = 'release' ]; then
-              rm -r lib/swift/pm
-            fi
             mv include/curl include/execinfo.h include/libxml2 include/spawn.h .
             rm -r include/*
             mv curl execinfo.h libxml2 spawn.h include/
@@ -237,24 +222,32 @@ jobs:
           {
               "schemaVersion": "4.0",
               "targetTriples": {
-                  "aarch64-unknown-linux-android${ANDROID_API_LEVEL}": {
+          EOF
+
+          for api in $(eval echo "{$ANDROID_API_LEVEL..35}"); do
+            cat >> $BUNDLE_DIR/$SDK_DIR/swift-sdk.json << EOF
+                  "aarch64-unknown-linux-android$api": {
                       "sdkRootPath": "${ROOT}",
                       "swiftResourcesPath": "${ROOT}/usr/lib/swift",
                       "swiftStaticResourcesPath": "${ROOT}/usr/lib/swift_static-aarch64",
                       "toolsetPaths": ["swift-toolset.json"]
                   },
-                  "x86_64-unknown-linux-android${ANDROID_API_LEVEL}": {
+                  "x86_64-unknown-linux-android$api": {
                       "sdkRootPath": "${ROOT}",
                       "swiftResourcesPath": "${ROOT}/usr/lib/swift",
                       "swiftStaticResourcesPath": "${ROOT}/usr/lib/swift_static-x86_64",
                       "toolsetPaths": ["swift-toolset.json"]
                   },
-                  "armv7-unknown-linux-androideabi${ANDROID_API_LEVEL}": {
+                  "armv7-unknown-linux-androideabi$api": {
                       "sdkRootPath": "${ROOT}",
                       "swiftResourcesPath": "${ROOT}/usr/lib/swift",
                       "swiftStaticResourcesPath": "${ROOT}/usr/lib/swift_static-armv7",
                       "toolsetPaths": ["swift-toolset.json"]
-                  }
+                  },
+          EOF
+          done
+
+          cat >> $BUNDLE_DIR/$SDK_DIR/swift-sdk.json << EOF
               }
           }
           EOF
@@ -302,9 +295,7 @@ jobs:
           ${TOOLCHAIN}/bin/swift sdk install ~/${{ steps.version.outputs.tag }}-android-*.artifactbundle.tar.gz
           ${TOOLCHAIN}/bin/swift sdk configure --show-configuration ${{ steps.version.outputs.tag }}-android-${ANDROID_API_LEVEL}-${BUNDLE_VERSION} armv7-unknown-linux-androideabi${ANDROID_API_LEVEL}
 
-          if ${{ matrix.version != 'release' }}; then
-            echo "ANDROID_NDK_ROOT=" >> $GITHUB_ENV
-          fi
+          echo "ANDROID_NDK_ROOT=" >> $GITHUB_ENV
 
           SFLAGS="--swift-sdk aarch64-unknown-linux-android${ANDROID_API_LEVEL} ${FLAGS}"
           echo "SWIFTPM_AARCH_FLAGS=${SFLAGS}" >> $GITHUB_ENV
@@ -547,6 +538,6 @@ jobs:
       - name: Run tests on Android x86_64 emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: ${{ matrix.version == 'release' && '29' || env.ANDROID_API_LEVEL }}
+          api-level: ${{ env.ANDROID_API_LEVEL }}
           arch: x86_64
           script: ~/test-toolchain.sh
