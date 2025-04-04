@@ -17,7 +17,7 @@ let extraSwiftRepos = ["swift-llbuild", "swift-package-manager", "swift-driver",
                        "swift-certificates", "swift-asn1", "swift-toolchain-sqlite"]
 let appleRepos = ["swift-argument-parser", "swift-crypto", "swift-system", "swift-collections", "swift-certificates", "swift-asn1"]
 let renameRepos = ["swift-llbuild" : "llbuild", "swift-package-manager" : "swiftpm", "Yams" : "yams"]
-var repoTags = ["swift-system" : "1.3.0", "swift-collections" : "1.1.3", "swift-asn1" : "1.0.0",
+var repoTags = ["swift-system" : "1.4.1", "swift-collections" : "1.1.3", "swift-asn1" : "1.0.0",
                 "swift-certificates" : "1.0.1", "Yams" : "5.0.6", "swift-argument-parser" : "1.4.0",
                 "swift-crypto" : "3.0.0", "swift-toolchain-sqlite" : "1.0.1"]
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
@@ -53,6 +53,7 @@ if tagExtract.numberOfMatches(in: SWIFT_TAG, range: tagRange) == 1 {
 }
 
 if swiftBranch == "RELEASE" {
+  repoTags["swift-system"] = "1.3.0"
   sdkDir = "swift-release-android-\(ANDROID_ARCH)-24-sdk"
 } else {
   sdkDir = "swift-\(swiftVersion == "" ? "trunk" : "devel")-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"

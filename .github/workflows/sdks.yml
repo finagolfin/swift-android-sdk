@@ -31,7 +31,7 @@ jobs:
             SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
           fi
           echo "tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
-          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-patch-bundle" >> $GITHUB_OUTPUT
+          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-parch-bundle" >> $GITHUB_OUTPUT
       - name: Get cached SDK bundle
         id: cache-bundle
         uses: actions/cache/restore@v4
@@ -126,14 +126,14 @@ jobs:
             ANDROID_ARCH=$arch BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
           done
 
-          git apply swift-android.patch swift-crypto.patch swift-system.patch
-          git apply -C1 swift-android-ci.patch
-          if [ ${{ matrix.version }} != 'trunk' ]; then
+          git apply swift-android.patch
+          git apply swift-android-ci.patch
+          if ${{ matrix.version == 'release' }}; then
             perl -pi -e 's%r26%ndk/27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
             LSP_BUILD="-p --sourcekit-lsp"
-            git apply swift-android-testing-devel.patch
+            git apply swift-android-ci-release.patch swift-android-testing-release.patch
           else
-            git apply swift-android-trunk.patch
+            git apply swift-android-ci-except-release.patch swift-android-testing-except-release.patch
           fi
 
           perl -pi -e 's%String\(cString: getpass%\"fake\" //%' swiftpm/Sources/PackageRegistryCommand/PackageRegistryCommand+Auth.swift
