@@ -133,7 +133,7 @@ jobs:
             LSP_BUILD="-p --sourcekit-lsp"
             git apply swift-android-ci-release.patch swift-android-testing-release.patch
           else
-            git apply swift-android-ci-except-release.patch swift-android-testing-except-release.patch
+            git apply swift-android-testing-except-release.patch # swift-android-testing-except-release.patch
           fi
 
           perl -pi -e 's%String\(cString: getpass%\"fake\" //%' swiftpm/Sources/PackageRegistryCommand/PackageRegistryCommand+Auth.swift
