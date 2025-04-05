@@ -284,6 +284,9 @@ for repo in swiftRepos {
 
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
   for repo in extraSwiftRepos {
+    if swiftVersion == "" && repo == "sourcekit-lsp" && !fmd.fileExists(atPath: cwd.appendingPathComponent(repo)) {
+      try fmd.createDirectory(atPath: cwd.appendingPathComponent(repo), withIntermediateDirectories: false)
+    }
     if !fmd.fileExists(atPath: cwd.appendingPathComponent(renameRepos[repo] ?? repo)) {
       let tag = repoTags[repo] ?? SWIFT_TAG
       var repoOrg = "swiftlang"
