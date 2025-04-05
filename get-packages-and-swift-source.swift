@@ -285,12 +285,14 @@ for repo in swiftRepos {
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
   for repo in extraSwiftRepos {
     if !fmd.fileExists(atPath: cwd.appendingPathComponent(renameRepos[repo] ?? repo)) {
-      let tag = repoTags[repo] ?? SWIFT_TAG
+      var tag = repoTags[repo] ?? SWIFT_TAG
       var repoOrg = "swiftlang"
       if repo == "Yams" {
         repoOrg = "jpsim"
       } else if appleRepos.contains(repo) {
         repoOrg = "apple"
+      } else if swiftVersion == "" && repo == "sourcekit-lsp" {
+        tag = "swift-DEVELOPMENT-SNAPSHOT-2025-03-28-a"
       }
       _ = runCommand("curl", with: ["-f", "-L", "-O",
                 "https://github.com/\(repoOrg)/\(repo)/archive/refs/tags/\(tag).tar.gz"])
