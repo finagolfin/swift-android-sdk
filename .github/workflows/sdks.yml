@@ -225,6 +225,11 @@ jobs:
           EOF
 
           for api in $(eval echo "{$ANDROID_API_LEVEL..35}"); do
+            if [[ ${api} == "35" ]]; then
+              TRAILING_COMMA=""
+            else
+              TRAILING_COMMA=","
+            fi
             cat >> $BUNDLE_DIR/$SDK_DIR/swift-sdk.json << EOF
                   "aarch64-unknown-linux-android$api": {
                       "sdkRootPath": "${ROOT}",
@@ -243,7 +248,7 @@ jobs:
                       "swiftResourcesPath": "${ROOT}/usr/lib/swift",
                       "swiftStaticResourcesPath": "${ROOT}/usr/lib/swift_static-armv7",
                       "toolsetPaths": ["swift-toolset.json"]
-                  },
+                  }${TRAILING_COMMA}
           EOF
           done
 
