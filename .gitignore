@@ -1,2 +1,16 @@
 .*.swp
 .DS_Store
+llvm-project/
+swift-collections/
+swift-corelibs-foundation/
+swift-corelibs-libdispatch/
+swift-corelibs-xctest/
+swift-experimental-string-processing/
+swift-foundation-icu/
+swift-foundation/
+swift-release-android-aarch64-24-sdk/
+swift-syntax/
+swift-testing/
+swift/
+termux/
+
