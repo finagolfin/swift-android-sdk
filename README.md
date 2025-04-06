@@ -126,14 +126,15 @@ packagingOptions {
 
 ## Building an Android SDK from source
 
-Download the Swift 6.1 compiler as above and Android NDK 27c (only building
-the Android SDKs on linux works for now). Check out this repo and run
-`SWIFT_TAG=swift-6.1-RELEASE ANDROID_ARCH=aarch64 swift get-packages-and-swift-source.swift`
-to get some prebuilt Android libraries and the Swift source to build an AArch64
-SDK. If you pass in a different tag like `swift-DEVELOPMENT-SNAPSHOT-2025-04-03-a`
-for the latest Swift trunk snapshot and pass in the path to the corresponding
-prebuilt Swift toolchain to `build-script` below, you can build a Swift trunk
-SDK too, as seen on the CI.
+You may need to install llvm-symbolizer(llvm) and patchelf which need to be
+available in your PATH. Download the Swift 6.1 compiler as above and Android
+NDK 27c (only building the Android SDKs on linux works for now). Check out this
+repo and run `SWIFT_TAG=swift-6.1-RELEASE ANDROID_ARCH=aarch64 swift
+get-packages-and-swift-source.swift` to get some prebuilt Android libraries and
+the Swift source to build an AArch64 SDK. If you pass in a different tag like
+`swift-DEVELOPMENT-SNAPSHOT-2025-04-03-a` for the latest Swift trunk snapshot
+and pass in the path to the corresponding prebuilt Swift toolchain to
+`build-script` below, you can build a Swift trunk SDK too, as seen on the CI.
 
 Next, apply two patches from this repo to the Swift source, which make
 modifications for NDK 27 and [the Foundation rewrite in Swift 6 that was merged
