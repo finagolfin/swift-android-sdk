@@ -21,7 +21,7 @@ var repoTags = ["swift-system" : "1.4.1", "swift-collections" : "1.1.3", "swift-
                 "swift-certificates" : "1.0.1", "Yams" : "5.0.6", "swift-argument-parser" : "1.4.0",
                 "swift-crypto" : "3.0.0", "swift-toolchain-sqlite" : "1.0.1"]
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
-  termuxPackages += ["ncurses", "libsqlite"]
+  termuxPackages += ["ncurses"]
 }
 
 guard let SWIFT_TAG = ProcessInfo.processInfo.environment["SWIFT_TAG"] else {
@@ -54,6 +54,9 @@ if tagExtract.numberOfMatches(in: SWIFT_TAG, range: tagRange) == 1 {
 
 if swiftBranch == "RELEASE" {
   repoTags["swift-system"] = "1.3.0"
+  if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
+    termuxPackages += ["libsqlite"]
+  }
   sdkDir = "swift-release-android-\(ANDROID_ARCH)-24-sdk"
 } else {
   sdkDir = "swift-\(swiftVersion == "" ? "trunk" : "devel")-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"
@@ -245,9 +248,11 @@ for soFile in try fmd.contentsOfDirectory(atPath: libPath) {
   }
 }
 
-// Rename ncurses for llbuild and add a symlink for SwiftPM
-try fmd.moveItem(atPath: libPath.appendingPathComponent("libncursesw.so"), toPath: libPath.appendingPathComponent("libcurses.so"))
-try fmd.createSymbolicLink(atPath: libPath.appendingPathComponent("libncurses.so"), withDestinationPath: "libcurses.so")
+if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
+  // Rename ncurses for llbuild and add a symlink for SwiftPM
+  try fmd.moveItem(atPath: libPath.appendingPathComponent("libncursesw.so"), toPath: libPath.appendingPathComponent("libcurses.so"))
+  try fmd.createSymbolicLink(atPath: libPath.appendingPathComponent("libncurses.so"), withDestinationPath: "libcurses.so")
+}
 
 // update the rpath to be $ORIGIN, set the soname, and update all the "needed" sections for each of the peer libraries
 for soFile in try fmd.contentsOfDirectory(atPath: libPath).filter({ $0.hasSuffix(".so")} ) {
