@@ -10,9 +10,9 @@ index 494186e..090ceb8 100644
 +import Android
 +#endif
 +
- let samplePemCert = """
-     -----BEGIN CERTIFICATE-----
-     MIIGGzCCBAOgAwIBAgIJAJ/X0Fo0ynmEMA0GCSqGSIb3DQEBCwUAMIGjMQswCQYD
+ #if compiler(>=6.1)
+ internal import CNIOBoringSSL
+ #else
 diff --git a/Tests/NIOSSLTests/SSLCertificateTest.swift b/Tests/NIOSSLTests/SSLCertificateTest.swift
 index 18d3a1a..9bbd447 100644
 --- a/Tests/NIOSSLTests/SSLCertificateTest.swift
@@ -55,5 +55,5 @@ index 7ef2dfd..a8c6ac1 100644
 +#endif
 +
  class SSLPrivateKeyTest: XCTestCase {
-     static var pemKeyFilePath: String! = nil
-     static var derKeyFilePath: String! = nil
+     static let dynamicallyGeneratedKey = generateSelfSignedCert().1
+ 
