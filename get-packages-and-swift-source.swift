@@ -7,7 +7,7 @@ import Foundation
 var termuxPackages = ["libandroid-execinfo", "libandroid-spawn", "libandroid-spawn-static", "libcurl", "zlib", "libxml2", "libnghttp3", "libnghttp2", "libssh2", "openssl", "liblzma", "libiconv"]
 let termuxURL = "https://packages.termux.dev/apt/termux-main"
 
-let swiftRepos = ["llvm-project", "swift", "swift-experimental-string-processing", "swift-corelibs-libdispatch",
+var swiftRepos = ["llvm-project", "swift", "swift-experimental-string-processing", "swift-corelibs-libdispatch",
                   "swift-corelibs-foundation", "swift-corelibs-xctest", "swift-syntax", "swift-collections",
                   "swift-foundation", "swift-foundation-icu", "swift-testing"]
 
@@ -21,6 +21,7 @@ var repoTags = ["swift-system" : "1.4.1", "swift-collections" : "1.1.3", "swift-
                 "swift-certificates" : "1.0.1", "Yams" : "5.0.6", "swift-argument-parser" : "1.4.0",
                 "swift-crypto" : "3.0.0", "swift-toolchain-sqlite" : "1.0.1"]
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
+  swiftRepos += extraSwiftRepos
   termuxPackages += ["ncurses", "libsqlite"]
 }
 
@@ -268,40 +269,20 @@ for soFile in try fmd.contentsOfDirectory(atPath: libPath).filter({ $0.hasSuffix
 
 for repo in swiftRepos {
   print("Checking for \(repo) source")
-  if !fmd.fileExists(atPath: cwd.appendingPathComponent(repo)) {
+  if !fmd.fileExists(atPath: cwd.appendingPathComponent(renameRepos[repo] ?? repo)) {
     print("Downloading and extracting \(repo) source")
     let tag = repoTags[repo] ?? SWIFT_TAG
     var repoOrg = "swiftlang"
-    if ["swift-corelibs-libdispatch", "swift-collections"].contains(repo) {
+    if repo == "Yams" {
+      repoOrg = "jpsim"
+    } else if appleRepos.contains(repo) {
       repoOrg = "apple"
     }
     _ = runCommand("curl", with: ["-f", "-L", "-O",
               "https://github.com/\(repoOrg)/\(repo)/archive/refs/tags/\(tag).tar.gz"])
     _ = runCommand("tar", with: ["xf", "\(tag).tar.gz"])
     try fmd.moveItem(atPath: cwd.appendingPathComponent("\(repo)-\(tag)"),
-                     toPath: cwd.appendingPathComponent(repo))
+                     toPath: cwd.appendingPathComponent(renameRepos[repo] ?? repo))
     try fmd.removeItem(atPath: cwd.appendingPathComponent("\(tag).tar.gz"))
-  }
-}
-
-if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
-  for repo in extraSwiftRepos {
-    if !fmd.fileExists(atPath: cwd.appendingPathComponent(renameRepos[repo] ?? repo)) {
-      var tag = repoTags[repo] ?? SWIFT_TAG
-      var repoOrg = "swiftlang"
-      if repo == "Yams" {
-        repoOrg = "jpsim"
-      } else if appleRepos.contains(repo) {
-        repoOrg = "apple"
-      } else if swiftVersion == "" && repo == "sourcekit-lsp" {
-        tag = "swift-DEVELOPMENT-SNAPSHOT-2025-03-28-a"
-      }
-      _ = runCommand("curl", with: ["-f", "-L", "-O",
-                "https://github.com/\(repoOrg)/\(repo)/archive/refs/tags/\(tag).tar.gz"])
-      _ = runCommand("tar", with: ["xf", "\(tag).tar.gz"])
-      try fmd.moveItem(atPath: cwd.appendingPathComponent("\(repo)-\(tag)"),
-                       toPath: cwd.appendingPathComponent(renameRepos[repo] ?? repo))
-      try fmd.removeItem(atPath: cwd.appendingPathComponent("\(tag).tar.gz"))
-    }
   }
 }
