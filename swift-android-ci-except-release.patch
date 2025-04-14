@@ -10,8 +10,163 @@ index d264f10c..7c69168e 100755
          ]
      elif not build_os.startswith('macosx'):
          # Library rpath for swift, dispatch, Foundation, etc. when installing
+diff --git a/swift-build/Sources/SWBCore/LibclangVendored/Libclang.swift b/swift-build/Sources/SWBCore/LibclangVendored/Libclang.swift
+index de0c6a8..79e43a3 100644
+--- a/swift-build/Sources/SWBCore/LibclangVendored/Libclang.swift
++++ b/swift-build/Sources/SWBCore/LibclangVendored/Libclang.swift
+@@ -484,7 +484,7 @@ public final class ClangCASDatabases {
+         return Int(ret)
+     }
+ 
+-    public func setOndiskSizeLimit(_ limit: Int?) throws {
++    public func setOndiskSizeLimit(_ limit: Int64?) throws {
+         var error: ClangCASDatabases.Error? = nil
+         libclang_casdatabases_set_ondisk_size_limit(dbs, Int64(limit ?? 0), { c_error in
+             error = .operationFailed(String(cString: c_error!))
+diff --git a/swift-build/Sources/SWBCore/Settings/CASOptions.swift b/swift-build/Sources/SWBCore/Settings/CASOptions.swift
+index 27acbad..1c1b796 100644
+--- a/swift-build/Sources/SWBCore/Settings/CASOptions.swift
++++ b/swift-build/Sources/SWBCore/Settings/CASOptions.swift
+@@ -34,7 +34,7 @@ public struct CASOptions: Hashable, Serializable, Encodable, Sendable {
+         /// Cache directory is removed after the build is finished.
+         case discarded
+         /// The maximum size for the cache directory in bytes. `nil` means no limit.
+-        case maxSizeBytes(Int?)
++        case maxSizeBytes(Int64?)
+         /// The maximum size for the cache directory, in terms of percentage of the
+         /// available space on the disk. Set to 100 to indicate no limit, 50 to
+         /// indicate that the cache size will not be left over half the available disk
+@@ -86,14 +86,14 @@ public struct CASOptions: Hashable, Serializable, Encodable, Sendable {
+     /// * "0": indicates no limit
+     ///
+     /// Returns `nil` if the string is invalid.
+-    public static func parseSizeLimit(_ sizeLimitStr: String) -> Int? {
+-        if let size = Int(sizeLimitStr) {
++    public static func parseSizeLimit(_ sizeLimitStr: String) -> Int64? {
++        if let size = Int64(sizeLimitStr) {
+             return size
+         }
+-        guard let size = Int(sizeLimitStr.dropLast()) else {
++        guard let size = Int64(sizeLimitStr.dropLast()) else {
+             return nil
+         }
+-        let kb = 1024
++        let kb : Int64 = 1024
+         let mb = kb * 1024
+         let gb = mb * 1024
+         let tb = gb * 1024
+diff --git a/swift-build/Sources/SWBTaskExecution/DynamicTaskSpecs/CompilationCachingDataPruner.swift b/swift-build/Sources/SWBTaskExecution/DynamicTaskSpecs/CompilationCachingDataPruner.swift
+index 1e0f1d6..0ba0055 100644
+--- a/swift-build/Sources/SWBTaskExecution/DynamicTaskSpecs/CompilationCachingDataPruner.swift
++++ b/swift-build/Sources/SWBTaskExecution/DynamicTaskSpecs/CompilationCachingDataPruner.swift
+@@ -219,7 +219,7 @@ fileprivate func computeCASSizeLimit(
+     casOptions: CASOptions,
+     dbSize: Int?,
+     fileSystem fs: any FSProxy
+-) throws -> Int? {
++) throws -> Int64? {
+     guard let dbSize else { return nil }
+     switch casOptions.limitingStrategy {
+     case .discarded:
+@@ -233,7 +233,7 @@ fileprivate func computeCASSizeLimit(
+         guard let freeSpace = try fs.getFreeDiskSpace(casOptions.casPath) else {
+             return nil
+         }
+-        let availableSpace = dbSize + freeSpace
+-        return availableSpace * percent / 100
++        let availableSpace = Int64(dbSize + freeSpace)
++        return availableSpace * Int64(percent) / 100
+     }
+ }
+diff --git a/swift-build/Sources/SWBUtil/FSProxy.swift b/swift-build/Sources/SWBUtil/FSProxy.swift
+index b446d21..f88f3c3 100644
+--- a/swift-build/Sources/SWBUtil/FSProxy.swift
++++ b/swift-build/Sources/SWBUtil/FSProxy.swift
+@@ -49,7 +49,7 @@ public struct FileInfo: Equatable, Sendable {
+         #if os(Windows)
+         return (statBuf.st_mode & UInt16(ucrt.S_IFREG)) != 0
+         #else
+-        return (statBuf.st_mode & S_IFREG) != 0
++        return (mode_t(statBuf.st_mode) & S_IFREG) != 0
+         #endif
+     }
+ 
+@@ -57,7 +57,7 @@ public struct FileInfo: Equatable, Sendable {
+         #if os(Windows)
+         return (statBuf.st_mode & UInt16(ucrt.S_IFDIR)) != 0
+         #else
+-        return (statBuf.st_mode & S_IFDIR) != 0
++        return (mode_t(statBuf.st_mode) & S_IFDIR) != 0
+         #endif
+     }
+ 
+@@ -65,7 +65,7 @@ public struct FileInfo: Equatable, Sendable {
+         #if os(Windows)
+         return (statBuf.st_mode & UInt16(S_IFLNK)) == S_IFLNK
+         #else
+-        return (statBuf.st_mode & S_IFMT) == S_IFLNK
++        return (mode_t(statBuf.st_mode) & S_IFMT) == S_IFLNK
+         #endif
+     }
+ 
+@@ -75,7 +75,7 @@ public struct FileInfo: Equatable, Sendable {
+         // Don't use FileManager.isExecutableFile due to https://github.com/swiftlang/swift-foundation/issues/860
+         return (statBuf.st_mode & UInt16(_S_IEXEC)) != 0
+         #else
+-        return (statBuf.st_mode & S_IXUSR) != 0
++        return (mode_t(statBuf.st_mode) & S_IXUSR) != 0
+         #endif
+     }
+ 
+@@ -1395,9 +1395,9 @@ public class PseudoFS: FSProxy, @unchecked Sendable {
+                 #else
+                 info.st_mtimespec = timespec(tv_sec: time_t(node.timestamp), tv_nsec: 0)
+                 #endif
+-                info.st_size = off_t(contents.bytes.count)
+-                info.st_dev = node.device
+-                info.st_ino = node.inode
++                info.st_size = numericCast(contents.bytes.count)
++                info.st_dev = numericCast(node.device)
++                info.st_ino = numericCast(node.inode)
+                 return createFileInfo(info)
+             case .directory(let dir):
+                 var info = stat()
+@@ -1405,12 +1405,12 @@ public class PseudoFS: FSProxy, @unchecked Sendable {
+                 info.st_mode = UInt16(ucrt.S_IFDIR)
+                 info.st_mtimespec = timespec(tv_sec: Int64(node.timestamp), tv_nsec: 0)
+                 #else
+-                info.st_mode = S_IFDIR
++                info.st_mode = numericCast(S_IFDIR)
+                 info.st_mtimespec = timespec(tv_sec: time_t(node.timestamp), tv_nsec: 0)
+                 #endif
+-                info.st_size = off_t(dir.contents.count)
+-                info.st_dev = node.device
+-                info.st_ino = node.inode
++                info.st_size = numericCast(dir.contents.count)
++                info.st_dev = numericCast(node.device)
++                info.st_ino = numericCast(node.inode)
+                 return createFileInfo(info)
+             case .symlink(_):
+                 var info = stat()
+@@ -1418,12 +1418,12 @@ public class PseudoFS: FSProxy, @unchecked Sendable {
+                 info.st_mode = UInt16(S_IFLNK)
+                 info.st_mtimespec = timespec(tv_sec: Int64(node.timestamp), tv_nsec: 0)
+                 #else
+-                info.st_mode = S_IFLNK
++                info.st_mode = numericCast(S_IFLNK)
+                 info.st_mtimespec = timespec(tv_sec: time_t(node.timestamp), tv_nsec: 0)
+                 #endif
+-                info.st_size = off_t(0)
+-                info.st_dev = node.device
+-                info.st_ino = node.inode
++                info.st_size = numericCast(0)
++                info.st_dev = numericCast(node.device)
++                info.st_ino = numericCast(node.inode)
+                 return createFileInfo(info)
+             }
+         }
 diff --git a/swift-build/Sources/SWBUtil/Lock.swift b/swift-build/Sources/SWBUtil/Lock.swift
-index 2135ce6..706d13b 100644
+index 2135ce6..fbff6f6 100644
 --- a/swift-build/Sources/SWBUtil/Lock.swift
 +++ b/swift-build/Sources/SWBUtil/Lock.swift
 @@ -10,7 +10,11 @@
