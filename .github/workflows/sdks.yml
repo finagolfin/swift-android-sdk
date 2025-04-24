@@ -122,9 +122,7 @@ jobs:
 
           cd sdk-config
 
-          for arch in aarch64 x86_64 armv7; do
-            ANDROID_ARCH=$arch BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
-          done
+          ANDROID_ARCH=aarch64 BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
 
           git apply swift-android.patch
           git apply -C1 swift-android-ci.patch
@@ -151,6 +149,9 @@ jobs:
           mv sysroot $SYSROOT
 
           for arch in aarch64 x86_64 armv7; do
+            if [[ $arch != 'aarch64' ]]; then
+              ANDROID_ARCH=$arch BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
+            fi
             SDK_NAME=$(ls | grep swift-${{ matrix.version }}-android-$arch)
             SDK=`pwd`/$SDK_NAME
 
