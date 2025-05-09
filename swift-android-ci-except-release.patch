@@ -169,18 +169,15 @@ diff --git a/swift-build/Sources/SWBUtil/Lock.swift b/swift-build/Sources/SWBUti
 index 2135ce6..fbff6f6 100644
 --- a/swift-build/Sources/SWBUtil/Lock.swift
 +++ b/swift-build/Sources/SWBUtil/Lock.swift
-@@ -10,7 +10,11 @@
- //
- //===----------------------------------------------------------------------===//
- 
-+#if canImport(Android)
-+@_exported import Android
-+#else
- private import SWBLibc
-+#endif
- 
- // FIXME: Replace the contents of this file with the Swift standard library's Mutex type once it's available everywhere we deploy.
- 
+@@ -14,6 +14,8 @@
+ public import os
+ #elseif os(Windows)
+ public import WinSDK
++#elseif canImport(Android)
++public import Android
+ #else
+ public import SWBLibc
+ #endif
 diff --git a/swiftpm/Utilities/bootstrap b/swiftpm/Utilities/bootstrap
 index 156bf002a..d891da556 100755
 --- a/swiftpm/Utilities/bootstrap
