@@ -130,6 +130,9 @@ jobs:
             LSP_BUILD="--sourcekit-lsp"
             git apply swift-android-ci-release.patch swift-android-testing-release.patch
           else
+            if ${{ matrix.version == 'devel' }}; then
+              git apply swift-android-ci-devel.patch
+            fi
             git apply -C2 swift-android-ci-except-release.patch swift-android-testing-except-release.patch
             SDK_NAME=$(ls | grep swift-${{ matrix.version }}-android-aarch64)
             cp $SDK_NAME/usr/include/execinfo.h $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include

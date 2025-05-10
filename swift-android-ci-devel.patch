@@ -1,0 +1,352 @@
+commit de9a45a27868947fa16850bac0a900b8d8849928
+Author: Jake Petroules <jake.petroules@apple.com>
+Date:   Thu May 1 18:36:26 2025 -0700
+
+    Introduce a ByteCount abstraction for representing bytes
+    
+    Rather than inconsistently using Int and Int64 throughout the codebase.
+
+diff --git a/swift-build/Sources/SWBCore/LibclangVendored/Libclang.swift b/Sources/SWBCore/LibclangVendored/Libclang.swift
+index de0c6a8..d65d8ed 100644
+--- a/Sources/SWBCore/LibclangVendored/Libclang.swift
++++ b/Sources/SWBCore/LibclangVendored/Libclang.swift
+@@ -470,7 +470,7 @@ public final class ClangCASDatabases {
+         libclang_casdatabases_dispose(dbs)
+     }
+ 
+-    public func getOndiskSize() throws -> Int? {
++    public func getOndiskSize() throws -> Int64? {
+         var error: ClangCASDatabases.Error? = nil
+         let ret = libclang_casdatabases_get_ondisk_size(dbs, { c_error in
+             error = .operationFailed(String(cString: c_error!))
+@@ -481,12 +481,12 @@ public final class ClangCASDatabases {
+         if ret < 0 {
+             return nil
+         }
+-        return Int(ret)
++        return ret
+     }
+ 
+-    public func setOndiskSizeLimit(_ limit: Int?) throws {
++    public func setOndiskSizeLimit(_ limit: Int64?) throws {
+         var error: ClangCASDatabases.Error? = nil
+-        libclang_casdatabases_set_ondisk_size_limit(dbs, Int64(limit ?? 0), { c_error in
++        libclang_casdatabases_set_ondisk_size_limit(dbs, limit ?? 0, { c_error in
+             error = .operationFailed(String(cString: c_error!))
+         })
+         if let error {
+diff --git a/Sources/SWBCore/Settings/CASOptions.swift b/Sources/SWBCore/Settings/CASOptions.swift
+index 27acbad..a6b7c8d 100644
+--- a/Sources/SWBCore/Settings/CASOptions.swift
++++ b/Sources/SWBCore/Settings/CASOptions.swift
+@@ -34,7 +34,7 @@ public struct CASOptions: Hashable, Serializable, Encodable, Sendable {
+         /// Cache directory is removed after the build is finished.
+         case discarded
+         /// The maximum size for the cache directory in bytes. `nil` means no limit.
+-        case maxSizeBytes(Int?)
++        case maxSizeBytes(ByteCount?)
+         /// The maximum size for the cache directory, in terms of percentage of the
+         /// available space on the disk. Set to 100 to indicate no limit, 50 to
+         /// indicate that the cache size will not be left over half the available disk
+@@ -86,26 +86,22 @@ public struct CASOptions: Hashable, Serializable, Encodable, Sendable {
+     /// * "0": indicates no limit
+     ///
+     /// Returns `nil` if the string is invalid.
+-    public static func parseSizeLimit(_ sizeLimitStr: String) -> Int? {
+-        if let size = Int(sizeLimitStr) {
++    public static func parseSizeLimit(_ sizeLimitStr: String) -> ByteCount? {
++        if let size = ByteCount(Int64(sizeLimitStr)) {
+             return size
+         }
+-        guard let size = Int(sizeLimitStr.dropLast()) else {
++        guard let size = Int64(sizeLimitStr.dropLast()) else {
+             return nil
+         }
+-        let kb = 1024
+-        let mb = kb * 1024
+-        let gb = mb * 1024
+-        let tb = gb * 1024
+-        switch sizeLimitStr.last! {
+-        case "K": // kilobytes
+-            return size * kb
+-        case "M": // megabytes
+-            return size * mb
+-        case "G": // gigabytes
+-            return size * gb
+-        case "T": // terabytes
+-            return size * tb
++        switch sizeLimitStr.last {
++        case "K":
++            return .kilobytes(size)
++        case "M":
++            return .megabytes(size)
++        case "G":
++            return .gigabytes(size)
++        case "T":
++            return .terabytes(size)
+         default:
+             return nil
+         }
+@@ -228,7 +224,7 @@ public struct CASOptions: Hashable, Serializable, Encodable, Sendable {
+                 guard let sizeLimit = CASOptions.parseSizeLimit(sizeLimitStr) else {
+                     throw Errors.invalidSizeLimit(sizeLimitString: sizeLimitStr, origin: origin)
+                 }
+-                return .maxSizeBytes(sizeLimit > 0 ? sizeLimit : nil)
++                return .maxSizeBytes(sizeLimit > .zero ? sizeLimit : nil)
+             }
+ 
+             let sizeLimitStr = scope.evaluate(BuiltinMacros.COMPILATION_CACHE_LIMIT_SIZE)
+diff --git a/Sources/SWBTaskExecution/DynamicTaskSpecs/CompilationCachingDataPruner.swift b/Sources/SWBTaskExecution/DynamicTaskSpecs/CompilationCachingDataPruner.swift
+index cd6c44d..6b9a294 100644
+--- a/Sources/SWBTaskExecution/DynamicTaskSpecs/CompilationCachingDataPruner.swift
++++ b/Sources/SWBTaskExecution/DynamicTaskSpecs/CompilationCachingDataPruner.swift
+@@ -112,7 +112,7 @@ package final class CompilationCachingDataPruner: Sendable {
+             { activityID in
+                 let status: BuildOperationTaskEnded.Status
+                 do {
+-                    let dbSize = try casDBs.getOndiskSize()
++                    let dbSize = try ByteCount(casDBs.getOndiskSize())
+                     let sizeLimit = try computeCASSizeLimit(casOptions: casOpts, dbSize: dbSize, fileSystem: fs)
+                     if let dbSize, let sizeLimit, sizeLimit < dbSize {
+                         activityReporter.emit(
+@@ -125,7 +125,7 @@ package final class CompilationCachingDataPruner: Sendable {
+                             signature: signature
+                         )
+                     }
+-                    try casDBs.setOndiskSizeLimit(sizeLimit ?? 0)
++                    try casDBs.setOndiskSizeLimit(sizeLimit?.count ?? 0)
+                     try casDBs.pruneOndiskData()
+                     status = .succeeded
+                 } catch {
+@@ -181,8 +181,8 @@ package final class CompilationCachingDataPruner: Sendable {
+             { activityID in
+                 let status: BuildOperationTaskEnded.Status
+                 do {
+-                    let dbSize = try casDBs.getStorageSize()
+-                    let sizeLimit = try computeCASSizeLimit(casOptions: casOpts, dbSize: dbSize.map{Int($0)}, fileSystem: fs)
++                    let dbSize = try ByteCount(casDBs.getStorageSize())
++                    let sizeLimit = try computeCASSizeLimit(casOptions: casOpts, dbSize: dbSize, fileSystem: fs)
+                     if let dbSize, let sizeLimit, sizeLimit < dbSize {
+                         activityReporter.emit(
+                             diagnostic: Diagnostic(
+@@ -194,7 +194,7 @@ package final class CompilationCachingDataPruner: Sendable {
+                             signature: signature
+                         )
+                     }
+-                    try casDBs.setSizeLimit(Int64(sizeLimit ?? 0))
++                    try casDBs.setSizeLimit(sizeLimit?.count ?? 0)
+                     try casDBs.prune()
+                     status = .succeeded
+                 } catch {
+@@ -250,8 +250,8 @@ package final class CompilationCachingDataPruner: Sendable {
+             { activityID in
+                 let status: BuildOperationTaskEnded.Status
+                 do {
+-                    let dbSize = (try? toolchainCAS.getOnDiskSize()).map { Int($0) }
+-                    let sizeLimit = try computeCASSizeLimit(casOptions: casOpts, dbSize: dbSize, fileSystem: fs).map { Int64($0) }
++                    let dbSize = try? ByteCount(toolchainCAS.getOnDiskSize())
++                    let sizeLimit = try computeCASSizeLimit(casOptions: casOpts, dbSize: dbSize, fileSystem: fs)
+                     if let dbSize, let sizeLimit, sizeLimit < dbSize {
+                         activityReporter.emit(
+                             diagnostic: Diagnostic(
+@@ -263,7 +263,7 @@ package final class CompilationCachingDataPruner: Sendable {
+                             signature: signature
+                         )
+                     }
+-                    try toolchainCAS.setOnDiskSizeLimit(sizeLimit ?? 0)
++                    try toolchainCAS.setOnDiskSizeLimit(sizeLimit?.count ?? 0)
+                     try toolchainCAS.prune()
+                     status = .succeeded
+                 } catch {
+@@ -287,9 +287,9 @@ package final class CompilationCachingDataPruner: Sendable {
+ 
+ fileprivate func computeCASSizeLimit(
+     casOptions: CASOptions,
+-    dbSize: Int?,
++    dbSize: ByteCount?,
+     fileSystem fs: any FSProxy
+-) throws -> Int? {
++) throws -> ByteCount? {
+     guard let dbSize else { return nil }
+     switch casOptions.limitingStrategy {
+     case .discarded:
+@@ -304,6 +304,6 @@ fileprivate func computeCASSizeLimit(
+             return nil
+         }
+         let availableSpace = dbSize + freeSpace
+-        return availableSpace * percent / 100
++        return ByteCount(availableSpace.count * Int64(percent) / 100)
+     }
+ }
+diff --git a/Sources/SWBTaskExecution/DynamicTaskSpecs/SwiftDriverJobDynamicTaskSpec.swift b/Sources/SWBTaskExecution/DynamicTaskSpecs/SwiftDriverJobDynamicTaskSpec.swift
+index e01273b..127e304 100644
+--- a/Sources/SWBTaskExecution/DynamicTaskSpecs/SwiftDriverJobDynamicTaskSpec.swift
++++ b/Sources/SWBTaskExecution/DynamicTaskSpecs/SwiftDriverJobDynamicTaskSpec.swift
+@@ -242,7 +242,7 @@ final class SwiftDriverJobDynamicTaskSpec: DynamicTaskSpec {
+         // rdar://91295617 (Swift produces empty serialized diagnostics if there are none which is not parseable by clang_loadDiagnostics)
+         return expectedDiagnostics.filter { filePath in
+             do {
+-                let shouldAdd = try fs.exists(filePath) && (try fs.getFileSize(filePath)) > 0
++                let shouldAdd = try fs.exists(filePath) && (try fs.getFileSize(filePath)) > .zero
+                 return shouldAdd
+             } catch {
+                 return false
+diff --git a/Sources/SWBUtil/ByteCount.swift b/Sources/SWBUtil/ByteCount.swift
+new file mode 100644
+index 0000000..feadcdd
+--- /dev/null
++++ b/Sources/SWBUtil/ByteCount.swift
+@@ -0,0 +1,93 @@
++//===----------------------------------------------------------------------===//
++//
++// This source file is part of the Swift open source project
++//
++// Copyright (c) 2025 Apple Inc. and the Swift project authors
++// Licensed under Apache License v2.0 with Runtime Library Exception
++//
++// See http://swift.org/LICENSE.txt for license information
++// See http://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
++//
++//===----------------------------------------------------------------------===//
++
++public struct ByteCount: Hashable, Sendable {
++    public var count: Int64
++
++    public init?(_ count: Int64?) {
++        guard let count else { return nil }
++        self.count = count
++    }
++
++    public init(_ count: Int64) {
++        self.count = count
++    }
++}
++
++extension ByteCount: Codable {
++    public init(from decoder: any Swift.Decoder) throws {
++        self.count = try .init(from: decoder)
++    }
++
++    public func encode(to encoder: any Swift.Encoder) throws {
++        try self.count.encode(to: encoder)
++    }
++}
++
++extension ByteCount: Serializable {
++    public init(from deserializer: any Deserializer) throws {
++        self.count = try .init(from: deserializer)
++    }
++
++    public func serialize<T>(to serializer: T) where T : Serializer {
++        self.count.serialize(to: serializer)
++    }
++}
++
++extension ByteCount: Comparable {
++    public static func < (lhs: ByteCount, rhs: ByteCount) -> Bool {
++        lhs.count < rhs.count
++    }
++}
++
++extension ByteCount: AdditiveArithmetic {
++    public static var zero: ByteCount {
++        Self(0)
++    }
++
++    public static func + (lhs: ByteCount, rhs: ByteCount) -> ByteCount {
++        Self(lhs.count + rhs.count)
++    }
++
++    public static func - (lhs: ByteCount, rhs: ByteCount) -> ByteCount {
++        Self(lhs.count - rhs.count)
++    }
++}
++
++extension ByteCount: CustomStringConvertible {
++    public var description: String {
++        "\(count) bytes"
++    }
++}
++
++extension ByteCount {
++    private static let kb = Int64(1024)
++    private static let mb = kb * 1024
++    private static let gb = mb * 1024
++    private static let tb = gb * 1024
++
++    public static func kilobytes(_ count: Int64) -> Self {
++        Self(kb * count)
++    }
++
++    public static func megabytes(_ count: Int64) -> Self {
++        Self(mb * count)
++    }
++
++    public static func gigabytes(_ count: Int64) -> Self {
++        Self(gb * count)
++    }
++
++    public static func terabytes(_ count: Int64) -> Self {
++        Self(tb * count)
++    }
++}
+diff --git a/Sources/SWBUtil/CMakeLists.txt b/Sources/SWBUtil/CMakeLists.txt
+index 9fa533e..91348fd 100644
+--- a/Sources/SWBUtil/CMakeLists.txt
++++ b/Sources/SWBUtil/CMakeLists.txt
+@@ -19,6 +19,7 @@ add_library(SWBUtil
+   AsyncOperationQueue.swift
+   AsyncSingleValueCache.swift
+   AsyncStreamController.swift
++  ByteCount.swift
+   ByteString.swift
+   Cache.swift
+   Collection.swift
+diff --git a/Sources/SWBUtil/FSProxy.swift b/Sources/SWBUtil/FSProxy.swift
+index 974bc66..adf69e3 100644
+--- a/Sources/SWBUtil/FSProxy.swift
++++ b/Sources/SWBUtil/FSProxy.swift
+@@ -255,7 +255,7 @@ public protocol FSProxy: AnyObject, Sendable {
+     func isOnPotentiallyRemoteFileSystem(_ path: Path) -> Bool
+ 
+     /// Returns the free disk space of the volume of `path` in bytes, or `nil` if the underlying FS implementation doesn't support this.
+-    func getFreeDiskSpace(_ path: Path) throws -> Int?
++    func getFreeDiskSpace(_ path: Path) throws -> ByteCount?
+ }
+ 
+ public extension FSProxy {
+@@ -287,7 +287,7 @@ public extension FSProxy {
+         return false
+     }
+ 
+-    func getFreeDiskSpace(_ path: Path) throws -> Int? {
++    func getFreeDiskSpace(_ path: Path) throws -> ByteCount? {
+         return nil
+     }
+ 
+@@ -296,8 +296,8 @@ public extension FSProxy {
+         return isSymlink(path, &exists)
+     }
+ 
+-    func getFileSize(_ path: Path) throws -> Int64 {
+-        try Int64(getFileInfo(path).statBuf.st_size)
++    func getFileSize(_ path: Path) throws -> ByteCount {
++        try ByteCount(Int64(getFileInfo(path).statBuf.st_size))
+     }
+ }
+ 
+@@ -860,12 +860,12 @@ class LocalFS: FSProxy, @unchecked Sendable {
+         #endif
+     }
+ 
+-    func getFreeDiskSpace(_ path: Path) throws -> Int? {
++    func getFreeDiskSpace(_ path: Path) throws -> ByteCount? {
+         let systemAttributes = try fileManager.attributesOfFileSystem(forPath: path.str)
+         guard let freeSpace = (systemAttributes[FileAttributeKey.systemFreeSize] as? NSNumber)?.int64Value else {
+             return nil
+         }
+-        return Int(freeSpace)
++        return ByteCount(freeSpace)
+     }
+ }
+ 
