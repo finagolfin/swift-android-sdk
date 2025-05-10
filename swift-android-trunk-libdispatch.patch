@@ -1,0 +1,12 @@
+diff --git a/swift-corelibs-libdispatch/src/swift/CMakeLists.txt b/swift-corelibs-libdispatch/src/swift/CMakeLists.txt
+index 38bef37..d0ddf98 100644
+--- a/swift-corelibs-libdispatch/src/swift/CMakeLists.txt
++++ b/swift-corelibs-libdispatch/src/swift/CMakeLists.txt
+@@ -15,6 +15,7 @@ add_library(swiftDispatch
+   Source.swift
+   Time.swift
+   Wrapper.swift)
++set(CMAKE_SHARED_LINKER_FLAGS "")
+ target_compile_options(swiftDispatch PRIVATE
+   "SHELL:-Xcc -fblocks"
+   "SHELL:-Xcc -fmodule-map-file=${PROJECT_SOURCE_DIR}/dispatch/module.modulemap"

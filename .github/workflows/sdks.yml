@@ -132,6 +132,8 @@ jobs:
           else
             if ${{ matrix.version == 'devel' }}; then
               git apply swift-android-ci-devel.patch
+            else
+              git apply swift-android-trunk-libdispatch.patch
             fi
             git apply -C2 swift-android-ci-except-release.patch swift-android-testing-except-release.patch
             SDK_NAME=$(ls | grep swift-${{ matrix.version }}-android-aarch64)
