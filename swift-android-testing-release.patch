@@ -11,6 +11,19 @@ index b6bfa5760ef..324d1a77eea 100644
  
      def _cmake_product(self, host_target):
          build_root = os.path.dirname(self.build_dir)
+diff --git a/swift-corelibs-foundation/Sources/CoreFoundation/CFPlatform.c b/swift-corelibs-foundation/Sources/CoreFoundation/CFPlatform.c
+index 90f4aa78..0429425b 100644
+--- a/swift-corelibs-foundation/Sources/CoreFoundation/CFPlatform.c
++++ b/swift-corelibs-foundation/Sources/CoreFoundation/CFPlatform.c
+@@ -2279,7 +2279,7 @@ CF_EXPORT int _CFPosixSpawnFileActionsAddClose(_CFPosixSpawnFileActionsRef file_
+ }
+ 
+ CF_EXPORT int _CFPosixSpawnFileActionsChdir(_CFPosixSpawnFileActionsRef file_actions, const char *path) {
+-  #if defined(__GLIBC__) && !__GLIBC_PREREQ(2, 29)
++  #if defined(__GLIBC__) && !__GLIBC_PREREQ(2, 29) || (defined(__ANDROID__) && __ANDROID_API__ < 34)
+   // Glibc versions prior to 2.29 don't support posix_spawn_file_actions_addchdir_np, impacting:
+   //  - Amazon Linux 2 (EoL mid-2025)
+   return ENOSYS;
 diff --git a/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift b/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift
 index 78227e3..e0db2e9 100644
 --- a/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift

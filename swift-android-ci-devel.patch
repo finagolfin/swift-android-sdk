@@ -6,10 +6,10 @@ Date:   Thu May 1 18:36:26 2025 -0700
     
     Rather than inconsistently using Int and Int64 throughout the codebase.
 
-diff --git a/swift-build/Sources/SWBCore/LibclangVendored/Libclang.swift b/Sources/SWBCore/LibclangVendored/Libclang.swift
+diff --git a/swift-build/Sources/SWBCore/LibclangVendored/Libclang.swift b/swift-build/Sources/SWBCore/LibclangVendored/Libclang.swift
 index de0c6a8..d65d8ed 100644
---- a/Sources/SWBCore/LibclangVendored/Libclang.swift
-+++ b/Sources/SWBCore/LibclangVendored/Libclang.swift
+--- a/swift-build/Sources/SWBCore/LibclangVendored/Libclang.swift
++++ b/swift-build/Sources/SWBCore/LibclangVendored/Libclang.swift
 @@ -470,7 +470,7 @@ public final class ClangCASDatabases {
          libclang_casdatabases_dispose(dbs)
      }
@@ -35,10 +35,10 @@ index de0c6a8..d65d8ed 100644
              error = .operationFailed(String(cString: c_error!))
          })
          if let error {
-diff --git a/Sources/SWBCore/Settings/CASOptions.swift b/Sources/SWBCore/Settings/CASOptions.swift
+diff --git a/swift-build/Sources/SWBCore/Settings/CASOptions.swift b/swift-build/Sources/SWBCore/Settings/CASOptions.swift
 index 27acbad..a6b7c8d 100644
---- a/Sources/SWBCore/Settings/CASOptions.swift
-+++ b/Sources/SWBCore/Settings/CASOptions.swift
+--- a/swift-build/Sources/SWBCore/Settings/CASOptions.swift
++++ b/swift-build/Sources/SWBCore/Settings/CASOptions.swift
 @@ -34,7 +34,7 @@ public struct CASOptions: Hashable, Serializable, Encodable, Sendable {
          /// Cache directory is removed after the build is finished.
          case discarded
@@ -96,10 +96,10 @@ index 27acbad..a6b7c8d 100644
              }
  
              let sizeLimitStr = scope.evaluate(BuiltinMacros.COMPILATION_CACHE_LIMIT_SIZE)
-diff --git a/Sources/SWBTaskExecution/DynamicTaskSpecs/CompilationCachingDataPruner.swift b/Sources/SWBTaskExecution/DynamicTaskSpecs/CompilationCachingDataPruner.swift
+diff --git a/swift-build/Sources/SWBTaskExecution/DynamicTaskSpecs/CompilationCachingDataPruner.swift b/swift-build/Sources/SWBTaskExecution/DynamicTaskSpecs/CompilationCachingDataPruner.swift
 index cd6c44d..6b9a294 100644
---- a/Sources/SWBTaskExecution/DynamicTaskSpecs/CompilationCachingDataPruner.swift
-+++ b/Sources/SWBTaskExecution/DynamicTaskSpecs/CompilationCachingDataPruner.swift
+--- a/swift-build/Sources/SWBTaskExecution/DynamicTaskSpecs/CompilationCachingDataPruner.swift
++++ b/swift-build/Sources/SWBTaskExecution/DynamicTaskSpecs/CompilationCachingDataPruner.swift
 @@ -112,7 +112,7 @@ package final class CompilationCachingDataPruner: Sendable {
              { activityID in
                  let status: BuildOperationTaskEnded.Status
@@ -178,10 +178,10 @@ index cd6c44d..6b9a294 100644
 +        return ByteCount(availableSpace.count * Int64(percent) / 100)
      }
  }
-diff --git a/Sources/SWBTaskExecution/DynamicTaskSpecs/SwiftDriverJobDynamicTaskSpec.swift b/Sources/SWBTaskExecution/DynamicTaskSpecs/SwiftDriverJobDynamicTaskSpec.swift
+diff --git a/swift-build/Sources/SWBTaskExecution/DynamicTaskSpecs/SwiftDriverJobDynamicTaskSpec.swift b/swift-build/Sources/SWBTaskExecution/DynamicTaskSpecs/SwiftDriverJobDynamicTaskSpec.swift
 index e01273b..127e304 100644
---- a/Sources/SWBTaskExecution/DynamicTaskSpecs/SwiftDriverJobDynamicTaskSpec.swift
-+++ b/Sources/SWBTaskExecution/DynamicTaskSpecs/SwiftDriverJobDynamicTaskSpec.swift
+--- a/swift-build/Sources/SWBTaskExecution/DynamicTaskSpecs/SwiftDriverJobDynamicTaskSpec.swift
++++ b/swift-build/Sources/SWBTaskExecution/DynamicTaskSpecs/SwiftDriverJobDynamicTaskSpec.swift
 @@ -242,7 +242,7 @@ final class SwiftDriverJobDynamicTaskSpec: DynamicTaskSpec {
          // rdar://91295617 (Swift produces empty serialized diagnostics if there are none which is not parseable by clang_loadDiagnostics)
          return expectedDiagnostics.filter { filePath in
@@ -191,11 +191,11 @@ index e01273b..127e304 100644
                  return shouldAdd
              } catch {
                  return false
-diff --git a/Sources/SWBUtil/ByteCount.swift b/Sources/SWBUtil/ByteCount.swift
+diff --git a/swift-build/Sources/SWBUtil/ByteCount.swift b/swift-build/Sources/SWBUtil/ByteCount.swift
 new file mode 100644
 index 0000000..feadcdd
 --- /dev/null
-+++ b/Sources/SWBUtil/ByteCount.swift
++++ b/swift-build/Sources/SWBUtil/ByteCount.swift
 @@ -0,0 +1,93 @@
 +//===----------------------------------------------------------------------===//
 +//
@@ -290,10 +290,10 @@ index 0000000..feadcdd
 +        Self(tb * count)
 +    }
 +}
-diff --git a/Sources/SWBUtil/CMakeLists.txt b/Sources/SWBUtil/CMakeLists.txt
+diff --git a/swift-build/Sources/SWBUtil/CMakeLists.txt b/swift-build/Sources/SWBUtil/CMakeLists.txt
 index 9fa533e..91348fd 100644
---- a/Sources/SWBUtil/CMakeLists.txt
-+++ b/Sources/SWBUtil/CMakeLists.txt
+--- a/swift-build/Sources/SWBUtil/CMakeLists.txt
++++ b/swift-build/Sources/SWBUtil/CMakeLists.txt
 @@ -19,6 +19,7 @@ add_library(SWBUtil
    AsyncOperationQueue.swift
    AsyncSingleValueCache.swift
@@ -302,10 +302,10 @@ index 9fa533e..91348fd 100644
    ByteString.swift
    Cache.swift
    Collection.swift
-diff --git a/Sources/SWBUtil/FSProxy.swift b/Sources/SWBUtil/FSProxy.swift
+diff --git a/swift-build/Sources/SWBUtil/FSProxy.swift b/swift-build/Sources/SWBUtil/FSProxy.swift
 index 974bc66..adf69e3 100644
---- a/Sources/SWBUtil/FSProxy.swift
-+++ b/Sources/SWBUtil/FSProxy.swift
+--- a/swift-build/Sources/SWBUtil/FSProxy.swift
++++ b/swift-build/Sources/SWBUtil/FSProxy.swift
 @@ -255,7 +255,7 @@ public protocol FSProxy: AnyObject, Sendable {
      func isOnPotentiallyRemoteFileSystem(_ path: Path) -> Bool
  
