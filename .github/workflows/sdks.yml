@@ -130,9 +130,7 @@ jobs:
             LSP_BUILD="--sourcekit-lsp"
             git apply swift-android-ci-release.patch swift-android-testing-release.patch
           else
-            if ${{ matrix.version == 'devel' }}; then
-              git apply swift-android-ci-devel.patch
-            else
+            if ${{ matrix.version == 'trunk' }}; then
               git apply swift-android-trunk-libdispatch.patch
             fi
             git apply -C2 swift-android-ci-except-release.patch swift-android-testing-except-release.patch
