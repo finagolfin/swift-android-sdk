@@ -15,6 +15,26 @@ diff --git a/swift-corelibs-foundation/Sources/CoreFoundation/CFPlatform.c b/swi
 index 90f4aa78..0429425b 100644
 --- a/swift-corelibs-foundation/Sources/CoreFoundation/CFPlatform.c
 +++ b/swift-corelibs-foundation/Sources/CoreFoundation/CFPlatform.c
+@@ -1948,7 +1948,7 @@ CF_CROSS_PLATFORM_EXPORT void *_CFReallocf(void *ptr, size_t size) {
+ #endif
+ }
+ 
+-#if TARGET_OS_ANDROID
++#if TARGET_OS_ANDROID && __ANDROID_API__ < 28
+ 
+ #include <dlfcn.h>
+ #include <spawn.h>
+@@ -2277,6 +2277,10 @@ CF_EXPORT int _CFPosixSpawnFileActionsAddClose(_CFPosixSpawnFileActionsRef file_
+     return _CFPosixSpawnFileActionsAddCloseImpl(file_actions, filedes);
+ }
+ 
++CF_EXPORT int _CFPosixSpawnFileActionsChdir(_CFPosixSpawnFileActionsRef file_actions, const char *path) {
++  return ENOSYS;
++}
++
+ CF_EXPORT int _CFPosixSpawn(pid_t *_CF_RESTRICT pid, const char *_CF_RESTRICT path, _CFPosixSpawnFileActionsRef file_actions, _CFPosixSpawnAttrRef _Nullable _CF_RESTRICT attrp, char *_Nullable const argv[_Nullable _CF_RESTRICT], char *_Nullable const envp[_Nullable _CF_RESTRICT]) {
+     _CFPosixSpawnInitialize();
+     return _CFPosixSpawnImpl(pid, path, file_actions, attrp, argv, envp);
 @@ -2279,7 +2279,7 @@ CF_EXPORT int _CFPosixSpawnFileActionsAddClose(_CFPosixSpawnFileActionsRef file_
  }
  

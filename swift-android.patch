@@ -59,30 +59,6 @@ index 7f290d16..95366592 100644
  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-diff --git a/swift-corelibs-foundation/Sources/CoreFoundation/CFPlatform.c b/swift-corelibs-foundation/Sources/CoreFoundation/CFPlatform.c
-index 5769a331..238f2ecb 100644
---- a/swift-corelibs-foundation/Sources/CoreFoundation/CFPlatform.c
-+++ b/swift-corelibs-foundation/Sources/CoreFoundation/CFPlatform.c
-@@ -1948,7 +1948,7 @@ CF_CROSS_PLATFORM_EXPORT void *_CFReallocf(void *ptr, size_t size) {
- #endif
- }
- 
--#if TARGET_OS_ANDROID
-+#if TARGET_OS_ANDROID && __ANDROID_API__ < 28
- 
- #include <dlfcn.h>
- #include <spawn.h>
-@@ -2277,6 +2277,10 @@ CF_EXPORT int _CFPosixSpawnFileActionsAddClose(_CFPosixSpawnFileActionsRef file_
-     return _CFPosixSpawnFileActionsAddCloseImpl(file_actions, filedes);
- }
- 
-+CF_EXPORT int _CFPosixSpawnFileActionsChdir(_CFPosixSpawnFileActionsRef file_actions, const char *path) {
-+  return ENOSYS;
-+}
-+
- CF_EXPORT int _CFPosixSpawn(pid_t *_CF_RESTRICT pid, const char *_CF_RESTRICT path, _CFPosixSpawnFileActionsRef file_actions, _CFPosixSpawnAttrRef _Nullable _CF_RESTRICT attrp, char *_Nullable const argv[_Nullable _CF_RESTRICT], char *_Nullable const envp[_Nullable _CF_RESTRICT]) {
-     _CFPosixSpawnInitialize();
-     return _CFPosixSpawnImpl(pid, path, file_actions, attrp, argv, envp);
 diff --git a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt b/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
 index 016bf294..5c42986a 100644
 --- a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
