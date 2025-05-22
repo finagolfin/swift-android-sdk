@@ -367,7 +367,6 @@ jobs:
           path: swift-system
       - name: Build Swift System package
         run: |
-          git apply sdk-config/swift-system-tests.patch
           cd swift-system
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
