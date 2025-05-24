@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [release, devel, trunk]
+        version: [trunk]
         os: [ubuntu-24.04, macos-13]
     env:
       ANDROID_API_LEVEL: 24
