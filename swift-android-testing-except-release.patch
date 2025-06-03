@@ -13,24 +13,6 @@ index 468dc61..a90ae3d 100644
  endif()
  execute_process(COMMAND ${print_target_info_invocation} OUTPUT_VARIABLE target_info_json)
  message(CONFIGURE_LOG "Swift Target Info: ${print_target_info_invocation}\n"
-diff --git a/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift b/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift
-index 78227e3..e0db2e9 100644
---- a/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift
-+++ b/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift
-@@ -65,11 +65,11 @@ public struct Backtrace: Sendable {
-       } else {
-         initializedCount = .init(clamping: backtrace(addresses.baseAddress!, .init(clamping: addresses.count)))
-       }
--#elseif os(Android)
-+#elseif os(Androi)
-       initializedCount = addresses.withMemoryRebound(to: UnsafeMutableRawPointer.self) { addresses in
-         .init(clamping: backtrace(addresses.baseAddress!, .init(clamping: addresses.count)))
-       }
--#elseif os(Linux) || os(FreeBSD) || os(OpenBSD)
-+#elseif os(Linux) || os(FreeBSD) || os(OpenBSD) || os(Android)
-       initializedCount = .init(clamping: backtrace(addresses.baseAddress!, .init(clamping: addresses.count)))
- #elseif os(Windows)
-       initializedCount = Int(clamping: RtlCaptureStackBackTrace(0, ULONG(clamping: addresses.count), addresses.baseAddress!, nil))
 diff --git a/swift-testing/cmake/modules/PlatformInfo.cmake b/swift-testing/cmake/modules/PlatformInfo.cmake
 index 94c60ef..ab8a491 100644
 --- a/swift-testing/cmake/modules/PlatformInfo.cmake

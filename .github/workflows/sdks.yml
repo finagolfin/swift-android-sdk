@@ -31,7 +31,7 @@ jobs:
             SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
           fi
           echo "tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
-          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-parch-bundle" >> $GITHUB_OUTPUT
+          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-bt-bundle" >> $GITHUB_OUTPUT
       - name: Get cached SDK bundle
         id: cache-bundle
         uses: actions/cache/restore@v4
@@ -137,7 +137,7 @@ jobs:
             fi
             git apply -C2 swift-android-ci-except-release.patch swift-android-testing-except-release.patch
             SDK_NAME=$(ls | grep swift-${{ matrix.version }}-android-aarch64)
-            cp $SDK_NAME/usr/include/execinfo.h $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include
+            perl -pi -e 's%33%24%' $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/execinfo.h
           fi
 
           perl -pi -e 's%String\(cString: getpass%\"fake\" //%' swiftpm/Sources/PackageRegistryCommand/PackageRegistryCommand+Auth.swift
@@ -158,6 +158,10 @@ jobs:
             fi
             SDK_NAME=$(ls | grep swift-${{ matrix.version }}-android-$arch)
             SDK=`pwd`/$SDK_NAME
+
+            # Patch the NDK execinfo.h to work with the backported libandroid-execinfo
+            cp $SYSROOT/usr/include/execinfo.h ${SDK_NAME}/usr/include
+            perl -pi -e 's%33%24%' ${SDK_NAME}/usr/include/execinfo.h
 
             ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_HOME --android-arch $arch --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=${TOOLCHAIN}/bin --native-clang-tools-path=${TOOLCHAIN}/bin --cross-compile-hosts=android-$arch --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='compiler;clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b --install-llbuild --swift-testing --install-swift-testing -p $LSP_BUILD
 

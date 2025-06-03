@@ -44,24 +44,6 @@ index 90f4aa78..0429425b 100644
    // Glibc versions prior to 2.29 don't support posix_spawn_file_actions_addchdir_np, impacting:
    //  - Amazon Linux 2 (EoL mid-2025)
    return ENOSYS;
-diff --git a/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift b/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift
-index 78227e3..e0db2e9 100644
---- a/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift
-+++ b/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift
-@@ -65,11 +65,11 @@ public struct Backtrace: Sendable {
-       } else {
-         initializedCount = .init(clamping: backtrace(addresses.baseAddress!, .init(clamping: addresses.count)))
-       }
--#elseif os(Android)
-+#elseif os(Androi)
-       initializedCount = addresses.withMemoryRebound(to: UnsafeMutableRawPointer.self) { addresses in
-         .init(clamping: backtrace(addresses.baseAddress!, .init(clamping: addresses.count)))
-       }
--#elseif os(Linux) || os(FreeBSD)
-+#elseif os(Linux) || os(FreeBSD) || os(Android)
-       initializedCount = .init(clamping: backtrace(addresses.baseAddress!, .init(clamping: addresses.count)))
- #elseif os(Windows)
-       initializedCount = Int(clamping: RtlCaptureStackBackTrace(0, ULONG(clamping: addresses.count), addresses.baseAddress!, nil))
 diff --git a/swift-testing/cmake/modules/SwiftModuleInstallation.cmake b/swift-testing/cmake/modules/SwiftModuleInstallation.cmake
 index 1553725..d9f9e5b 100644
 --- a/swift-testing/cmake/modules/SwiftModuleInstallation.cmake
