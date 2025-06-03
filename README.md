@@ -56,13 +56,13 @@ one depends on the example executables `color`, `generate-manual`, `math`,
 point at test data in the repo: I've had success moving this data with the test
 runner, after modifying the test source so it has the path to this test data in
 the Android test environment. See the example of [swift-crypto on the
-CI](https://github.com/finagolfin/swift-android-sdk/blob/6.1.2/.github/workflows/sdks.yml#L517).
+CI](https://github.com/finagolfin/swift-android-sdk/blob/6.1.2/.github/workflows/sdks.yml#L521).
 
 You can copy these executables and the Swift runtime libraries to [an emulator
 or a USB debugging-enabled device with adb](https://github.com/swiftlang/swift/blob/release/6.1/docs/Android.md#3-deploying-the-build-products-to-the-device),
 or put them on an Android device with [a terminal emulator app like Termux](https://termux.dev/en/).
 I test aarch64 with Termux so I'll show how to run the test runner there, but
-the process is similar with adb, [as can be seen on the CI](https://github.com/finagolfin/swift-android-sdk/blob/6.1.2/.github/workflows/sdks.yml#L465).
+the process is similar with adb, [as can be seen on the CI](https://github.com/finagolfin/swift-android-sdk/blob/6.1.2/.github/workflows/sdks.yml#L469).
 
 Copy the test executables to the same directory as the Swift 6.1.2 runtime libraries:
 ```
