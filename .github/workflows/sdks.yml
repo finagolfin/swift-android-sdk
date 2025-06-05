@@ -138,6 +138,7 @@ jobs:
             git apply -C2 swift-android-ci-except-release.patch swift-android-testing-except-release.patch
             SDK_NAME=$(ls | grep swift-${{ matrix.version }}-android-aarch64)
             perl -pi -e 's%33%24%' $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/execinfo.h
+            perl -pi -e "s%swift/android',%swift/android', '-Xlinker', '-landroid-spawn',%" sourcekit-lsp/Utilities/build-script-helper.py
           fi
 
           perl -pi -e 's%String\(cString: getpass%\"fake\" //%' swiftpm/Sources/PackageRegistryCommand/PackageRegistryCommand+Auth.swift
