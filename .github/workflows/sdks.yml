@@ -125,12 +125,14 @@ jobs:
           ANDROID_ARCH=aarch64 BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
 
           git apply -C1 swift-android.patch swift-android-ci.patch
+          BUILD_FLAG="--build-swift-tools=0"
           if ${{ matrix.version == 'release' }}; then
             perl -pi -e 's%r26%ndk/27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
             LSP_BUILD="--sourcekit-lsp"
             git apply swift-android-ci-release.patch swift-android-testing-release.patch
           else
             if ${{ matrix.version == 'trunk' }}; then
+              BUILD_FLAG="--cross-compile-build-swift-tools=0"
               git apply swift-android-trunk-libdispatch.patch
             else
               git apply swift-android-devel.patch
@@ -164,7 +166,7 @@ jobs:
             cp $SYSROOT/usr/include/execinfo.h ${SDK_NAME}/usr/include
             perl -pi -e 's%33%24%' ${SDK_NAME}/usr/include/execinfo.h
 
-            ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_HOME --android-arch $arch --android-api-level $ANDROID_API_LEVEL --build-swift-tools=0 --native-swift-tools-path=${TOOLCHAIN}/bin --native-clang-tools-path=${TOOLCHAIN}/bin --cross-compile-hosts=android-$arch --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='compiler;clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b --install-llbuild --swift-testing --install-swift-testing -p $LSP_BUILD
+            ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_HOME --android-arch $arch --android-api-level $ANDROID_API_LEVEL --native-swift-tools-path=${TOOLCHAIN}/bin --native-clang-tools-path=${TOOLCHAIN}/bin --cross-compile-hosts=android-$arch --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='compiler;clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False -b --install-llbuild --swift-testing --install-swift-testing -p $BUILD_FLAG $LSP_BUILD
 
             rm $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/swift
 

@@ -1,3 +1,25 @@
+diff --git a/swift/utils/build-script-impl b/swift/utils/build-script-impl
+index 890fc5e1419..a9bdd7f8842 100755
+--- a/swift/utils/build-script-impl
++++ b/swift/utils/build-script-impl
+@@ -2331,7 +2331,7 @@ for host in "${ALL_HOSTS[@]}"; do
+                     continue
+                 fi
+ 
+-                if [[ "${BUILD_SWIFT_TOOLS}" == "0" ]]; then
++                if [[ "${CROSS_COMPILE_BUILD_SWIFT_TOOLS}" == "0" ]]; then
+                     echo "Skipping building Foundation Macros for ${host}, because the host tools are not being built"
+                     continue
+                 fi
+@@ -2920,7 +2920,7 @@ for host in "${ALL_HOSTS[@]}"; do
+                     continue
+                 fi
+ 
+-                if [[ "${BUILD_SWIFT_TOOLS}" == "0" && "${product}" == "foundation_macros" ]]; then
++                if [[ "${CROSS_COMPILE_BUILD_SWIFT_TOOLS}" == "0" && "${product}" == "foundation_macros" ]]; then
+                     echo "Skipping installing Foundation Macros for ${host}, because the host tools are not being built"
+                     continue
+                 fi
 diff --git a/swift-corelibs-libdispatch/cmake/modules/SwiftSupport.cmake b/swift-corelibs-libdispatch/cmake/modules/SwiftSupport.cmake
 index 3da519e..e2dd8ed 100644
 --- a/swift-corelibs-libdispatch/cmake/modules/SwiftSupport.cmake
