@@ -11,6 +11,21 @@ index 2135ce6..fbff6f6 100644
  #else
  public import SWBLibc
  #endif
+diff --git a/swiftpm/Sources/swift-build-prebuilts/BuildPrebuilts.swift b/swiftpm/Sources/swift-build-prebuilts/BuildPrebuilts.swift
+index ffa6b7f3f..abe453232 100644
+--- a/swiftpm/Sources/swift-build-prebuilts/BuildPrebuilts.swift
++++ b/swiftpm/Sources/swift-build-prebuilts/BuildPrebuilts.swift
+@@ -24,6 +24,10 @@ import struct TSCBasic.ByteString
+ import struct TSCBasic.SHA256
+ import Workspace
+ 
++#if canImport(Android)
++import Android
++#endif
++
+ // Format for the .zip.json files.
+ struct Artifact: Codable {
+     var platform: Workspace.PrebuiltsManifest.Platform
 diff --git a/swiftpm/Utilities/bootstrap b/swiftpm/Utilities/bootstrap
 index 156bf002a..d891da556 100755
 --- a/swiftpm/Utilities/bootstrap
