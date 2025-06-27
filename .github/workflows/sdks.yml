@@ -134,7 +134,7 @@ jobs:
             if ${{ matrix.version == 'trunk' }}; then
               git apply swift-android-trunk-libdispatch.patch
             else
-              git apply swift-android-devel.patch swift-android-ci-devel.patch
+              git apply swift-android-ci-devel.patch
             fi
             git apply -C2 swift-android-ci-except-release.patch swift-android-testing-except-release.patch
             BUILD_FLAG="--cross-compile-build-swift-tools=0"
