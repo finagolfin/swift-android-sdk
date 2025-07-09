@@ -2,6 +2,16 @@ diff --git a/swift/utils/build-script-impl b/swift/utils/build-script-impl
 index 16e05052609..7ab8cebfab8 100755
 --- a/swift/utils/build-script-impl
 +++ b/swift/utils/build-script-impl
+@@ -828,6 +828,9 @@ function set_build_options_for_host() {
+     # and it must be the same for both LLVM and Swift
+ 
+     if [[ "${SWIFT_HOST_TRIPLE}" ]] ; then
++        SWIFT_TARGET_CMAKE_OPTIONS+=(
++            -DCMAKE_Swift_COMPILER_TARGET:STRING="${SWIFT_HOST_TRIPLE}"
++        )
+         llvm_cmake_options+=(
+             -DLLVM_HOST_TRIPLE:STRING="${SWIFT_HOST_TRIPLE}"
+         )
 @@ -2622,6 +2622,7 @@ for host in "${ALL_HOSTS[@]}"; do
                      echo "Cleaning the libdispatch build directory"
                      call rm -rf "${LIBDISPATCH_BUILD_DIR}"
@@ -24,15 +34,16 @@ index 324d1a77eea..e88601a8701 100644
  
  from . import cmake_product
  from . import product
-@@ -115,6 +117,22 @@ class SwiftTestingCMakeShim(cmake_product.CMakeProduct):
+@@ -115,6 +117,24 @@ class SwiftTestingCMakeShim(cmake_product.CMakeProduct):
          # FIXME: If we build macros for the builder, specify the path.
          self.cmake_options.define('SwiftTesting_MACRO', 'NO')
  
 +        if host_target.startswith('android') and self.is_cross_compile_target(host_target):
 +            host_config = HostSpecificConfiguration(host_target, self.args)
 +            self.cmake_options.extend(host_config.cmake_options)
-+            flags = '-target %s-unknown-linux-android%s ' % (self.args.android_arch,
-+                                                             self.args.android_api_level)
++            triple = '%s-unknown-linux-android%s' % (self.args.android_arch,
++                                                     self.args.android_api_level)
++            flags = '-target %s ' % (triple)
 +
 +            flags += '-resource-dir %s/lib/swift ' % (
 +                     self.host_install_destdir(host_target) + self.args.install_prefix)
@@ -41,6 +52,7 @@ index 324d1a77eea..e88601a8701 100644
 +            flags += '-sdk %s/sysroot ' % (ndk_path)
 +            flags += '-tools-directory %s/bin' % (ndk_path)
 +            self.cmake_options.define('CMAKE_Swift_FLAGS', flags)
++            self.cmake_options.define('CMAKE_Swift_COMPILER_TARGET', triple)
 +            self.cmake_options.define('CMAKE_CXX_COMPILER_WORKS', 'True')
 +            self.cmake_options.define('CMAKE_FIND_ROOT_PATH', self.args.cross_compile_deps_path)
 +
@@ -100,21 +112,6 @@ index 758dd1df..02970992 100644
          guard var spawnAttrs else {
              throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno),
                            userInfo: [NSURLErrorKey:self.executableURL!])
-diff --git a/swift-foundation/cmake/modules/SwiftFoundationSwiftSupport.cmake b/swift-foundation/cmake/modules/SwiftFoundationSwiftSupport.cmake
-index cbdfc2a..bb4121d 100644
---- a/swift-foundation/cmake/modules/SwiftFoundationSwiftSupport.cmake
-+++ b/swift-foundation/cmake/modules/SwiftFoundationSwiftSupport.cmake
-@@ -37,6 +37,10 @@ function(_swift_foundation_install_target module)
-     set(module_triple_command "${CMAKE_Swift_COMPILER}" -print-target-info)
-     if(CMAKE_Swift_COMPILER_TARGET)
-       list(APPEND module_triple_command -target ${CMAKE_Swift_COMPILER_TARGET})
-+    else()
-+      set(arg_list ${CMAKE_Swift_FLAGS})
-+      separate_arguments(arg_list)
-+      list(APPEND module_triple_command ${arg_list})
-     endif()
-     execute_process(COMMAND ${module_triple_command} OUTPUT_VARIABLE target_info_json)
-     string(JSON module_triple GET "${target_info_json}" "target" "moduleTriple")
 diff --git a/swift-testing/CMakeLists.txt b/swift-testing/CMakeLists.txt
 index 1be9a4b..bd7b1bd 100644
 --- a/swift-testing/CMakeLists.txt
@@ -143,18 +140,3 @@ index e40cb1b..ff2f920 100644
    endif()
    target_link_libraries(Testing PUBLIC
      Foundation)
-diff --git a/swift-testing/cmake/modules/TargetTriple.cmake b/swift-testing/cmake/modules/TargetTriple.cmake
-index e087cc4..02f3a95 100644
---- a/swift-testing/cmake/modules/TargetTriple.cmake
-+++ b/swift-testing/cmake/modules/TargetTriple.cmake
-@@ -10,6 +10,10 @@
- set(SWT_TARGET_INFO_COMMAND "${CMAKE_Swift_COMPILER}" -print-target-info)
- if(CMAKE_Swift_COMPILER_TARGET)
-   list(APPEND SWT_TARGET_INFO_COMMAND -target ${CMAKE_Swift_COMPILER_TARGET})
-+else()
-+      set(arg_list ${CMAKE_Swift_FLAGS})
-+      separate_arguments(arg_list)
-+      list(APPEND SWT_TARGET_INFO_COMMAND ${arg_list})
- endif()
- execute_process(COMMAND ${SWT_TARGET_INFO_COMMAND} OUTPUT_VARIABLE SWT_TARGET_INFO_JSON)
- string(JSON SWT_TARGET_TRIPLE GET "${SWT_TARGET_INFO_JSON}" "target" "unversionedTriple")

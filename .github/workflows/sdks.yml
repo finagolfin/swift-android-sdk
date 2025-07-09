@@ -31,7 +31,7 @@ jobs:
             SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
           fi
           echo "tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
-          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-bt-bundle" >> $GITHUB_OUTPUT
+          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-get-bundle" >> $GITHUB_OUTPUT
       - name: Get cached SDK bundle
         id: cache-bundle
         uses: actions/cache/restore@v4
@@ -136,7 +136,7 @@ jobs:
             else
               git apply swift-android-ci-devel.patch
             fi
-            git apply -C2 swift-android-ci-except-release.patch swift-android-testing-except-release.patch
+            git apply -C2 swift-android-ci-except-release.patch
             BUILD_FLAG="--cross-compile-build-swift-tools=0"
             SDK_NAME=$(ls | grep swift-${{ matrix.version }}-android-aarch64)
             perl -pi -e 's%33%24%' $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/execinfo.h
