@@ -5,7 +5,7 @@ index 016bf294..5c42986a 100644
 @@ -162,6 +162,10 @@ if(NOT BUILD_SHARED_LIBS)
          "SHELL:$<$<COMPILE_LANGUAGE:Swift>:-Xfrontend -public-autolink-library -Xfrontend _FoundationICU>")
      target_compile_options(Foundation PRIVATE
-         "SHELL:$<$<COMPILE_LANGUAGE:Swift>:-Xfrontend -public-autolink-library -Xfrontend $<$<PLATFORM_ID:Windows>:${CMAKE_STATIC_LIBRARY_PREFIX_Swift}>swiftSynchronization>")
+         "SHELL:$<$<COMPILE_LANGUAGE:Swift>:-Xfrontend -public-autolink-library -Xfrontend swiftSynchronization>")
 +    if(${CMAKE_SYSTEM_NAME} STREQUAL Android)
 +      target_compile_options(Foundation PRIVATE
 +          "SHELL:$<$<COMPILE_LANGUAGE:Swift>:-Xfrontend -public-autolink-library -Xfrontend android-spawn>")
@@ -13,15 +13,3 @@ index 016bf294..5c42986a 100644
  endif()
  
  if(dispatch_FOUND)
-diff --git a/swift-corelibs-libdispatch/src/swift/CMakeLists.txt b/swift-corelibs-libdispatch/src/swift/CMakeLists.txt
-index 38bef37..d0ddf98 100644
---- a/swift-corelibs-libdispatch/src/swift/CMakeLists.txt
-+++ b/swift-corelibs-libdispatch/src/swift/CMakeLists.txt
-@@ -15,6 +15,7 @@ add_library(swiftDispatch
-   Source.swift
-   Time.swift
-   Wrapper.swift)
-+set(CMAKE_SHARED_LINKER_FLAGS "")
- target_compile_options(swiftDispatch PRIVATE
-   "SHELL:-Xcc -fblocks"
-   "SHELL:-Xcc -fmodule-map-file=${PROJECT_SOURCE_DIR}/dispatch/module.modulemap"
