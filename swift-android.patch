@@ -2,16 +2,6 @@ diff --git a/swift/utils/build-script-impl b/swift/utils/build-script-impl
 index 16e05052609..7ab8cebfab8 100755
 --- a/swift/utils/build-script-impl
 +++ b/swift/utils/build-script-impl
-@@ -828,6 +828,9 @@ function set_build_options_for_host() {
-     # and it must be the same for both LLVM and Swift
- 
-     if [[ "${SWIFT_HOST_TRIPLE}" ]] ; then
-+        SWIFT_TARGET_CMAKE_OPTIONS+=(
-+            -DCMAKE_Swift_COMPILER_TARGET:STRING="${SWIFT_HOST_TRIPLE}"
-+        )
-         llvm_cmake_options+=(
-             -DLLVM_HOST_TRIPLE:STRING="${SWIFT_HOST_TRIPLE}"
-         )
 @@ -2622,6 +2622,7 @@ for host in "${ALL_HOSTS[@]}"; do
                      echo "Cleaning the libdispatch build directory"
                      call rm -rf "${LIBDISPATCH_BUILD_DIR}"
