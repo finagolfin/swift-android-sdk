@@ -15,7 +15,7 @@ jobs:
     env:
       ANDROID_API_LEVEL: 24
       BUNDLE_VERSION: 0.1
-      NDK_VERSION: 27c
+      NDK_VERSION: 27d
     steps:
       - name: Check for latest Swift ${{ matrix.version }} toolchain
         id: version
@@ -91,7 +91,7 @@ jobs:
         if: ${{ steps.cache-bundle.outputs.cache-hit != 'true' && steps.cache-ndk.outputs.cache-hit != 'true' && startsWith(matrix.os, 'ubuntu') }}
         run: |
           wget -q https://dl.google.com/android/repository/android-ndk-r$NDK_VERSION-linux.zip
-          if [ "$(sha1sum android-ndk-r$NDK_VERSION-linux.zip | cut -f1 -d" ")" != '090e8083a715fdb1a3e402d0763c388abb03fb4e' ]; then
+          if [ "$(sha1sum android-ndk-r$NDK_VERSION-linux.zip | cut -f1 -d" ")" != '22105e410cf29afcf163760cc95522b9fb981121' ]; then
             echo "NDK checksum didn't match"
             exit 1
           fi
@@ -281,7 +281,7 @@ jobs:
           cat > $BUNDLE_DIR/$SYSROOT/SDKSettings.json << EOF
           {
               "DisplayName": "Android NDK ${NDK_VERSION} sysroot with ${VERSION} runtime libraries for API ${ANDROID_API_LEVEL}",
-              "Version": "27.2.12479018",
+              "Version": "27.3.13750724",
               "VersionMap": {},
               "CanonicalName": "${VERSION}-android${ANDROID_API_LEVEL}"
           }
