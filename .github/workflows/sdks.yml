@@ -125,19 +125,21 @@ jobs:
           ANDROID_ARCH=aarch64 BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
 
           git apply -C1 swift-android.patch swift-android-ci.patch
+          BUILD_FLAG="--foundation-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS=''"
           if ${{ matrix.version == 'release' }}; then
             perl -pi -e 's%r26%ndk/27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
-            BUILD_FLAG="--build-swift-tools=0"
+            BUILD_FLAG+=" --build-swift-tools=0"
             LSP_BUILD="--sourcekit-lsp"
             git apply swift-android-ci-release.patch swift-android-testing-release.patch
           else
             if ${{ matrix.version == 'trunk' }}; then
               git apply swift-android-trunk-libdispatch.patch
+              BUILD_FLAG+=" --libdispatch-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS=''"
             else
               git apply swift-android-ci-devel.patch swift-android-devel.patch
             fi
             git apply -C2 swift-android-ci-except-release.patch
-            BUILD_FLAG="--cross-compile-build-swift-tools=0"
+            BUILD_FLAG+=" --cross-compile-build-swift-tools=0"
             SDK_NAME=$(ls | grep swift-${{ matrix.version }}-android-aarch64)
             perl -pi -e 's%33%24%' $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/execinfo.h
           fi
