@@ -124,7 +124,7 @@ jobs:
 
           ANDROID_ARCH=aarch64 BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
 
-          git apply -C1 swift-android.patch swift-android-ci.patch
+          git apply -C1 swift-android.patch swift-android-ci.patch swift-android-16k-pages.patch
           BUILD_FLAG="--foundation-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS=''"
           if ${{ matrix.version == 'release' }}; then
             perl -pi -e 's%r26%ndk/27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
