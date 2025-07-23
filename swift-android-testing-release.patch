@@ -12,6 +12,31 @@ index 16e05052609..7ab8cebfab8 100755
          llvm_cmake_options+=(
              -DLLVM_HOST_TRIPLE:STRING="${SWIFT_HOST_TRIPLE}"
          )
+diff --git a/swift/utils/swift_build_support/swift_build_support/products/product.py b/swift/utils/swift_build_support/swift_build_support/products/product.py
+index e62eb23c8bb..d88c3c242ad 100644
+--- a/swift/utils/swift_build_support/swift_build_support/products/product.py
++++ b/swift/utils/swift_build_support/swift_build_support/products/product.py
+@@ -389,7 +395,7 @@ class Product(object):
+         sysroot_arch, vendor, abi = self.get_linux_target_components(arch)
+         return '{}-{}-linux-{}'.format(sysroot_arch, vendor, abi)
+ 
+-    def generate_linux_toolchain_file(self, platform, arch):
++    def generate_linux_toolchain_file(self, platform, arch, crosscompiling=True):
+         """
+         Generates a new CMake tolchain file that specifies Linux as a target
+         platform.
+@@ -402,8 +408,9 @@ class Product(object):
+ 
+         toolchain_args = {}
+ 
+-        toolchain_args['CMAKE_SYSTEM_NAME'] = 'Linux'
+-        toolchain_args['CMAKE_SYSTEM_PROCESSOR'] = arch
++        if crosscompiling:
++            toolchain_args['CMAKE_SYSTEM_NAME'] = 'Linux'
++            toolchain_args['CMAKE_SYSTEM_PROCESSOR'] = arch
+ 
+         # We only set the actual sysroot if we are actually cross
+         # compiling. This is important since otherwise cmake seems to change the
 diff --git a/swift/utils/swift_build_support/swift_build_support/products/swift_testing.py b/swift/utils/swift_build_support/swift_build_support/products/swift_testing.py
 index b6bfa5760ef..324d1a77eea 100644
 --- a/swift/utils/swift_build_support/swift_build_support/products/swift_testing.py

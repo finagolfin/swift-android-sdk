@@ -1,3 +1,28 @@
+diff --git a/swift/utils/swift_build_support/swift_build_support/products/product.py b/swift/utils/swift_build_support/swift_build_support/products/product.py
+index 47e7ab79905..d88c3c242ad 100644
+--- a/swift/utils/swift_build_support/swift_build_support/products/product.py
++++ b/swift/utils/swift_build_support/swift_build_support/products/product.py
+@@ -389,7 +395,7 @@ class Product(object):
+         sysroot_arch, vendor, abi = self.get_linux_target_components(arch)
+         return '{}-{}-linux-{}'.format(sysroot_arch, vendor, abi)
+ 
+-    def generate_linux_toolchain_file(self, platform, arch):
++    def generate_linux_toolchain_file(self, platform, arch, crosscompiling=True):
+         """
+         Generates a new CMake tolchain file that specifies Linux as a target
+         platform.
+@@ -402,8 +408,9 @@ class Product(object):
+ 
+         toolchain_args = {}
+ 
+-        toolchain_args['CMAKE_SYSTEM_NAME'] = 'Linux'
+-        toolchain_args['CMAKE_SYSTEM_PROCESSOR'] = arch
++        if crosscompiling:
++            toolchain_args['CMAKE_SYSTEM_NAME'] = 'Linux'
++            toolchain_args['CMAKE_SYSTEM_PROCESSOR'] = arch
+ 
+         # We only set the actual sysroot if we are actually cross
+         # compiling. This is important since otherwise cmake seems to change the
 diff --git a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt b/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
 index 016bf294..5c42986a 100644
 --- a/swift-corelibs-foundation/Sources/Foundation/CMakeLists.txt
