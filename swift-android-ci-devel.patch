@@ -1,3 +1,34 @@
+diff --git a/swift-argument-parser/Sources/ArgumentParser/Utilities/Platform.swift b/swift-argument-parser/Sources/ArgumentParser/Utilities/Platform.swift
+index b7fa046..a94e3b8 100644
+--- a/swift-argument-parser/Sources/ArgumentParser/Utilities/Platform.swift
++++ b/swift-argument-parser/Sources/ArgumentParser/Utilities/Platform.swift
+@@ -19,6 +19,8 @@ import Darwin
+ import CRT
+ #elseif canImport(WASILibc)
+ import WASILibc
++#elseif canImport(Android)
++import Android
+ #endif
+ 
+ enum Platform {}
+@@ -88,6 +90,8 @@ extension Platform {
+     ucrt._exit(code)
+ #elseif canImport(WASILibc)
+     WASILibc.exit(code)
++#elseif canImport(Android)
++    Android.exit(code)
+ #endif
+   }
+ }
+@@ -108,7 +112,7 @@ extension Platform {
+ 
+ // MARK: Terminal size
+ 
+-#if canImport(Glibc)
++#if canImport(Glibc) || canImport(Android)
+ func ioctl(_ a: Int32, _ b: Int32, _ p: UnsafeMutableRawPointer) -> Int32 {
+   ioctl(CInt(a), UInt(b), p)
+ }
 diff --git a/swift-build/Sources/SWBUtil/FSProxy.swift b/swift-build/Sources/SWBUtil/FSProxy.swift
 index b446d21..f88f3c3 100644
 --- a/swift-build/Sources/SWBUtil/FSProxy.swift
@@ -85,3 +116,17 @@ index b446d21..f88f3c3 100644
                  return createFileInfo(info)
              }
          }
+diff --git a/swift-crypto/Sources/Crypto/Key Derivation/HKDF.swift b/swift-crypto/Sources/Crypto/Key Derivation/HKDF.swift
+index 5f47c2f..4b5579e 100644
+--- a/swift-crypto/Sources/Crypto/Key Derivation/HKDF.swift
++++ b/swift-crypto/Sources/Crypto/Key Derivation/HKDF.swift
+@@ -15,6 +15,9 @@
+ @_exported import CryptoKit
+ #else
+ import Foundation
++#if canImport(Android)
++import Android
++#endif
+ 
+ /// A standards-based implementation of an HMAC-based Key Derivation Function
+ /// (HKDF).
