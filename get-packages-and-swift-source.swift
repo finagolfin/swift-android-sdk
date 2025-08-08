@@ -274,11 +274,7 @@ for repo in swiftRepos {
   print("Checking for \(repo) source")
   if !fmd.fileExists(atPath: cwd.appendingPathComponent(renameRepos[repo] ?? repo)) {
     print("Downloading and extracting \(repo) source")
-    var tag = repoTags[repo] ?? SWIFT_TAG
-    let noTagRepos = ["swift-experimental-string-processing", "swift-syntax", "swift-driver", "swift-tools-support-core", "indexstore-db", "swift-lmdb", "sourcekit-lsp", "swift-build"]
-    if noTagRepos.contains(repo) && swiftVersion == "" {
-      tag = "swift-DEVELOPMENT-SNAPSHOT-2025-08-04-a"
-    }
+    let tag = repoTags[repo] ?? SWIFT_TAG
     var repoOrg = "swiftlang"
     if repo == "Yams" {
       repoOrg = "jpsim"
