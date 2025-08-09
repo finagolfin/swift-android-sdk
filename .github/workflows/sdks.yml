@@ -12,6 +12,9 @@ jobs:
       matrix:
         version: [release, devel, trunk]
         os: [ubuntu-24.04, macos-13]
+        exclude:
+          - version: trunk
+            os: macos-13
     env:
       ANDROID_API_LEVEL: 24
       BUNDLE_VERSION: 0.1
