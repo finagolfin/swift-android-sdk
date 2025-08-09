@@ -12,9 +12,6 @@ jobs:
       matrix:
         version: [release, devel, trunk]
         os: [ubuntu-24.04, macos-13]
-        exclude:
-          - version: trunk
-            os: macos-13
     env:
       ANDROID_API_LEVEL: 24
       BUNDLE_VERSION: 0.1
@@ -34,7 +31,7 @@ jobs:
             SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
           fi
           echo "tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
-          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-test-bundle" >> $GITHUB_OUTPUT
+          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-sdk-bundle" >> $GITHUB_OUTPUT
       - name: Get cached SDK bundle
         id: cache-bundle
         uses: actions/cache/restore@v4
