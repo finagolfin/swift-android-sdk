@@ -358,6 +358,9 @@ jobs:
         run: |
           cd swift-nio
           git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem.patch
+          if ${{ startsWith(matrix.os, 'macos') }}; then
+            git apply -R ../sdk-config/swift-nio-revert.patch
+          fi
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
