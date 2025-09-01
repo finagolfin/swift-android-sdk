@@ -60,7 +60,7 @@ index c18e2c8e..65872fb9 100644
          let temporaryDirectory = try await FileSystem.shared.temporaryDirectory
 @@ -1013,7 +1012,7 @@ final class FileHandleTests: XCTestCase {
          try await handle.close()
-         let info = try await FileSystem.shared.info(forFileAt: path)
+         let info = try await FileSystem.shared.info(forFileAt: NIOFilePath(path))
          XCTAssertNotNil(info)
 -    }
 +    }*/
@@ -71,23 +71,24 @@ diff --git a/Tests/NIOFileSystemIntegrationTests/FileSystemTests.swift b/Tests/N
 index f24736a7..310d9691 100644
 --- a/Tests/NIOFileSystemIntegrationTests/FileSystemTests.swift
 +++ b/Tests/NIOFileSystemIntegrationTests/FileSystemTests.swift
-@@ -19,8 +19,8 @@ import NIOCore
- @_spi(Testing) @testable import _NIOFileSystem
+@@ -19,9 +19,8 @@ import NIOCore
+ import XCTest
  
- extension FilePath {
--    static let testData = FilePath(#filePath)
--        .removingLastComponent()  // FileHandleTests.swift
-+    static let testFile = FilePath("/data/data/com.termux/pack/FileHandleTests.swift")
-+    static let testData = FilePath("/data/data/com.termux/pack/")
-         .appending("Test Data")
-         .lexicallyNormalized()
- 
+ extension NIOFilePath {
+-    static let testData = NIOFilePath(
+-        FilePath(#filePath)
+-            .removingLastComponent()  // FileHandleTests.swift
++    static let testFile = NIOFilePath("/data/data/com.termux/pack/FileHandleTests.swift")
++    static let testData = NIOFilePath(FilePath("/data/data/com.termux/pack/")
+             .appending("Test Data")
+             .lexicallyNormalized()
+     )
 @@ -100,7 +100,7 @@ final class FileSystemTests: XCTestCase {
      }
  
      func testOpenFileWhereIntermediateIsNotADirectory() async throws {
--        let path = FilePath(#filePath).appending("foobar")
-+        let path = FilePath.testFile.appending("foobar")
+-        let path = NIOFilePath(FilePath(#filePath).appending("foobar"))
++        let path = NIOFilePath(FilePath(NIOFilePath.testFile).appending("foobar"))
  
          // For reading:
          await XCTAssertThrowsFileSystemErrorAsync {
@@ -99,7 +100,7 @@ index f24736a7..310d9691 100644
 +    /*func testOpenNonExistentFileForWritingWithMaterialization() async throws {
          for isAbsolute in [true, false] {
              let path = try await self.fs.temporaryFilePath(inTemporaryDirectory: isAbsolute)
-             XCTAssertEqual(path.isAbsolute, isAbsolute)
+             XCTAssertEqual(path.underlying.isAbsolute, isAbsolute)
 @@ -256,7 +256,7 @@ final class FileSystemTests: XCTestCase {
          XCTAssertEqual(buffer.readBytes(length: 1024), Array(repeating: 0, count: 1024))
          XCTAssertEqual(buffer.readBytes(length: 1024), Array(repeating: 1, count: 1024))
@@ -149,8 +150,8 @@ index f24736a7..310d9691 100644
      }
  
      func testReadChunksRange() async throws {
--        try await self.fs.withFileHandle(forReadingAt: FilePath(#filePath)) { handle in
-+        try await self.fs.withFileHandle(forReadingAt: FilePath.testFile) { handle in
+-        try await self.fs.withFileHandle(forReadingAt: NIOFilePath(#filePath)) { handle in
++        try await self.fs.withFileHandle(forReadingAt: NIOFilePath.testFile) { handle in
              let info = try await handle.info()
              let size = info.size
              let endIndex = size + 1
@@ -158,8 +159,8 @@ index f24736a7..310d9691 100644
      }
  
      func testReadChunksClosedRange() async throws {
--        try await self.fs.withFileHandle(forReadingAt: FilePath(#filePath)) { handle in
-+        try await self.fs.withFileHandle(forReadingAt: FilePath.testFile) { handle in
+-        try await self.fs.withFileHandle(forReadingAt: NIOFilePath(#filePath)) { handle in
++        try await self.fs.withFileHandle(forReadingAt: NIOFilePath.testFile) { handle in
              let info = try await handle.info()
              let size = info.size
              let endIndex = size + 1
@@ -167,8 +168,8 @@ index f24736a7..310d9691 100644
      }
  
      func testReadChunksPartialRangeUpTo() async throws {
--        try await self.fs.withFileHandle(forReadingAt: FilePath(#filePath)) { handle in
-+        try await self.fs.withFileHandle(forReadingAt: FilePath.testFile) { handle in
+-        try await self.fs.withFileHandle(forReadingAt: NIOFilePath(#filePath)) { handle in
++        try await self.fs.withFileHandle(forReadingAt: NIOFilePath.testFile) { handle in
              let info = try await handle.info()
              let size = info.size
              let endIndex = size + 1
@@ -176,8 +177,8 @@ index f24736a7..310d9691 100644
      }
  
      func testReadChunksPartialRangeThrough() async throws {
--        try await self.fs.withFileHandle(forReadingAt: FilePath(#filePath)) { handle in
-+        try await self.fs.withFileHandle(forReadingAt: FilePath.testFile) { handle in
+-        try await self.fs.withFileHandle(forReadingAt: NIOFilePath(#filePath)) { handle in
++        try await self.fs.withFileHandle(forReadingAt: NIOFilePath.testFile) { handle in
              let info = try await handle.info()
              let size = info.size
              let endIndex = size + 1
@@ -185,8 +186,8 @@ index f24736a7..310d9691 100644
      }
  
      func testReadChunksPartialRangeFrom() async throws {
--        try await self.fs.withFileHandle(forReadingAt: FilePath(#filePath)) { handle in
-+        try await self.fs.withFileHandle(forReadingAt: FilePath.testFile) { handle in
+-        try await self.fs.withFileHandle(forReadingAt: NIOFilePath(#filePath)) { handle in
++        try await self.fs.withFileHandle(forReadingAt: NIOFilePath.testFile) { handle in
              let info = try await handle.info()
              let size = info.size
              let endIndex = size + 1
@@ -194,8 +195,8 @@ index f24736a7..310d9691 100644
      }
  
      func testReadChunksUnboundedRange() async throws {
--        try await self.fs.withFileHandle(forReadingAt: FilePath(#filePath)) { handle in
-+        try await self.fs.withFileHandle(forReadingAt: FilePath.testFile) { handle in
+-        try await self.fs.withFileHandle(forReadingAt: NIOFilePath(#filePath)) { handle in
++        try await self.fs.withFileHandle(forReadingAt: NIOFilePath.testFile) { handle in
              let info = try await handle.info()
              let size = info.size
  
@@ -204,8 +205,8 @@ index 66ed1171..5253a650 100644
 --- a/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
 +++ b/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
 @@ -17,6 +17,10 @@
+ import SystemPackage
  import XCTest
- @_spi(Testing) import _NIOFileSystem
  
 +#if canImport(Android)
 +import Android
