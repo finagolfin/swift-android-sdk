@@ -1,0 +1,123 @@
+commit f656af6b796a9ee5e103c38cafd2346b95fdc759
+Author: Johannes Weiss <johannesweiss@apple.com>
+Date:   Thu Aug 28 13:08:45 2025 +0100
+
+    SelectableEventLoop.debugDescription: fix debugDescription deadlock (#3360)
+    
+    ### Motivation:
+    
+    In #3297, I introduced a deadlock involving `SelectableEventLoop`'s
+    `debugDescription`. I was under the impression that it's not possible to
+    call this from outside the `NIO` module so I deemed it safe. That was a
+    mistake :).
+    
+    ### Modifications:
+    
+    - Make it impossible to deadlock around
+    `SelectableEventLoop.debugDescription`.
+    
+    ### Result:
+    
+    - Fewer deadlocks
+
+diff --git a/Sources/NIOPosix/SelectableEventLoop.swift b/Sources/NIOPosix/SelectableEventLoop.swift
+index 6ca89bd3..e696d505 100644
+--- a/Sources/NIOPosix/SelectableEventLoop.swift
++++ b/Sources/NIOPosix/SelectableEventLoop.swift
+@@ -1060,28 +1060,31 @@ extension SelectableEventLoop: CustomStringConvertible, CustomDebugStringConvert
+ 
+     @usableFromInline
+     var debugDescription: String {
+-        self._tasksLock.withLock {
+-            if self.inEventLoop {
+-                return """
+-                    SelectableEventLoop { \
+-                    selector = \(self._selector), \
+-                    scheduledTasks = \(self._scheduledTasks.description), \
+-                    thread = \(self.thread), \
+-                    state = \(self.internalState) \
+-                    }
+-                    """
+-            } else {
+-                return self.externalStateLock.withLock {
+-                    """
+-                    SelectableEventLoop { \
+-                    selector = \(self._selector), \
+-                    scheduledTasks = \(self._scheduledTasks.description), \
+-                    thread = \(self.thread), \
+-                    state = \(self.externalState) \
+-                    }
+-                    """
++        let scheduledTasks = self._tasksLock.withLock {
++            self._scheduledTasks.description
++        }
++
++        if self.inEventLoop {
++            return """
++                SelectableEventLoop { \
++                selector = \(self._selector), \
++                scheduledTasks = \(scheduledTasks), \
++                thread = \(self.thread), \
++                state = \(self.internalState) \
+                 }
++                """
++        } else {
++            let externalState = self.externalStateLock.withLock {
++                self.externalState
+             }
++            return """
++                SelectableEventLoop { \
++                selector = \(self._selector), \
++                scheduledTasks = \(scheduledTasks), \
++                thread = \(self.thread), \
++                state = \(externalState) \
++                }
++                """
+         }
+     }
+ }
+diff --git a/Tests/NIOPosixTests/EventLoopTest.swift b/Tests/NIOPosixTests/EventLoopTest.swift
+index 65bbc653..93a5a700 100644
+--- a/Tests/NIOPosixTests/EventLoopTest.swift
++++ b/Tests/NIOPosixTests/EventLoopTest.swift
+@@ -2070,6 +2070,40 @@ final class EventLoopTest: XCTestCase {
+         XCTAssertEqual("cool", actual)
+     }
+     #endif
++
++    func testRegressionSelectableEventLoopDeadlock() throws {
++        let iterations = 1_000
++        let loop = MultiThreadedEventLoopGroup.singleton.next() as! SelectableEventLoop
++        let threadsReadySem = DispatchSemaphore(value: 0)
++        let go = DispatchSemaphore(value: 0)
++
++        let scheduleds = NIOThreadPool.singleton.runIfActive(eventLoop: loop) {
++            threadsReadySem.signal()
++            go.wait()
++            var tasks: [Scheduled<()>] = []
++            for _ in 0..<iterations {
++                tasks.append(loop.scheduleTask(in: .milliseconds(1)) {})
++            }
++            return tasks
++        }
++
++        let descriptions = NIOThreadPool.singleton.runIfActive(eventLoop: loop) {
++            threadsReadySem.signal()
++            go.wait()
++            var descriptions: [String] = []
++            for _ in 0..<iterations {
++                descriptions.append(loop.debugDescription)
++            }
++            return descriptions
++        }
++
++        threadsReadySem.wait()
++        threadsReadySem.wait()
++        go.signal()
++        go.signal()
++        XCTAssertEqual(iterations, try scheduleds.wait().map { $0.cancel() }.count)
++        XCTAssertEqual(iterations, try descriptions.wait().count)
++    }
+ }
+ 
+ private final class EventLoopWithPreSucceededFuture: EventLoop {
