@@ -22,7 +22,7 @@ jobs:
         run: |
           if [ ${{ matrix.version }} = 'release' ]; then
             LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-6.2 | cut -d- -f2)
-            SWIFT_TAG="swift-${LATEST_TOOLCHAIN_VERSION}-RELEASE"
+            SWIFT_TAG="swift-6.2-RELEASE"
           elif [ ${{ matrix.version }} = 'devel' ]; then
             LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-6.2-DEV | cut -d- -f8-10)
             SWIFT_TAG="swift-6.2-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
