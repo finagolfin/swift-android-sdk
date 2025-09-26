@@ -1,7 +1,7 @@
-diff --git a/Sources/NIOFileSystem/Internal/SystemFileHandle.swift b/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
+diff --git a/Sources/NIOFS/Internal/SystemFileHandle.swift b/Sources/NIOFS/Internal/SystemFileHandle.swift
 index 3dc51872..49aeeeca 100644
---- a/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
-+++ b/Sources/NIOFileSystem/Internal/SystemFileHandle.swift
+--- a/Sources/NIOFS/Internal/SystemFileHandle.swift
++++ b/Sources/NIOFS/Internal/SystemFileHandle.swift
 @@ -1113,7 +1113,7 @@ extension SystemFileHandle {
          let truncate = options.contains(.truncate)
          let delayMaterialization = transactional && isWritable && (exclusiveCreate || truncate)
@@ -11,10 +11,10 @@ index 3dc51872..49aeeeca 100644
              // When opening in this mode we can more "atomically" create the file, that is, by not
              // leaving the user with a half written file should e.g. the system crash or throw an
              // error while writing. On non-Android Linux we do this by opening the directory for
-diff --git a/Tests/NIOFileSystemIntegrationTests/BufferedReaderTests.swift b/Tests/NIOFileSystemIntegrationTests/BufferedReaderTests.swift
+diff --git a/Tests/NIOFSIntegrationTests/BufferedReaderTests.swift b/Tests/NIOFSIntegrationTests/BufferedReaderTests.swift
 index 8404e159..151fccc1 100644
---- a/Tests/NIOFileSystemIntegrationTests/BufferedReaderTests.swift
-+++ b/Tests/NIOFileSystemIntegrationTests/BufferedReaderTests.swift
+--- a/Tests/NIOFSIntegrationTests/BufferedReaderTests.swift
++++ b/Tests/NIOFSIntegrationTests/BufferedReaderTests.swift
 @@ -21,7 +21,7 @@ import XCTest
  final class BufferedReaderTests: XCTestCase {
      func testBufferedReaderSizeAndCapacity() async throws {
@@ -33,10 +33,10 @@ index 8404e159..151fccc1 100644
              var reader = handle.bufferedReader(capacity: .bytes(128))
              var buffer = ByteBuffer()
              while true {
-diff --git a/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift b/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift
+diff --git a/Tests/NIOFSIntegrationTests/FileHandleTests.swift b/Tests/NIOFSIntegrationTests/FileHandleTests.swift
 index c18e2c8e..65872fb9 100644
---- a/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift
-+++ b/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift
+--- a/Tests/NIOFSIntegrationTests/FileHandleTests.swift
++++ b/Tests/NIOFSIntegrationTests/FileHandleTests.swift
 @@ -20,9 +20,8 @@ import XCTest
  
  @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
@@ -67,10 +67,10 @@ index c18e2c8e..65872fb9 100644
  
      func testOpenExclusiveCreateForFileWhichExistsWithoutOTMPFILEOrRenameat2() async throws {
          // Takes the path where 'O_TMPFILE' doesn't exist, so materializing the file is done via
-diff --git a/Tests/NIOFileSystemIntegrationTests/FileSystemTests.swift b/Tests/NIOFileSystemIntegrationTests/FileSystemTests.swift
+diff --git a/Tests/NIOFSIntegrationTests/FileSystemTests.swift b/Tests/NIOFSIntegrationTests/FileSystemTests.swift
 index f24736a7..310d9691 100644
---- a/Tests/NIOFileSystemIntegrationTests/FileSystemTests.swift
-+++ b/Tests/NIOFileSystemIntegrationTests/FileSystemTests.swift
+--- a/Tests/NIOFSIntegrationTests/FileSystemTests.swift
++++ b/Tests/NIOFSIntegrationTests/FileSystemTests.swift
 @@ -19,9 +19,8 @@ import NIOCore
  import XCTest
  
@@ -200,10 +200,10 @@ index f24736a7..310d9691 100644
              let info = try await handle.info()
              let size = info.size
  
-diff --git a/Tests/NIOFileSystemTests/Internal/SyscallTests.swift b/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
+diff --git a/Tests/NIOFSTests/Internal/SyscallTests.swift b/Tests/NIOFSTests/Internal/SyscallTests.swift
 index 66ed1171..5253a650 100644
---- a/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
-+++ b/Tests/NIOFileSystemTests/Internal/SyscallTests.swift
+--- a/Tests/NIOFSTests/Internal/SyscallTests.swift
++++ b/Tests/NIOFSTests/Internal/SyscallTests.swift
 @@ -17,6 +17,10 @@
  import SystemPackage
  import XCTest

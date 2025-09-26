@@ -122,6 +122,8 @@ jobs:
           elif ${{ startsWith(matrix.os, 'ubuntu') }}; then
             sudo apt install ninja-build
           fi
+          sudo rm -fr /opt/ghc /opt/hostedtoolcache /usr/share/dotnet
+          # /usr/share/swift
 
           cd sdk-config
 
@@ -337,8 +339,7 @@ jobs:
       - name: Build Swift crypto package
         run: |
           cd swift-crypto
-          perl -pi -e 's%\\\\(testsDirectory)/.*Vectors%/data/local/tmp/pack/crypto-vectors%' Tests/{Crypto,_CryptoExtras}Tests/Utils/{RFCVector,Wycheproof}.swift
-          perl -pi -e 's%#file%"/data/local/tmp/pack/crypto-vectors"%;s%../_CryptoExtrasVectors/%%' Tests/_CryptoExtrasTests/TestRSABlindSigning.swift
+          perl -pi -e 's%#filePath%"/data/local/tmp/pack/crypto-vectors"%;s%../CryptoExtrasVectors/%%' Tests/CryptoExtrasTests/TestRSABlindSigning.swift
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
@@ -522,10 +523,10 @@ jobs:
           echo 'adb shell /data/local/tmp/pack/swift-algorithmsPackageTests.xctest' >> ~/test-toolchain.sh
 
           mkdir pack/crypto-vectors pack/swift-crypto_CryptoTests.resources
-          cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/_CryptoExtrasVectors/* pack/crypto-vectors
+          cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/CryptoExtrasVectors/* pack/crypto-vectors
           cp swift-crypto/Tests/CryptoTests/HPKE/hpke-test-vectors.json pack/swift-crypto_CryptoTests.resources
-          rm swift-nio/Tests/NIOFileSystemIntegrationTests/Test\ Data/*symlink
-          cp -r swift-nio/Tests/NIOFileSystemIntegrationTests/Test\ Data/ swift-nio/Tests/NIOFileSystemIntegrationTests/FileHandleTests.swift pack
+          rm swift-nio/Tests/NIOFSIntegrationTests/Test\ Data/*symlink
+          cp -r swift-nio/Tests/NIOFSIntegrationTests/Test\ Data/ swift-nio/Tests/NIOFSIntegrationTests/FileHandleTests.swift pack
           cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
           cp ~/.${{ startsWith(matrix.os, 'ubuntu') && 'config/' || '' }}swiftpm/swift-sdks/${{ steps.version.outputs.tag }}-android-${ANDROID_API_LEVEL}-*.artifactbundle/swift*sdk/android*sysroot/usr/lib/x86_64-linux-android/lib*so pack
 
