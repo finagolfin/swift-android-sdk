@@ -25,9 +25,9 @@ index 65bbc653..93a5a700 100644
 --- a/Tests/NIOPosixTests/EventLoopTest.swift
 +++ b/Tests/NIOPosixTests/EventLoopTest.swift
 @@ -2070,6 +2070,40 @@ final class EventLoopTest: XCTestCase {
+         }
          XCTAssertEqual("cool", actual)
      }
-     #endif
 +
 +    func testRegressionSelectableEventLoopDeadlock() throws {
 +        let iterations = 1_000

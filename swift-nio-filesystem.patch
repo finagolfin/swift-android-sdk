@@ -11,6 +11,19 @@ index 3dc51872..49aeeeca 100644
              // When opening in this mode we can more "atomically" create the file, that is, by not
              // leaving the user with a half written file should e.g. the system crash or throw an
              // error while writing. On non-Android Linux we do this by opening the directory for
+diff --git a/Sources/NIOPerformanceTester/main.swift b/Sources/NIOPerformanceTester/main.swift
+index b3c2840a..809f114e 100644
+--- a/Sources/NIOPerformanceTester/main.swift
++++ b/Sources/NIOPerformanceTester/main.swift
+@@ -32,7 +32,7 @@ import NIOPosix
+ import NIOWebSocket
+ 
+ // Use unbuffered stdout to help detect exactly which test was running in the event of a crash.
+-setbuf(stdout, nil)
++//setbuf(stdout, nil)
+ 
+ // MARK: Test Harness
+ 
 diff --git a/Tests/NIOFSIntegrationTests/BufferedReaderTests.swift b/Tests/NIOFSIntegrationTests/BufferedReaderTests.swift
 index 8404e159..151fccc1 100644
 --- a/Tests/NIOFSIntegrationTests/BufferedReaderTests.swift
