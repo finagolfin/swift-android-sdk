@@ -13,24 +13,3 @@ index 016bf294..5c42986a 100644
  endif()
  
  if(dispatch_FOUND)
-commit 5ac9500a5d858868e518a56fa0197be65b759ef4
-Author: Jonathan Grynspan <jgrynspan@apple.com>
-Date:   Thu Oct 16 18:57:31 2025 -0400
-
-    Fix backtrace() call on Android being optional
-
-diff --git a/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift b/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift
-index 6f6fcaab..552e16d6 100644
---- a/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift
-+++ b/swift-testing/Sources/Testing/SourceAttribution/Backtrace.swift
-@@ -77,7 +77,9 @@ public struct Backtrace: Sendable {
-       }
- #elseif os(Android)
- #if !SWT_NO_DYNAMIC_LINKING
--      initializedCount = .init(clamping: _backtrace?(addresses.baseAddress!, .init(clamping: addresses.count)))
-+      if let _backtrace {
-+        initializedCount = .init(clamping: _backtrace(addresses.baseAddress!, .init(clamping: addresses.count)))
-+      }
- #endif
- #elseif os(Linux) || os(FreeBSD) || os(OpenBSD)
-       initializedCount = .init(clamping: backtrace(addresses.baseAddress!, .init(clamping: addresses.count)))
