@@ -10,9 +10,9 @@ index 494186e..090ceb8 100644
 +import Android
 +#endif
 +
- #if compiler(>=6.1)
- internal import CNIOBoringSSL
- #else
+ let samplePemCert = """
+     -----BEGIN CERTIFICATE-----
+     MIIGGzCCBAOgAwIBAgIJAJ/X0Fo0ynmEMA0GCSqGSIb3DQEBCwUAMIGjMQswCQYD
 diff --git a/Tests/NIOSSLTests/SSLCertificateTest.swift b/Tests/NIOSSLTests/SSLCertificateTest.swift
 index 18d3a1a..9bbd447 100644
 --- a/Tests/NIOSSLTests/SSLCertificateTest.swift
