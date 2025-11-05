@@ -129,13 +129,10 @@ jobs:
           git apply -C1 swift-android.patch swift-android-ci.patch
           BUILD_FLAG="--foundation-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS=''"
           if ${{ matrix.version == 'trunk' }}; then
-            git apply swift-android-trunk-libdispatch.patch
+            git apply swift-android-trunk-spawn.patch
             BUILD_FLAG+=" --libdispatch-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS=''"
           else
             git apply swift-android-ci-except-trunk.patch swift-android-except-trunk.patch
-            if ${{ matrix.version == 'release' }}; then
-              git apply swift-android-testing-release.patch
-            fi
           fi
 
           perl -pi -e 's%33%24%' $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/execinfo.h

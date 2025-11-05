@@ -144,11 +144,9 @@ SDK too, as seen on the CI.
 
 Next, apply two patches from this repo to the Swift source, which make
 modifications for NDK 27 and [the Foundation rewrite in Swift 6 that was merged
-last summer](https://www.swift.org/blog/foundation-preview-now-available/), and
-substitute a string for NDK 27:
+last summer](https://www.swift.org/blog/foundation-preview-now-available/):
 ```
-git apply swift-android.patch swift-android-testing-release.patch
-perl -pi -e 's%r26%r27%' swift/stdlib/cmake/modules/AddSwiftStdlib.cmake
+git apply swift-android.patch swift-android-except-trunk.patch
 ```
 
 After making sure [needed build tools like python 3, CMake, and ninja](https://github.com/swiftlang/swift/blob/release/6.2/docs/HowToGuides/GettingStarted.md#linux)
