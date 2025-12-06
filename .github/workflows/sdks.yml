@@ -10,309 +10,38 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [release, devel, trunk]
-        os: [ubuntu-24.04, macos-15-intel]
-    env:
-      ANDROID_API_LEVEL: 24
-      BUNDLE_VERSION: 0.1
-      NDK_VERSION: 27d
+        version: ["5.10", "6.0", "6.1", "6.2"]
+        os: [ubuntu-24.04, ubuntu-22.04]
     steps:
       - name: Check for latest Swift ${{ matrix.version }} toolchain
         id: version
         run: |
-          if [ ${{ matrix.version }} = 'release' ]; then
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/releases | grep -m1 swift-6.2 | cut -d- -f2)
-            SWIFT_TAG="swift-${LATEST_TOOLCHAIN_VERSION}-RELEASE"
-          elif [ ${{ matrix.version }} = 'devel' ]; then
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-6.3-DEV | cut -d- -f8-10)
-            SWIFT_TAG="swift-6.3-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
-          else
-            LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-DEV | cut -d- -f7-9)
-            SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
-          fi
-          echo "tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
-          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-test-bundle" >> $GITHUB_OUTPUT
-      - name: Get cached SDK bundle
-        id: cache-bundle
-        uses: actions/cache/restore@v4
-        with:
-          path: ~/${{ steps.version.outputs.tag }}-android-${{ env.ANDROID_API_LEVEL }}-${{ env.BUNDLE_VERSION }}.artifactbundle.tar.gz
-          key: ${{ steps.version.outputs.key }}
-          fail-on-cache-miss: ${{ startsWith(matrix.os, 'macos') && 'true' || 'false' }}
+          echo "tag=swift-${{matrix.version}}-RELEASE" >> $GITHUB_OUTPUT
       - name: Get cached ${{ matrix.os }} ${{ steps.version.outputs.tag }} toolchain
         id: cache-toolchain
         uses: actions/cache@v4
         with:
-          path: ~/${{ steps.version.outputs.tag }}-${{ startsWith(matrix.os, 'macos') && 'osx.pkg' || 'ubuntu24.04.tar.gz' }}
-          key: swift-${{ matrix.os }}-${{ steps.version.outputs.tag }}-toolchain
+          path: ~/${{ steps.version.outputs.tag }}-${{matrix.os}}.tar.gz
+          key: ${{ steps.version.outputs.tag }}-${{matrix.os}}-toolchain
       - name: Download toolchain
         if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' }}
         env:
           SWIFT_TAG: ${{ steps.version.outputs.tag }}
         run: |
-          if [ ${{ matrix.version }} != 'trunk' ]; then
-            SWIFT_BRANCH="swift-$(echo $SWIFT_TAG | cut -d- -f2)-${{ matrix.version == 'release' && 'release' || 'branch' }}"
-          else
-            SWIFT_BRANCH="development"
-          fi
           cd
-          if ${{ steps.cache-toolchain.outputs.cache-hit != 'true' }}; then
-            wget -q https://download.swift.org/$SWIFT_BRANCH/${{ startsWith(matrix.os, 'macos') && 'xcode' || 'ubuntu2404' }}/$SWIFT_TAG/$SWIFT_TAG-${{ startsWith(matrix.os, 'macos') && 'osx.pkg' || 'ubuntu24.04.tar.gz' }}
-            echo "downloaded latest ${{ matrix.os }} toolchain: ${SWIFT_TAG}"
-          fi
+          wget -q https://download.swift.org/swift-${{matrix.version}}-release/${{ startsWith(matrix.os, 'ubuntu-24.04') && 'ubuntu2404' || 'ubuntu2204' }}/$SWIFT_TAG/$SWIFT_TAG-${{ startsWith(matrix.os, 'ubuntu-24.04') && 'ubuntu24.04' || 'ubuntu22.04' }}.tar.gz
+          echo "downloaded latest ${{ matrix.os }} toolchain: ${SWIFT_TAG}"
 
       - name: Extract toolchain and set it up
         env:
           SWIFT_TAG: ${{ steps.version.outputs.tag }}
         run: |
-          if ${{ startsWith(matrix.os, 'macos') }}; then
-            mkdir ${SWIFT_TAG}
-            pushd ${SWIFT_TAG}
-            xar -x -C . -f ~/${SWIFT_TAG}-osx.pkg
-            tar xz -C . -f ${SWIFT_TAG}-osx-package.pkg/Payload
-            TOOLCHAIN=${PWD}/usr
-            popd
-          elif ${{ startsWith(matrix.os, 'ubuntu') }}; then
-            SWIFT_TOOLS=$SWIFT_TAG-$(echo ${{ matrix.os }} | tr -d - )
-            tar xf ~/$SWIFT_TOOLS.tar.gz
-            TOOLCHAIN=${PWD}/$SWIFT_TOOLS/usr
-          fi
+          SWIFT_TOOLS=$SWIFT_TAG-$(echo ${{ matrix.os }} | tr -d - )
+          tar xf ~/$SWIFT_TOOLS.tar.gz
+          TOOLCHAIN=${PWD}/$SWIFT_TOOLS/usr
 
           echo "TOOLCHAIN=${TOOLCHAIN}" >> $GITHUB_ENV
           ${TOOLCHAIN}/bin/swift --version
-      - name: Get cached Android NDK sysroot and runtime libraries
-        id: cache-ndk
-        uses: actions/cache@v4
-        if: ${{ (steps.cache-bundle.outputs.cache-hit != 'true') && startsWith(matrix.os, 'ubuntu') }}
-        with:
-          path: ~/android-sysroot.tar.xz
-          key: android-ndk-${{ env.NDK_VERSION }}
-      - name: Extract Android NDK sysroot if not cached before
-        if: ${{ steps.cache-bundle.outputs.cache-hit != 'true' && steps.cache-ndk.outputs.cache-hit != 'true' && startsWith(matrix.os, 'ubuntu') }}
-        run: |
-          wget -q https://dl.google.com/android/repository/android-ndk-r$NDK_VERSION-linux.zip
-          if [ "$(sha1sum android-ndk-r$NDK_VERSION-linux.zip | cut -f1 -d" ")" != '22105e410cf29afcf163760cc95522b9fb981121' ]; then
-            echo "NDK checksum didn't match"
-            exit 1
-          fi
-          unzip -q android-ndk-r$NDK_VERSION-linux.zip
-          rm android-ndk-r$NDK_VERSION-linux.zip
-          mv android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/sysroot .
-          rm -r sysroot/usr/{include,lib}/{i686,riscv64}-linux-android
-          mv android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/*/lib/linux sysroot
-          rm -r sysroot/linux/*{i[36]86,riscv64}* android-ndk-r$NDK_VERSION
-          tar cJf ~/android-sysroot.tar.xz sysroot
-      - name: Clone
-        uses: actions/checkout@v4
-        with:
-          path: sdk-config
-      - name: Build Swift ${{ matrix.version }} Android SDK bundle if not the latest
-        # build-script currently only works on ubuntu
-        if: ${{ (steps.cache-bundle.outputs.cache-hit != 'true') && startsWith(matrix.os, 'ubuntu') }}
-        env:
-          SWIFT_TAG: ${{ steps.version.outputs.tag }}
-        run: |
-          set -x
-
-          if ${{ startsWith(matrix.os, 'macos') }}; then
-            brew install ninja patchelf
-          elif ${{ startsWith(matrix.os, 'ubuntu') }}; then
-            sudo apt install ninja-build
-          fi
-          sudo rm -fr /opt/ghc /opt/hostedtoolcache /usr/share/dotnet
-          # /usr/share/swift
-
-          cd sdk-config
-
-          ANDROID_ARCH=aarch64 BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
-
-          git apply -C1 swift-android.patch swift-android-ci.patch
-          BUILD_FLAG="--foundation-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS=''"
-          if ${{ matrix.version == 'release' }}; then
-            git apply swift-android-ci-release.patch swift-android-release.patch
-          else
-            git apply swift-android-spawn.patch
-            BUILD_FLAG+=" --libdispatch-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS=''"
-          fi
-
-          perl -pi -e 's%33%24%' $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/execinfo.h
-          perl -pi -e 's%String\(cString: getpass%\"fake\" //%' swiftpm/Sources/PackageRegistryCommand/PackageRegistryCommand+Auth.swift
-          perl -pi -e "s%swift/android',%swift/android', '-Xlinker', '-landroid-spawn',%" sourcekit-lsp/Utilities/build-script-helper.py
-          VERSION="$(echo ${{ steps.version.outputs.tag }} | cut -f1,2 -d-)-${{ matrix.version }}"
-
-          # e.g. swift-6.2-release-android-24-sdk
-          SDK_DIR=$VERSION-android-${ANDROID_API_LEVEL}-sdk
-          ROOT=android-${NDK_VERSION}-sysroot
-          SYSROOT=$SDK_DIR/$ROOT
-          mkdir ${SDK_DIR}
-
-          tar xf ~/android-sysroot.tar.xz
-          mv sysroot $SYSROOT
-
-          for arch in aarch64 x86_64 armv7; do
-            if [[ $arch != 'aarch64' ]]; then
-              ANDROID_ARCH=$arch BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
-            fi
-            SDK_NAME=$(ls | grep swift-${{ matrix.version }}-android-$arch)
-            SDK=`pwd`/$SDK_NAME
-
-            # Patch the NDK execinfo.h to work with the backported libandroid-execinfo
-            cp $SYSROOT/usr/include/execinfo.h ${SDK_NAME}/usr/include
-            perl -pi -e 's%33%24%' ${SDK_NAME}/usr/include/execinfo.h
-
-            ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_HOME --android-arch $arch --android-api-level $ANDROID_API_LEVEL --native-swift-tools-path=${TOOLCHAIN}/bin --native-clang-tools-path=${TOOLCHAIN}/bin --cross-compile-hosts=android-$arch --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='compiler;clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False --cross-compile-build-swift-tools=False -b --install-llbuild --swift-testing --install-swift-testing -p $BUILD_FLAG
-
-            rm $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/swift
-
-            pushd ${SDK_NAME}/usr
-
-            patchelf --set-rpath \$ORIGIN lib/swift/android/lib[dFXs]*.so
-            # Remove executables and unused toolchain headers/libraries
-            rm -r bin lib/libsqlite3.so lib/lib{curses,ncurses}.so lib/terminfo share/{tabset,terminfo}
-            mv include/curl include/execinfo.h include/libxml2 include/spawn.h .
-            rm -r include/*
-            mv curl execinfo.h libxml2 spawn.h include/
-            cp -r ../../swift/lib/ClangImporter/SwiftBridging/{module.modulemap,swift} include/
-
-            TRIPLE="$arch-linux-android"
-            if [[ $arch == 'armv7' ]]; then
-                TRIPLE="arm-linux-androideabi"
-            fi
-
-            mkdir lib/${TRIPLE}
-            mv lib/lib[a-z]*.so lib/pkgconfig lib/swift/android/lib*.{a,so} lib/${TRIPLE}
-
-            mv lib/swift_static lib/swift_static-$arch
-            mv lib/libandroid-spawn.a lib/swift_static-$arch/android
-            rm lib/swift{,_static-$arch}/clang
-
-            popd
-
-            # copy all the processed SDK files into the Android sysroot
-            rsync -ar ${SDK_NAME}/ $SYSROOT
-          done
-
-          # Copy necessary headers and libraries from the toolchain and NDK clang resource directories
-          mkdir -p $SYSROOT/usr/lib/swift/clang/lib
-          cp -r $TOOLCHAIN/lib/clang/*/include $SYSROOT/usr/lib/swift/clang
-          mv $SYSROOT/linux $SYSROOT/usr/lib/swift/clang/lib
-          ln -s ../swift/clang $SYSROOT/usr/lib/swift_static-aarch64/clang
-          ln -s ../swift/clang $SYSROOT/usr/lib/swift_static-armv7/clang
-          ln -s ../swift/clang $SYSROOT/usr/lib/swift_static-x86_64/clang
-
-          # Patch a single libc++ header to work around a Swift compiler bug
-          cd $SYSROOT
-          git apply ../../libc++-stdlib.h.patch
-          cd ../..
-
-          BUNDLE=${{ steps.version.outputs.tag }}-android-${ANDROID_API_LEVEL}-${BUNDLE_VERSION}
-          BUNDLE_DIR=$BUNDLE.artifactbundle
-          mkdir ${BUNDLE_DIR}
-          mv ${SDK_DIR} ${BUNDLE_DIR}
-
-          cat > $BUNDLE_DIR/info.json << EOF
-          {
-              "schemaVersion": "1.0",
-              "artifacts": {
-                  "${BUNDLE}": {
-                      "variants": [ { "path": "${SDK_DIR}" } ],
-                      "version": "${BUNDLE_VERSION}",
-                      "type": "swiftSDK"
-                  }
-              }
-          }
-          EOF
-
-          cat > $BUNDLE_DIR/$SDK_DIR/swift-sdk.json << EOF
-          {
-              "schemaVersion": "4.0",
-              "targetTriples": {
-          EOF
-
-          for api in $(eval echo "{$ANDROID_API_LEVEL..35}"); do
-            if [[ ${api} == "35" ]]; then
-              TRAILING_COMMA=""
-            else
-              TRAILING_COMMA=","
-            fi
-            cat >> $BUNDLE_DIR/$SDK_DIR/swift-sdk.json << EOF
-                  "aarch64-unknown-linux-android$api": {
-                      "sdkRootPath": "${ROOT}",
-                      "swiftResourcesPath": "${ROOT}/usr/lib/swift",
-                      "swiftStaticResourcesPath": "${ROOT}/usr/lib/swift_static-aarch64",
-                      "toolsetPaths": ["swift-toolset.json"]
-                  },
-                  "x86_64-unknown-linux-android$api": {
-                      "sdkRootPath": "${ROOT}",
-                      "swiftResourcesPath": "${ROOT}/usr/lib/swift",
-                      "swiftStaticResourcesPath": "${ROOT}/usr/lib/swift_static-x86_64",
-                      "toolsetPaths": ["swift-toolset.json"]
-                  },
-                  "armv7-unknown-linux-androideabi$api": {
-                      "sdkRootPath": "${ROOT}",
-                      "swiftResourcesPath": "${ROOT}/usr/lib/swift",
-                      "swiftStaticResourcesPath": "${ROOT}/usr/lib/swift_static-armv7",
-                      "toolsetPaths": ["swift-toolset.json"]
-                  }${TRAILING_COMMA}
-          EOF
-          done
-
-          cat >> $BUNDLE_DIR/$SDK_DIR/swift-sdk.json << EOF
-              }
-          }
-          EOF
-
-          cat > $BUNDLE_DIR/$SDK_DIR/swift-toolset.json << EOF
-          {
-              "cCompiler": { "extraCLIOptions": ["-fPIC"] },
-              "swiftCompiler": { "extraCLIOptions": ["-Xclang-linker", "-fuse-ld=lld"] },
-              "schemaVersion": "1.0"
-          }
-          EOF
-
-          cat > $BUNDLE_DIR/$SYSROOT/SDKSettings.json << EOF
-          {
-              "DisplayName": "Android NDK ${NDK_VERSION} sysroot with ${VERSION} runtime libraries for API ${ANDROID_API_LEVEL}",
-              "Version": "27.3.13750724",
-              "VersionMap": {},
-              "CanonicalName": "${VERSION}-android${ANDROID_API_LEVEL}"
-          }
-          EOF
-
-          # output visualization of the SDK bundle file tree
-          tree $BUNDLE_DIR
-
-          du -skh "${BUNDLE_DIR}"
-          tar czf ~/${BUNDLE_DIR}.tar.gz "${BUNDLE_DIR}"
-          du -skh ~/${BUNDLE_DIR}.tar.gz
-          shasum -a 256 ~/${BUNDLE_DIR}.tar.gz
-          rm -rf build/ swift-${{ matrix.version }}-android-*-sdk/ $BUNDLE_DIR llvm-project/
-      - name: Cache SDK bundle
-        uses: actions/cache/save@v4
-        if: ${{ (steps.cache-bundle.outputs.cache-hit != 'true') && startsWith(matrix.os, 'ubuntu') }}
-        with:
-          path: ~/${{ steps.version.outputs.tag }}-android-${{ env.ANDROID_API_LEVEL }}-${{ env.BUNDLE_VERSION }}.artifactbundle.tar.gz
-          key: ${{ steps.version.outputs.key }}
-      - name: Upload SDK bundle
-        if: ${{ startsWith(matrix.os, 'ubuntu') }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.version.outputs.tag }}-android-${{ env.ANDROID_API_LEVEL }}-${{ env.BUNDLE_VERSION }}.artifactbundle.tar.gz
-          path: ~/${{ steps.version.outputs.tag }}-android-${{ env.ANDROID_API_LEVEL }}-${{ env.BUNDLE_VERSION }}.artifactbundle.tar.gz
-          compression-level: 0
-      - name: Install ${{ matrix.version }} Android SDK bundle and set SwiftPM flags
-        run: |
-          ${TOOLCHAIN}/bin/swift sdk install ~/${{ steps.version.outputs.tag }}-android-*.artifactbundle.tar.gz
-          ${TOOLCHAIN}/bin/swift sdk configure --show-configuration ${{ steps.version.outputs.tag }}-android-${ANDROID_API_LEVEL}-${BUNDLE_VERSION} armv7-unknown-linux-androideabi${ANDROID_API_LEVEL}
-
-          echo "ANDROID_NDK_ROOT=" >> $GITHUB_ENV
-
-          SFLAGS="--swift-sdk aarch64-unknown-linux-android${ANDROID_API_LEVEL} ${FLAGS}"
-          echo "SWIFTPM_AARCH_FLAGS=${SFLAGS}" >> $GITHUB_ENV
-          XFLAGS="--swift-sdk x86_64-unknown-linux-android${ANDROID_API_LEVEL} ${FLAGS}"
-          echo "SWIFTPM_X_FLAGS=${XFLAGS}" >> $GITHUB_ENV
-          AFLAGS="--swift-sdk armv7-unknown-linux-androideabi${ANDROID_API_LEVEL} ${FLAGS}"
-          echo "SWIFTPM_ARM_FLAGS=${AFLAGS}" >> $GITHUB_ENV
       - name: Get Swift Argument Parser package
         uses: actions/checkout@v4
         with:
@@ -321,10 +50,10 @@ jobs:
       - name: Build Swift Argument Parser package
         run: |
           cd swift-argument-parser
-          rm Examples/count-lines/CountLines.swift Tools/changelog-authors/*.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
+          ${TOOLCHAIN}/bin/swift build
+          ${TOOLCHAIN}/bin/swift build
+          ${TOOLCHAIN}/bin/swift build --build-tests
+          ${TOOLCHAIN}/bin/swift build --build-tests
       - name: Get Swift crypto package
         uses: actions/checkout@v4
         with:
@@ -333,10 +62,10 @@ jobs:
       - name: Build Swift crypto package
         run: |
           cd swift-crypto
-          perl -pi -e 's%#filePath%"/data/local/tmp/pack/crypto-vectors"%;s%../CryptoExtrasVectors/%%' Tests/CryptoExtrasTests/TestRSABlindSigning.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
+          ${TOOLCHAIN}/bin/swift build
+          ${TOOLCHAIN}/bin/swift build
+          ${TOOLCHAIN}/bin/swift build --build-tests
+          ${TOOLCHAIN}/bin/swift build --build-tests
       - name: Get Swift NIO package
         uses: actions/checkout@v4
         with:
@@ -345,203 +74,7 @@ jobs:
       - name: Build Swift NIO package
         run: |
           cd swift-nio
-          git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem.patch
-          if ${{ startsWith(matrix.os, 'macos') }}; then
-            git apply -R ../sdk-config/swift-nio-revert.patch
-          fi
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
-      - name: Get Swift Numerics package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-numerics
-          path: swift-numerics
-      - name: Build Swift Numerics package
-        run: |
-          cd swift-numerics
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
-      - name: Get Swift System package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-system
-          path: swift-system
-      - name: Build Swift System package
-        run: |
-          cd swift-system
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
-      - name: Get Swift Collections package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-collections
-          path: swift-collections
-      - name: Build Swift Collections package
-        run: |
-          cd swift-collections
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
-      - name: Get Swift Atomics package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-atomics
-          path: swift-atomics
-          ref: 1.2.0
-      - name: Get Swift NIO SSH package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-nio-ssh
-          path: sns
-      - name: Build Swift NIO SSH package
-        run: |
-          cd sns
-          perl -pi -e 's%url: .*swift-([a-z]*)\.git.*$%path: \"../swift-\1\"),%g' Package.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
-      - name: Get Swift NIO SSL package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-nio-ssl
-          path: snl
-      - name: Build Swift NIO SSL package
-        run: |
-          cd snl
-          git apply ../sdk-config/swift-nio-ssl-test.patch
-          SWIFTCI_USE_LOCAL_DEPS=1 ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          SWIFTCI_USE_LOCAL_DEPS=1 ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          SWIFTCI_USE_LOCAL_DEPS=1 ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
-      - name: Get Yams package
-        uses: actions/checkout@v4
-        with:
-          repository: jpsim/Yams
-          path: yams
-      - name: Build Yams package
-        run: |
-          cd yams
-          perl -pi -e 's% fixturesDirectory + \"/SourceKitten#289% \"/data/local/tmp/pack%' Tests/YamsTests/PerformanceTests.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
-      - name: Get Swift NIO HTTP/2 package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-nio-http2
-          path: snh
-      - name: Build Swift NIO HTTP/2 package
-        run: |
-          cd snh
-          perl -pi -e 's%url: .*swift-([a-z]*)\.git.*$%path: \"../swift-\1\"),%g' Package.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-      - name: Get Swift Algorithms package
-        uses: actions/checkout@v4
-        with:
-          repository: apple/swift-algorithms
-          path: sa
-      - name: Build Swift Algorithms package
-        run: |
-          cd sa
-          perl -pi -e 's%url: .*$%path: \"../swift-numerics\"),%' Package.swift
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
-          ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
-      - name: Get cached Termux debug app for NIO tests
-        id: cache-termux
-        uses: actions/cache@v4
-        with:
-          path: ~/termux-debug.apk
-          key: termux-app
-      - name: Get Termux debug app if not cached
-        if: ${{ steps.cache-termux.outputs.cache-hit != 'true' }}
-        run: wget -O ~/termux-debug.apk https://github.com/termux/termux-app/releases/download/v0.118.0/termux-app_v0.118.0+github-debug_x86_64.apk
-      - name: Prepare Android emulator test package and script
-        run: |
-          set -x
-          # create the test runner script
-          cat > ~/test-toolchain.sh << EOF
-          adb install ~/termux-debug.apk
-          adb push pack /data/local/tmp
-          adb shell "run-as com.termux mkdir /data/data/com.termux/pack"
-          adb shell "run-as com.termux cp /data/local/tmp/pack/{lib*.so,swift-nioPackageTests.xctest,FileHandleTests.swift} /data/data/com.termux/pack"
-          adb shell "run-as com.termux cp -r /data/local/tmp/pack/Test\ Data /data/data/com.termux/pack"
-          adb shell "run-as com.termux ln -s README.md /data/data/com.termux/pack/Test\ Data/README.md.symlink"
-          adb shell "run-as com.termux ln -s Foo /data/data/com.termux/pack/Test\ Data/Foo.symlink"
-          adb shell "run-as com.termux sh -c 'TMPDIR=/data/data/com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest'"
-          adb shell "TMPDIR=/data/local/tmp /data/local/tmp/pack/swift-systemPackageTests.xctest"
-          EOF
-
-          mkdir pack
-          TARGET="x86_64-unknown-linux-android$ANDROID_API_LEVEL"
-
-          cp swift-argument-parser/.build/$TARGET/debug/{generate-manual,math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
-          echo 'adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest' >> ~/test-toolchain.sh
-
-          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v2.1.1/elf-cleaner.cpp
-          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v2.1.1/elf.h
-          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v2.1.1/arghandling.h
-          wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v2.1.1/arghandling.c
-          clang -c arghandling.c
-          clang -o elf-cleaner arghandling.o elf-cleaner.cpp -DCOPYRIGHT=\"foo\" -DPACKAGE_NAME=\"termux-elf-cleaner\" -DPACKAGE_VERSION=\"2.2.1\"
-          ./elf-cleaner --api-level $ANDROID_API_LEVEL pack/{generate-manual,math,repeat,roll} || true
-
-          cp swift-crypto/.build/$TARGET/debug/swift-cryptoPackageTests.xctest pack
-          echo 'adb shell /data/local/tmp/pack/swift-cryptoPackageTests.xctest' >> ~/test-toolchain.sh
-
-          cp swift-nio/.build/$TARGET/debug/swift-nioPackageTests.xctest pack
-
-          cp swift-numerics/.build/$TARGET/debug/swift-numericsPackageTests.xctest pack
-          echo 'adb shell /data/local/tmp/pack/swift-numericsPackageTests.xctest' >> ~/test-toolchain.sh
-
-          cp swift-system/.build/$TARGET/debug/swift-systemPackageTests.xctest pack
-          cp swift-collections/.build/$TARGET/debug/swift-collectionsPackageTests.xctest pack
-          echo 'adb shell /data/local/tmp/pack/swift-collectionsPackageTests.xctest' >> ~/test-toolchain.sh
-
-          cp sns/.build/$TARGET/debug/swift-nio-sshPackageTests.xctest pack
-          echo 'adb shell /data/local/tmp/pack/swift-nio-sshPackageTests.xctest' >> ~/test-toolchain.sh
-
-          cp snl/.build/$TARGET/debug/swift-nio-sslPackageTests.xctest pack
-          echo 'adb shell /data/local/tmp/pack/swift-nio-sslPackageTests.xctest' >> ~/test-toolchain.sh
-
-          cp snh/.build/$TARGET/debug/swift-nio-http2PackageTests.xctest pack
-          echo 'adb shell /data/local/tmp/pack/swift-nio-http2PackageTests.xctest' >> ~/test-toolchain.sh
-
-          cp yams/.build/$TARGET/debug/YamsPackageTests.xctest pack
-          echo 'adb shell /data/local/tmp/pack/YamsPackageTests.xctest' >> ~/test-toolchain.sh
-
-          cp sa/.build/$TARGET/debug/swift-algorithmsPackageTests.xctest pack
-          echo 'adb shell /data/local/tmp/pack/swift-algorithmsPackageTests.xctest' >> ~/test-toolchain.sh
-
-          mkdir pack/crypto-vectors pack/swift-crypto_CryptoTests.resources
-          cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/CryptoExtrasVectors/* pack/crypto-vectors
-          cp swift-crypto/Tests/CryptoTests/HPKE/hpke-test-vectors.json pack/swift-crypto_CryptoTests.resources
-          rm swift-nio/Tests/NIOFSIntegrationTests/Test\ Data/*symlink
-          cp -r swift-nio/Tests/NIOFSIntegrationTests/Test\ Data/ swift-nio/Tests/NIOFSIntegrationTests/FileHandleTests.swift pack
-          cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
-          cp ~/.${{ startsWith(matrix.os, 'ubuntu') && 'config/' || '' }}swiftpm/swift-sdks/${{ steps.version.outputs.tag }}-android-${ANDROID_API_LEVEL}-*.artifactbundle/swift*sdk/android*sysroot/usr/lib/x86_64-linux-android/lib*so pack
-
-          # need to free up some space or else the emulator fails to launch:
-          # ERROR   | Not enough space to create userdata partition. Available: 6086.191406 MB at /home/runner/.android/avd/../avd/test.avd, need 7372.800000 MB.
-          rm -rf ${{ steps.version.outputs.tag }}-$(echo ${{ matrix.os }} | tr -d - )/ */.build
-
-          chmod +x ~/test-toolchain.sh
-
-          echo "TEST SCRIPT:"
-          cat ~/test-toolchain.sh
-
-          if ${{ startsWith(matrix.os, 'ubuntu') }}; then
-            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-            sudo udevadm control --reload-rules
-            sudo udevadm trigger --name-match=kvm
-          fi
-
-      - name: Run tests on Android x86_64 emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: ${{ env.ANDROID_API_LEVEL }}
-          arch: x86_64
-          script: ~/test-toolchain.sh
+          ${TOOLCHAIN}/bin/swift build
+          ${TOOLCHAIN}/bin/swift build
+          ${TOOLCHAIN}/bin/swift build --build-tests
+          ${TOOLCHAIN}/bin/swift build --build-tests
