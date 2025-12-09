@@ -14,12 +14,13 @@ var swiftRepos = ["llvm-project", "swift", "swift-experimental-string-processing
 let extraSwiftRepos = ["swift-llbuild", "swift-package-manager", "swift-driver",
                        "swift-tools-support-core", "swift-argument-parser", "swift-crypto",
                        "indexstore-db", "sourcekit-lsp", "swift-system", "swift-lmdb",
-                       "swift-certificates", "swift-asn1", "swift-toolchain-sqlite", "swift-build"]
+                       "swift-certificates", "swift-asn1", "swift-toolchain-sqlite",
+                       "swift-build", "swift-tools-protocols"]
 let appleRepos = ["swift-argument-parser", "swift-crypto", "swift-system", "swift-collections", "swift-certificates", "swift-asn1"]
 let renameRepos = ["swift-llbuild" : "llbuild", "swift-package-manager" : "swiftpm"]
 var repoTags = ["swift-system" : "1.5.0", "swift-collections" : "1.1.6", "swift-asn1" : "1.3.2",
                 "swift-certificates" : "1.10.1", "swift-argument-parser" : "1.5.1",
-                "swift-crypto" : "3.12.5", "swift-toolchain-sqlite" : "1.0.1"]
+                "swift-crypto" : "3.12.5", "swift-toolchain-sqlite" : "1.0.1", "swift-tools-protocols" : "0.0.9"]
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
   swiftRepos += extraSwiftRepos
   termuxPackages += ["ncurses", "libsqlite"]
