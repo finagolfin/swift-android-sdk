@@ -13,7 +13,7 @@ jobs:
         version: [release, devel, trunk]
         os: [ubuntu-24.04, macos-15-intel]
     env:
-      ANDROID_API_LEVEL: 24
+      SDK_ANDROID_API_LEVEL: 24
       BUNDLE_VERSION: 0.1
       NDK_VERSION: 27d
     steps:
@@ -36,7 +36,7 @@ jobs:
         id: cache-bundle
         uses: actions/cache/restore@v4
         with:
-          path: ~/${{ steps.version.outputs.tag }}-android-${{ env.ANDROID_API_LEVEL }}-${{ env.BUNDLE_VERSION }}.artifactbundle.tar.gz
+          path: ~/${{ steps.version.outputs.tag }}-android-${{ env.SDK_ANDROID_API_LEVEL }}-${{ env.BUNDLE_VERSION }}.artifactbundle.tar.gz
           key: ${{ steps.version.outputs.key }}
           fail-on-cache-miss: ${{ startsWith(matrix.os, 'macos') && 'true' || 'false' }}
       - name: Get cached ${{ matrix.os }} ${{ steps.version.outputs.tag }} toolchain
@@ -141,7 +141,7 @@ jobs:
           VERSION="$(echo ${{ steps.version.outputs.tag }} | cut -f1,2 -d-)-${{ matrix.version }}"
 
           # e.g. swift-6.2-release-android-24-sdk
-          SDK_DIR=$VERSION-android-${ANDROID_API_LEVEL}-sdk
+          SDK_DIR=$VERSION-android-${SDK_ANDROID_API_LEVEL}-sdk
           ROOT=android-${NDK_VERSION}-sysroot
           SYSROOT=$SDK_DIR/$ROOT
           mkdir ${SDK_DIR}
@@ -160,7 +160,7 @@ jobs:
             cp $SYSROOT/usr/include/execinfo.h ${SDK_NAME}/usr/include
             perl -pi -e 's%33%24%' ${SDK_NAME}/usr/include/execinfo.h
 
-            ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_HOME --android-arch $arch --android-api-level $ANDROID_API_LEVEL --native-swift-tools-path=${TOOLCHAIN}/bin --native-clang-tools-path=${TOOLCHAIN}/bin --cross-compile-hosts=android-$arch --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='compiler;clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False --cross-compile-build-swift-tools=False -b --install-llbuild --swift-testing --install-swift-testing -p $BUILD_FLAG
+            ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_HOME --android-arch $arch --android-api-level $SDK_ANDROID_API_LEVEL --native-swift-tools-path=${TOOLCHAIN}/bin --native-clang-tools-path=${TOOLCHAIN}/bin --cross-compile-hosts=android-$arch --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='compiler;clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False --cross-compile-build-swift-tools=False -b --install-llbuild --swift-testing --install-swift-testing -p $BUILD_FLAG
 
             rm $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/swift
 
@@ -205,7 +205,7 @@ jobs:
           git apply ../../libc++-stdlib.h.patch
           cd ../..
 
-          BUNDLE=${{ steps.version.outputs.tag }}-android-${ANDROID_API_LEVEL}-${BUNDLE_VERSION}
+          BUNDLE=${{ steps.version.outputs.tag }}-android-${SDK_ANDROID_API_LEVEL}-${BUNDLE_VERSION}
           BUNDLE_DIR=$BUNDLE.artifactbundle
           mkdir ${BUNDLE_DIR}
           mv ${SDK_DIR} ${BUNDLE_DIR}
@@ -229,7 +229,7 @@ jobs:
               "targetTriples": {
           EOF
 
-          for api in $(eval echo "{$ANDROID_API_LEVEL..35}"); do
+          for api in $(eval echo "{$SDK_ANDROID_API_LEVEL..35}"); do
             if [[ ${api} == "35" ]]; then
               TRAILING_COMMA=""
             else
@@ -272,10 +272,10 @@ jobs:
 
           cat > $BUNDLE_DIR/$SYSROOT/SDKSettings.json << EOF
           {
-              "DisplayName": "Android NDK ${NDK_VERSION} sysroot with ${VERSION} runtime libraries for API ${ANDROID_API_LEVEL}",
+              "DisplayName": "Android NDK ${NDK_VERSION} sysroot with ${VERSION} runtime libraries for API ${SDK_ANDROID_API_LEVEL}",
               "Version": "27.3.13750724",
               "VersionMap": {},
-              "CanonicalName": "${VERSION}-android${ANDROID_API_LEVEL}"
+              "CanonicalName": "${VERSION}-android${SDK_ANDROID_API_LEVEL}"
           }
           EOF
 
@@ -291,27 +291,46 @@ jobs:
         uses: actions/cache/save@v4
         if: ${{ (steps.cache-bundle.outputs.cache-hit != 'true') && startsWith(matrix.os, 'ubuntu') }}
         with:
-          path: ~/${{ steps.version.outputs.tag }}-android-${{ env.ANDROID_API_LEVEL }}-${{ env.BUNDLE_VERSION }}.artifactbundle.tar.gz
+          path: ~/${{ steps.version.outputs.tag }}-android-${{ env.SDK_ANDROID_API_LEVEL }}-${{ env.BUNDLE_VERSION }}.artifactbundle.tar.gz
           key: ${{ steps.version.outputs.key }}
       - name: Upload SDK bundle
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.version.outputs.tag }}-android-${{ env.ANDROID_API_LEVEL }}-${{ env.BUNDLE_VERSION }}.artifactbundle.tar.gz
-          path: ~/${{ steps.version.outputs.tag }}-android-${{ env.ANDROID_API_LEVEL }}-${{ env.BUNDLE_VERSION }}.artifactbundle.tar.gz
+          name: ${{ steps.version.outputs.tag }}-android-${{ env.SDK_ANDROID_API_LEVEL }}-${{ env.BUNDLE_VERSION }}.artifactbundle.tar.gz
+          path: ~/${{ steps.version.outputs.tag }}-android-${{ env.SDK_ANDROID_API_LEVEL }}-${{ env.BUNDLE_VERSION }}.artifactbundle.tar.gz
           compression-level: 0
       - name: Install ${{ matrix.version }} Android SDK bundle and set SwiftPM flags
         run: |
+          if ${{ startsWith(matrix.os, 'ubuntu') }}; then
+            if ${{ matrix.version == 'trunk' }}; then
+              BUILD_ANDROID_API="24"
+            elif ${{ matrix.version == 'devel' }}; then
+              BUILD_ANDROID_API="29"
+            else
+              BUILD_ANDROID_API="33"
+            fi
+          else
+            if ${{ matrix.version == 'trunk' }}; then
+              BUILD_ANDROID_API="27"
+            elif ${{ matrix.version == 'devel' }}; then
+              BUILD_ANDROID_API="31"
+            else
+              BUILD_ANDROID_API="35"
+            fi
+          fi
+          echo "CI_ANDROID_API_LEVEL=${BUILD_ANDROID_API}" >> $GITHUB_ENV
+
           ${TOOLCHAIN}/bin/swift sdk install ~/${{ steps.version.outputs.tag }}-android-*.artifactbundle.tar.gz
-          ${TOOLCHAIN}/bin/swift sdk configure --show-configuration ${{ steps.version.outputs.tag }}-android-${ANDROID_API_LEVEL}-${BUNDLE_VERSION} armv7-unknown-linux-androideabi${ANDROID_API_LEVEL}
+          ${TOOLCHAIN}/bin/swift sdk configure --show-configuration ${{ steps.version.outputs.tag }}-android-${SDK_ANDROID_API_LEVEL}-${BUNDLE_VERSION} armv7-unknown-linux-androideabi${BUILD_ANDROID_API}
 
           echo "ANDROID_NDK_ROOT=" >> $GITHUB_ENV
 
-          SFLAGS="--swift-sdk aarch64-unknown-linux-android${ANDROID_API_LEVEL} ${FLAGS}"
+          SFLAGS="--swift-sdk aarch64-unknown-linux-android${BUILD_ANDROID_API} ${FLAGS}"
           echo "SWIFTPM_AARCH_FLAGS=${SFLAGS}" >> $GITHUB_ENV
-          XFLAGS="--swift-sdk x86_64-unknown-linux-android${ANDROID_API_LEVEL} ${FLAGS}"
+          XFLAGS="--swift-sdk x86_64-unknown-linux-android${BUILD_ANDROID_API} ${FLAGS}"
           echo "SWIFTPM_X_FLAGS=${XFLAGS}" >> $GITHUB_ENV
-          AFLAGS="--swift-sdk armv7-unknown-linux-androideabi${ANDROID_API_LEVEL} ${FLAGS}"
+          AFLAGS="--swift-sdk armv7-unknown-linux-androideabi${BUILD_ANDROID_API} ${FLAGS}"
           echo "SWIFTPM_ARM_FLAGS=${AFLAGS}" >> $GITHUB_ENV
       - name: Get Swift Argument Parser package
         uses: actions/checkout@v4
@@ -476,7 +495,7 @@ jobs:
           EOF
 
           mkdir pack
-          TARGET="x86_64-unknown-linux-android$ANDROID_API_LEVEL"
+          TARGET="x86_64-unknown-linux-android$CI_ANDROID_API_LEVEL"
 
           cp swift-argument-parser/.build/$TARGET/debug/{generate-manual,math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
           echo 'adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest' >> ~/test-toolchain.sh
@@ -487,7 +506,7 @@ jobs:
           wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v2.1.1/arghandling.c
           clang -c arghandling.c
           clang -o elf-cleaner arghandling.o elf-cleaner.cpp -DCOPYRIGHT=\"foo\" -DPACKAGE_NAME=\"termux-elf-cleaner\" -DPACKAGE_VERSION=\"2.2.1\"
-          ./elf-cleaner --api-level $ANDROID_API_LEVEL pack/{generate-manual,math,repeat,roll} || true
+          ./elf-cleaner --api-level $CI_ANDROID_API_LEVEL pack/{generate-manual,math,repeat,roll} || true
 
           cp swift-crypto/.build/$TARGET/debug/swift-cryptoPackageTests.xctest pack
           echo 'adb shell /data/local/tmp/pack/swift-cryptoPackageTests.xctest' >> ~/test-toolchain.sh
@@ -522,7 +541,7 @@ jobs:
           rm swift-nio/Tests/NIOFSIntegrationTests/Test\ Data/*symlink
           cp -r swift-nio/Tests/NIOFSIntegrationTests/Test\ Data/ swift-nio/Tests/NIOFSIntegrationTests/FileHandleTests.swift pack
           cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
-          cp ~/.${{ startsWith(matrix.os, 'ubuntu') && 'config/' || '' }}swiftpm/swift-sdks/${{ steps.version.outputs.tag }}-android-${ANDROID_API_LEVEL}-*.artifactbundle/swift*sdk/android*sysroot/usr/lib/x86_64-linux-android/lib*so pack
+          cp ~/.${{ startsWith(matrix.os, 'ubuntu') && 'config/' || '' }}swiftpm/swift-sdks/${{ steps.version.outputs.tag }}-android-${SDK_ANDROID_API_LEVEL}-*.artifactbundle/swift*sdk/android*sysroot/usr/lib/x86_64-linux-android/lib*so pack
 
           # need to free up some space or else the emulator fails to launch:
           # ERROR   | Not enough space to create userdata partition. Available: 6086.191406 MB at /home/runner/.android/avd/../avd/test.avd, need 7372.800000 MB.
@@ -539,9 +558,9 @@ jobs:
             sudo udevadm trigger --name-match=kvm
           fi
 
-      - name: Run tests on Android x86_64 emulator
+      - name: Run tests on Android x86_64 emulator against API ${{ env.CI_ANDROID_API_LEVEL }}
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: ${{ env.ANDROID_API_LEVEL }}
+          api-level: ${{ env.CI_ANDROID_API_LEVEL }}
           arch: x86_64
           script: ~/test-toolchain.sh
