@@ -142,11 +142,11 @@ for the latest Swift trunk snapshot and pass in the path to the corresponding
 prebuilt Swift toolchain to `build-script` below, you can build a Swift trunk
 SDK too, as seen on the CI.
 
-Next, apply two patches from this repo to the Swift source, which make
-modifications for NDK 27 and [the Foundation rewrite in Swift 6 that was merged
-last summer](https://www.swift.org/blog/foundation-preview-now-available/):
+Next, apply two patches from this repo to the Swift source, which work around a
+Driver bug, add a Testing dependency, and put in some last `posix_spawn_*` polyfills
+from upstream:
 ```
-git apply swift-android.patch swift-android-release.patch
+git apply swift-android.patch swift-android-spawn.patch
 ```
 
 After making sure [needed build tools like python 3, CMake, and ninja](https://github.com/swiftlang/swift/blob/release/6.2/docs/HowToGuides/GettingStarted.md#linux)

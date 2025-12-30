@@ -31,7 +31,7 @@ jobs:
             SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
           fi
           echo "tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
-          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-test-bundle" >> $GITHUB_OUTPUT
+          echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-spawn-bundle" >> $GITHUB_OUTPUT
       - name: Get cached SDK bundle
         id: cache-bundle
         uses: actions/cache/restore@v4
@@ -126,12 +126,11 @@ jobs:
 
           ANDROID_ARCH=aarch64 BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
 
-          git apply -C1 swift-android.patch swift-android-ci.patch
+          git apply -C1 swift-android.patch swift-android-spawn.patch swift-android-ci.patch
           BUILD_FLAG="--foundation-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS=''"
           if ${{ matrix.version == 'release' }}; then
-            git apply swift-android-ci-release.patch swift-android-release.patch
+            git apply swift-android-ci-release.patch
           else
-            git apply swift-android-spawn.patch
             BUILD_FLAG+=" --libdispatch-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS=''"
           fi
 
