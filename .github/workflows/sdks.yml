@@ -126,11 +126,14 @@ jobs:
 
           ANDROID_ARCH=aarch64 BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
 
-          git apply -C1 swift-android.patch swift-android-spawn.patch swift-android-ci.patch
+          git apply -C1 swift-android.patch swift-android-ci.patch
           BUILD_FLAG="--foundation-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS=''"
           if ${{ matrix.version == 'release' }}; then
-            git apply swift-android-ci-release.patch
+            git apply swift-android-ci-release.patch swift-android-spawn.patch
           else
+            if ${{ matrix.version == 'devel' }}; then
+              git apply swift-android-spawn.patch
+            fi
             BUILD_FLAG+=" --libdispatch-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS=''"
           fi
 
