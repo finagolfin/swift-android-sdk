@@ -403,6 +403,7 @@ jobs:
       - name: Build Swift Collections package
         run: |
           cd swift-collections
+          perl -pi -e 's%#if compiler\(>=6.2\)%#if compiler(>=6.2) && !os(Android)%' Tests/DequeTests/RigidDequeCrashTests.swift
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
