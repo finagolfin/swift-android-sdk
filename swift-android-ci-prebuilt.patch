@@ -1,0 +1,15 @@
+diff --git a/swiftpm/Sources/swift-build-prebuilts/BuildPrebuilts.swift b/swiftpm/Sources/swift-build-prebuilts/BuildPrebuilts.swift
+index ffa6b7f3f..abe453232 100644
+--- a/swiftpm/Sources/swift-build-prebuilts/BuildPrebuilts.swift
++++ b/swiftpm/Sources/swift-build-prebuilts/BuildPrebuilts.swift
+@@ -24,6 +24,10 @@ import struct TSCBasic.ByteString
+ import struct TSCBasic.SHA256
+ import Workspace
+ 
++#if canImport(Android)
++import Android
++#endif
++
+ // Format for the .zip.json files.
+ struct Artifact: Codable {
+     var platform: Workspace.PrebuiltsManifest.Platform
