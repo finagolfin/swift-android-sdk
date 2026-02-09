@@ -19,8 +19,8 @@ let extraSwiftRepos = ["swift-llbuild", "swift-package-manager", "swift-driver",
 let appleRepos = ["swift-argument-parser", "swift-crypto", "swift-system", "swift-collections", "swift-certificates", "swift-asn1"]
 let renameRepos = ["swift-llbuild" : "llbuild", "swift-package-manager" : "swiftpm"]
 var repoTags = ["swift-system" : "1.5.0", "swift-collections" : "1.1.6", "swift-asn1" : "1.3.2",
-                "swift-certificates" : "1.10.1", "swift-argument-parser" : "1.5.1",
-                "swift-crypto" : "3.12.5", "swift-toolchain-sqlite" : "1.0.1", "swift-tools-protocols" : "0.0.9"]
+                "swift-certificates" : "1.10.1", "swift-argument-parser" : "1.6.1",
+                "swift-crypto" : "3.12.5", "swift-toolchain-sqlite" : "1.0.7", "swift-tools-protocols" : "0.0.9"]
 if ProcessInfo.processInfo.environment["BUILD_SWIFT_PM"] != nil {
   swiftRepos += extraSwiftRepos
   termuxPackages += ["ncurses", "libsqlite"]
@@ -61,8 +61,12 @@ if swiftBranch == "RELEASE" {
   repoTags["swift-crypto"] = "3.0.0"
   repoTags["swift-certificates"] = "1.0.1"
   repoTags["swift-asn1"] = "1.0.0"
+  repoTags["swift-toolchain-sqlite"] = "1.0.1"
 } else {
   sdkDir = "swift-\(swiftVersion == "" ? "trunk" : "devel")-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"
+  if swiftVersion == "" {
+    repoTags["swift-tools-protocols"] = "0.0.10"
+  }
 }
 
 // takes the name of a command-line executable and the arguments to pass to it
