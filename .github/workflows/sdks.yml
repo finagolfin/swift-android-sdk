@@ -305,23 +305,7 @@ jobs:
           compression-level: 0
       - name: Install ${{ matrix.version }} Android SDK bundle and set SwiftPM flags
         run: |
-          if ${{ startsWith(matrix.os, 'ubuntu') }}; then
-            if ${{ matrix.version == 'trunk' }}; then
-              BUILD_ANDROID_API="24"
-            elif ${{ matrix.version == 'devel' }}; then
-              BUILD_ANDROID_API="29"
-            else
-              BUILD_ANDROID_API="33"
-            fi
-          else
-            if ${{ matrix.version == 'trunk' }}; then
-              BUILD_ANDROID_API="27"
-            elif ${{ matrix.version == 'devel' }}; then
-              BUILD_ANDROID_API="31"
-            else
-              BUILD_ANDROID_API="35"
-            fi
-          fi
+          BUILD_ANDROID_API="24"
           echo "CI_ANDROID_API_LEVEL=${BUILD_ANDROID_API}" >> $GITHUB_ENV
 
           ${TOOLCHAIN}/bin/swift sdk install ~/${{ steps.version.outputs.tag }}-android-*.artifactbundle.tar.gz
@@ -367,7 +351,7 @@ jobs:
       - name: Build Swift NIO package
         run: |
           cd swift-nio
-          git apply ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem.patch
+          git apply ../sdk-config/3506.diff ../sdk-config/swift-nio-disable-ecn-tests.patch ../sdk-config/swift-nio-filesystem.patch
           if ${{ startsWith(matrix.os, 'macos') }}; then
             git apply -R ../sdk-config/swift-nio-revert.patch
           fi
