@@ -1,0 +1,76 @@
+diff --git a/Sources/NIOCore/SystemCallHelpers.swift b/Sources/NIOCore/SystemCallHelpers.swift
+index 8894fd2d6c1..d1e00224e30 100644
+--- a/Sources/NIOCore/SystemCallHelpers.swift
++++ b/Sources/NIOCore/SystemCallHelpers.swift
+@@ -56,6 +56,9 @@ private let sysRead: @convention(c) (CInt, UnsafeMutableRawPointer?, size_t) ->
+ 
+ #if os(Android)
+ private let sysIfNameToIndex: @convention(c) (UnsafePointer<CChar>) -> CUnsignedInt = if_nametoindex
++#if compiler(>=6.3)
++@available(Android 24, *)
++#endif
+ private let sysGetifaddrs: @convention(c) (UnsafeMutablePointer<UnsafeMutablePointer<ifaddrs>?>) -> CInt = getifaddrs
+ #elseif !os(WASI)
+ private let sysIfNameToIndex: @convention(c) (UnsafePointer<CChar>?) -> CUnsignedInt = if_nametoindex
+@@ -228,8 +231,12 @@ enum SystemCalls {
+     }
+ 
+     #if !os(Windows)
++
+     @inline(never)
+     @usableFromInline
++    #if compiler(>=6.3)
++    @available(Android 24, *)
++    #endif
+     internal static func getifaddrs(_ addrs: UnsafeMutablePointer<UnsafeMutablePointer<ifaddrs>?>) throws {
+         _ = try syscall(blocking: false) {
+             sysGetifaddrs(addrs)
+diff --git a/Sources/NIOCore/Utilities.swift b/Sources/NIOCore/Utilities.swift
+index b9a0c788cb4..db5a6bcc15f 100644
+--- a/Sources/NIOCore/Utilities.swift
++++ b/Sources/NIOCore/Utilities.swift
+@@ -160,6 +160,9 @@ public enum System: Sendable {
+     /// - Returns: An array of network interfaces available on this machine.
+     /// - Throws: If an error is encountered while enumerating interfaces.
+     @available(*, deprecated, renamed: "enumerateDevices")
++    #if compiler(>=6.3)
++    @available(Android 24, *)
++    #endif
+     public static func enumerateInterfaces() throws -> [NIONetworkInterface] {
+         var interfaces: [NIONetworkInterface] = []
+         interfaces.reserveCapacity(12)  // Arbitrary choice.
+@@ -190,6 +193,9 @@ public enum System: Sendable {
+     ///
+     /// - Returns: An array of network devices available on this machine.
+     /// - Throws: If an error is encountered while enumerating interfaces.
++    #if compiler(>=6.3)
++    @available(Android 24, *)
++    #endif
+     public static func enumerateDevices() throws -> [NIONetworkDevice] {
+         var devices: [NIONetworkDevice] = []
+         devices.reserveCapacity(12)  // Arbitrary choice.
+diff --git a/Sources/NIOMulticastChat/main.swift b/Sources/NIOMulticastChat/main.swift
+index b71f6bb9a54..453c5022d00 100644
+--- a/Sources/NIOMulticastChat/main.swift
++++ b/Sources/NIOMulticastChat/main.swift
+@@ -53,7 +53,19 @@ let targetDevice: NIONetworkDevice? = {
+     if let interfaceAddress = CommandLine.arguments.dropFirst().first,
+         let targetAddress = try? SocketAddress(ipAddress: interfaceAddress, port: 0)
+     {
+-        for device in try! System.enumerateDevices() {
++        let devices: [NIONetworkDevice]
++
++        #if compiler(>=6.3)
++        if #available(Android 24, *) {
++            devices = try! System.enumerateDevices()
++        } else {
++            fatalError("This demo only works on Android API 24+")
++        }
++        #else
++        devices = try! System.enumerateDevices()
++        #endif
++
++        for device in devices {
+             if device.address == targetAddress {
+                 return device
+             }
