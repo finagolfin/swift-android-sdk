@@ -132,9 +132,6 @@ jobs:
           if ${{ matrix.version == 'release' }}; then
             git apply swift-android-ci-release.patch swift-android-spawn.patch
           else
-            if ${{ matrix.version == 'devel' }}; then
-              git apply swift-android-spawn.patch
-            fi
             BUILD_FLAG+=" --libdispatch-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS=''"
           fi
 
