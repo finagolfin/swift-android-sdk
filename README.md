@@ -1,3 +1,9 @@
+Please try out [the new official SDK for Android](https://www.swift.org/documentation/articles/swift-sdk-for-android-getting-started.html)
+and let them know what you think.
+
+I will put out a last 6.2.4 release here soon, then consider how to best use this
+repo going forward, perhaps just as a CI.
+
 # Swift cross-compilation SDK bundle for Android
 
 The patches used to build this SDK bundle are open source and listed below. I
