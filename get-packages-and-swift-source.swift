@@ -56,12 +56,6 @@ if tagExtract.numberOfMatches(in: SWIFT_TAG, range: tagRange) == 1 {
 
 if swiftBranch == "RELEASE" {
   sdkDir = "swift-release-android-\(ANDROID_ARCH)-24-sdk"
-  repoTags["swift-collections"] = "1.1.3"
-  repoTags["swift-argument-parser"] = "1.4.0"
-  repoTags["swift-crypto"] = "3.0.0"
-  repoTags["swift-certificates"] = "1.0.1"
-  repoTags["swift-asn1"] = "1.0.0"
-  repoTags["swift-toolchain-sqlite"] = "1.0.1"
 } else {
   sdkDir = "swift-\(swiftVersion == "" ? "trunk" : "devel")-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"
   if swiftVersion == "" {
