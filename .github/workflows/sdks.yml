@@ -319,6 +319,9 @@ jobs:
           ${TOOLCHAIN}/bin/swift sdk configure --show-configuration ${{ steps.version.outputs.tag }}-android-${SDK_ANDROID_API_LEVEL}-${BUNDLE_VERSION} armv7-unknown-linux-androideabi${BUILD_ANDROID_API}
 
           echo "ANDROID_NDK_ROOT=" >> $GITHUB_ENV
+          if ${{ matrix.version == 'trunk' }}; then
+            FLAGS="--build-system native"
+          fi
 
           SFLAGS="--swift-sdk aarch64-unknown-linux-android${BUILD_ANDROID_API} ${FLAGS}"
           echo "SWIFTPM_AARCH_FLAGS=${SFLAGS}" >> $GITHUB_ENV

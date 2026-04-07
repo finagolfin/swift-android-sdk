@@ -74,7 +74,7 @@ index 156bf002a..d891da556 100755
              build_flags += ["--arch", "x86_64", "--arch", "arm64"]
          elif cross_compile_hosts.startswith('android-'):
              build_flags.extend(["--destination", args.cross_compile_config])
-+            build_flags.extend(["-Xlinker", "-landroid-spawn"])
++            build_flags.extend(["-Xlinker", "-landroid-spawn", "--build-system", "native"])
          else:
              logging.error("cannot cross-compile for %s", cross_compile_hosts)
              raise SystemExit(1)
