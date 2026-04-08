@@ -318,8 +318,9 @@ jobs:
           ${TOOLCHAIN}/bin/swift sdk install ~/${{ steps.version.outputs.tag }}-android-*.artifactbundle.tar.gz
           ${TOOLCHAIN}/bin/swift sdk configure --show-configuration ${{ steps.version.outputs.tag }}-android-${SDK_ANDROID_API_LEVEL}-${BUNDLE_VERSION} armv7-unknown-linux-androideabi${BUILD_ANDROID_API}
 
-          echo "ANDROID_NDK_ROOT=" >> $GITHUB_ENV
-          if ${{ matrix.version == 'trunk' }}; then
+          if ${{ matrix.version == 'devel' }}; then
+            echo "ANDROID_NDK_ROOT=" >> $GITHUB_ENV
+          elif ${{ matrix.version == 'trunk' }}; then
             FLAGS="--build-system native"
           fi
 
