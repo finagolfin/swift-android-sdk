@@ -58,9 +58,6 @@ if swiftBranch == "RELEASE" {
   sdkDir = "swift-release-android-\(ANDROID_ARCH)-24-sdk"
 } else {
   sdkDir = "swift-\(swiftVersion == "" ? "trunk" : "devel")-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"
-  if swiftVersion == "" {
-    repoTags["swift-tools-protocols"] = "0.0.10"
-  }
 }
 
 // takes the name of a command-line executable and the arguments to pass to it
