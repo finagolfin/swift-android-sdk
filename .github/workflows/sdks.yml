@@ -126,6 +126,10 @@ jobs:
 
           ANDROID_ARCH=aarch64 BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
 
+          if ${{ matrix.version == 'trunk' }}; then
+            rm -rf swift-tools-protocols/
+            git clone https://github.com/swiftlang/swift-tools-protocols.git
+          fi
           git apply -C1 swift-android.patch swift-android-ci.patch
           git apply -C0 swift-android-ci-prebuilt.patch
 
