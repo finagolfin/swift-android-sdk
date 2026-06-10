@@ -37,7 +37,7 @@ guard let ANDROID_ARCH = ProcessInfo.processInfo.environment["ANDROID_ARCH"] els
 var sdkDir = "", swiftVersion = "", swiftBranch = "", swiftSnapshotDate = ""
 
 let tagRange = NSRange(SWIFT_TAG.startIndex..., in: SWIFT_TAG)
-let tagExtract = try NSRegularExpression(pattern: "swift-([5-9]\\.[0-9]+)?\\.?[1-9]*-?([A-Z-]+)([0-9-]+[0-9])?")
+let tagExtract = try NSRegularExpression(pattern: "swift-([5-9]\\.[0-9]+\\.?[1-9x]*)?-?([A-Z-]+)([0-9-]+[0-9])?")
 
 if tagExtract.numberOfMatches(in: SWIFT_TAG, range: tagRange) == 1 {
   let match = tagExtract.firstMatch(in: SWIFT_TAG, range: tagRange)
