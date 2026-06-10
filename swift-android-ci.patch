@@ -53,19 +53,6 @@ diff --git a/swift-certificates/Sources/X509/Verifier/RFC5280/URIConstraints.swi
  #elseif canImport(Darwin)
  import Darwin
  #endif
-diff --git a/swift-build/Sources/SWBUtil/Lock.swift b/swift-build/Sources/SWBUtil/Lock.swift
-index 2135ce6..fbff6f6 100644
---- a/swift-build/Sources/SWBUtil/Lock.swift
-+++ b/swift-build/Sources/SWBUtil/Lock.swift
-@@ -14,6 +14,8 @@
- public import os
- #elseif os(Windows)
- public import WinSDK
-+#elseif canImport(Android)
-+public import Android
- #else
- public import SWBLibc
- #endif
 diff --git a/swiftpm/Utilities/bootstrap b/swiftpm/Utilities/bootstrap
 index 156bf002a..d891da556 100755
 --- a/swiftpm/Utilities/bootstrap

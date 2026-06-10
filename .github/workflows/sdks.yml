@@ -28,7 +28,8 @@ jobs:
             SWIFT_TAG="swift-6.3-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
           else
             LATEST_TOOLCHAIN_VERSION=$(curl -sL https://github.com/apple/swift/tags | grep -m1 swift-DEV | cut -d- -f7-9)
-            SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-${LATEST_TOOLCHAIN_VERSION}-a"
+            SWIFT_TAG="swift-DEVELOPMENT-SNAPSHOT-2026-05-27-a"
+            # ${LATEST_TOOLCHAIN_VERSION}-a"
           fi
           echo "tag=$SWIFT_TAG" >> $GITHUB_OUTPUT
           echo "key=$SWIFT_TAG-ndk-${NDK_VERSION}-spawn-bundle" >> $GITHUB_OUTPUT
@@ -132,6 +133,9 @@ jobs:
           fi
           git apply -C1 swift-android.patch swift-android-ci.patch
           git apply -C0 swift-android-ci-prebuilt.patch
+          if ${{ matrix.version == 'release' }}; then
+            git apply swift-android-ci-release.patch
+          fi
 
           perl -pi -e 's%33%24%' $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/execinfo.h
           perl -pi -e 's%String\(cString: getpass%\"fake\" //%' swiftpm/Sources/PackageRegistryCommand/PackageRegistryCommand+Auth.swift
