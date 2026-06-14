@@ -179,7 +179,10 @@ jobs:
             mv include/curl include/execinfo.h include/libxml2 include/spawn.h .
             rm -r include/*
             mv curl execinfo.h libxml2 spawn.h include/
-            cp -r ../../swift/lib/ClangImporter/SwiftBridging/{module.modulemap,swift} include/
+            # C++ bridging header generated differently in trunk 6.5
+            if ${{ matrix.version != 'trunk' }}; then
+              cp -r ../../swift/lib/ClangImporter/SwiftBridging/{module.modulemap,swift} include/
+            fi
 
             TRIPLE="$arch-linux-android"
             if [[ $arch == 'armv7' ]]; then
