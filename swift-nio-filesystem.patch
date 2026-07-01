@@ -32,8 +32,8 @@ index d33fc2b3..e88c06b9 100644
  @_spi(CustomByteBufferAllocator) import NIOCore
  import Testing
  
--#if compiler(>=6.2)
-+#if compiler(>=6.2) && !os(Android)
+-#if compiler(>=6.2) && !(canImport(Darwin) && !os(macOS))
++#if compiler(>=6.2) && !(canImport(Darwin) && !os(macOS)) && !os(Android)
  @Suite struct ByteBufferCrashTests {
  
      @Test func copyBytesToIndexExceedingUInt32Max() async {
