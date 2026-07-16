@@ -11,19 +11,6 @@ index 3dc51872..49aeeeca 100644
              // When opening in this mode we can more "atomically" create the file, that is, by not
              // leaving the user with a half written file should e.g. the system crash or throw an
              // error while writing. On non-Android Linux we do this by opening the directory for
-diff --git a/Tests/NIOCoreTests/ByteBufferCrashTests.swift b/Tests/NIOCoreTests/ByteBufferCrashTests.swift
-index d33fc2b3..e88c06b9 100644
---- a/Tests/NIOCoreTests/ByteBufferCrashTests.swift
-+++ b/Tests/NIOCoreTests/ByteBufferCrashTests.swift
-@@ -16,7 +16,7 @@ import Foundation
- @_spi(CustomByteBufferAllocator) import NIOCore
- import Testing
- 
--#if compiler(>=6.2) && !(canImport(Darwin) && !os(macOS))
-+#if compiler(>=6.2) && !(canImport(Darwin) && !os(macOS)) && !os(Android)
- @Suite struct ByteBufferCrashTests {
- 
-     @Test func copyBytesToIndexExceedingUInt32Max() async {
 diff --git a/Tests/NIOFSIntegrationTests/BufferedReaderTests.swift b/Tests/NIOFSIntegrationTests/BufferedReaderTests.swift
 index 8404e159..151fccc1 100644
 --- a/Tests/NIOFSIntegrationTests/BufferedReaderTests.swift
