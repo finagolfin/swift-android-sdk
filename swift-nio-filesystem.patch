@@ -16,7 +16,7 @@ index 8404e159..151fccc1 100644
 --- a/Tests/NIOFSIntegrationTests/BufferedReaderTests.swift
 +++ b/Tests/NIOFSIntegrationTests/BufferedReaderTests.swift
 @@ -21,7 +21,7 @@ import XCTest
- final class BufferedReaderTests: XCTestCase {
+ 
      func testBufferedReaderSizeAndCapacity() async throws {
          let fs = FileSystem.shared
 -        try await fs.withFileHandle(forReadingAt: #filePath) { handle in
@@ -38,9 +38,9 @@ index c18e2c8e..65872fb9 100644
 --- a/Tests/NIOFSIntegrationTests/FileHandleTests.swift
 +++ b/Tests/NIOFSIntegrationTests/FileHandleTests.swift
 @@ -20,9 +20,8 @@ import XCTest
+         #endif
+     }
  
- @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
- final class FileHandleTests: XCTestCase {
 -    static let thisFile = FilePath(#filePath)
 -    static let testData = FilePath(#filePath)
 -        .removingLastComponent()  // FileHandleTests.swift
@@ -214,4 +214,4 @@ index 66ed1171..5253a650 100644
 +
  #if ENABLE_MOCKING
  final class SyscallTests: XCTestCase {
-     func test_openat() throws {
+     override func setUpWithError() throws {
