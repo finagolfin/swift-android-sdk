@@ -15,7 +15,7 @@ jobs:
     env:
       SDK_ANDROID_API_LEVEL: 24
       BUNDLE_VERSION: 0.1
-      NDK_VERSION: 27d
+      NDK_VERSION: ${{ matrix.version == 'release' && '27d' || '30-beta2' }}
     steps:
       - name: Check for latest Swift ${{ matrix.version }} toolchain
         id: version
@@ -91,7 +91,12 @@ jobs:
         if: ${{ steps.cache-bundle.outputs.cache-hit != 'true' && steps.cache-ndk.outputs.cache-hit != 'true' && startsWith(matrix.os, 'ubuntu') }}
         run: |
           wget -q https://dl.google.com/android/repository/android-ndk-r$NDK_VERSION-linux.zip
-          if [ "$(sha1sum android-ndk-r$NDK_VERSION-linux.zip | cut -f1 -d" ")" != '22105e410cf29afcf163760cc95522b9fb981121' ]; then
+          if ${{ matrix.version == 'release' }}; then
+            NDK_HASH='22105e410cf29afcf163760cc95522b9fb981121'
+          else
+            NDK_HASH='069427047d18cc6e44369cd7b8e711bfc2c7a3b5'
+          fi
+          if [ "$(sha1sum android-ndk-r$NDK_VERSION-linux.zip | cut -f1 -d" ")" != "$NDK_HASH" ]; then
             echo "NDK checksum didn't match"
             exit 1
           fi
@@ -125,8 +130,9 @@ jobs:
           cd sdk-config
 
           ANDROID_ARCH=aarch64 BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
-
+          NDK=$ANDROID_NDK_HOME
           if ${{ matrix.version != 'release' }}; then
+            NDK+="/../28.2.13676358"
             rm -rf swift-tools-protocols/
             git clone https://github.com/swiftlang/swift-tools-protocols.git
             if ${{ matrix.version == 'devel' }}; then
@@ -141,7 +147,7 @@ jobs:
             git apply swift-android-ci-release.patch
           fi
 
-          perl -pi -e 's%33%24%' $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/execinfo.h
+          perl -pi -e 's%33%24%' $NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/execinfo.h
           perl -pi -e 's%String\(cString: getpass%\"fake\" //%' swiftpm/Sources/PackageRegistryCommand/PackageRegistryCommand+Auth.swift
           perl -pi -e 's%Glibc%Android%' swiftpm/Sources/Commands/Utilities/TestingSupport.swift
           perl -pi -e "s%swift/android',%swift/android', '-Xlinker', '-landroid-spawn',%" sourcekit-lsp/Utilities/build-script-helper.py
@@ -167,9 +173,9 @@ jobs:
             cp $SYSROOT/usr/include/execinfo.h ${SDK_NAME}/usr/include
             perl -pi -e 's%33%24%' ${SDK_NAME}/usr/include/execinfo.h
 
-            ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $ANDROID_NDK_HOME --android-arch $arch --android-api-level $SDK_ANDROID_API_LEVEL --native-swift-tools-path=${TOOLCHAIN}/bin --native-clang-tools-path=${TOOLCHAIN}/bin --cross-compile-hosts=android-$arch --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='compiler;clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False --cross-compile-build-swift-tools=False -b --install-llbuild --swift-testing --install-swift-testing -p --foundation-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS='' --libdispatch-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS=''
+            ./swift/utils/build-script -RA --skip-build-cmark --build-llvm=0 --android --android-ndk $NDK --android-arch $arch --android-api-level $SDK_ANDROID_API_LEVEL --native-swift-tools-path=${TOOLCHAIN}/bin --native-clang-tools-path=${TOOLCHAIN}/bin --cross-compile-hosts=android-$arch --cross-compile-deps-path=$SDK --skip-local-build --build-swift-static-stdlib --xctest --install-swift --install-libdispatch --install-foundation --install-xctest --install-destdir=$SDK --swift-install-components='compiler;clang-resource-dir-symlink;license;stdlib;sdk-overlay' --cross-compile-append-host-target-to-destdir=False --cross-compile-build-swift-tools=False -b --install-llbuild --swift-testing --install-swift-testing -p --foundation-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS='' --libdispatch-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS=''
 
-            rm $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/swift
+            rm $NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/swift
 
             pushd ${SDK_NAME}/usr
 
@@ -210,9 +216,11 @@ jobs:
           ln -s ../swift/clang $SYSROOT/usr/lib/swift_static-armv7/clang
           ln -s ../swift/clang $SYSROOT/usr/lib/swift_static-x86_64/clang
 
-          # Patch a single libc++ header to work around a Swift compiler bug
+          # Patch a single libc++ header in NDK 27 to work around a Swift compiler bug
           cd $SYSROOT
-          git apply ../../libc++-stdlib.h.patch
+          if ${{ matrix.version == 'release' }}; then
+            git apply ../../libc++-stdlib.h.patch
+          fi
           cd ../..
 
           BUNDLE=${{ steps.version.outputs.tag }}-android-${SDK_ANDROID_API_LEVEL}-${BUNDLE_VERSION}
