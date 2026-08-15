@@ -439,6 +439,16 @@ jobs:
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_AARCH_FLAGS}
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_X_FLAGS}
           ${TOOLCHAIN}/bin/swift build --build-tests ${SWIFTPM_ARM_FLAGS}
+      - name: Get Swift Certificates package
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-certificates
+          path: swift-certificates
+      - name: Get Swift ASN1 package
+        uses: actions/checkout@v4
+        with:
+          repository: apple/swift-asn1
+          path: swift-asn1
       - name: Get Swift NIO SSL package
         uses: actions/checkout@v4
         with:
