@@ -145,6 +145,8 @@ jobs:
           git apply -C0 swift-android-ci-prebuilt.patch
           if ${{ matrix.version == 'release' }}; then
             git apply swift-android-ci-release.patch
+          elif ${{ matrix.version == 'trunk' }}; then
+            git apply swift-android-stdio.patch
           fi
 
           perl -pi -e 's%33%24%' $NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/execinfo.h
