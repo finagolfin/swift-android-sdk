@@ -13,7 +13,7 @@ var swiftRepos = ["llvm-project", "swift", "swift-experimental-string-processing
 
 let extraSwiftRepos = ["swift-llbuild", "swift-package-manager", "swift-driver",
                        "swift-tools-support-core", "swift-argument-parser", "swift-crypto",
-                       "indexstore-db", "sourcekit-lsp", "swift-system", "swift-lmdb",
+                       "indexstore-db", "swift-system", "swift-lmdb",
                        "swift-certificates", "swift-asn1", "swift-toolchain-sqlite",
                        "swift-build", "swift-tools-protocols"]
 let appleRepos = ["swift-argument-parser", "swift-crypto", "swift-system", "swift-collections", "swift-certificates", "swift-asn1"]

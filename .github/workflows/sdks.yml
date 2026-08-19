@@ -145,12 +145,14 @@ jobs:
           git apply -C0 swift-android-ci-prebuilt.patch
           if ${{ matrix.version == 'release' }}; then
             git apply swift-android-ci-release.patch
+          elif ${{ matrix.version == 'trunk' }}; then
+            git apply swift-android-stdio.patch
           fi
 
           perl -pi -e 's%33%24%' $NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/execinfo.h
           perl -pi -e 's%String\(cString: getpass%\"fake\" //%' swiftpm/Sources/PackageRegistryCommand/PackageRegistryCommand+Auth.swift
           perl -pi -e 's%Glibc%Android%' swiftpm/Sources/Commands/Utilities/TestingSupport.swift
-          perl -pi -e "s%swift/android',%swift/android', '-Xlinker', '-landroid-spawn',%" sourcekit-lsp/Utilities/build-script-helper.py
+          # perl -pi -e "s%swift/android',%swift/android', '-Xlinker', '-landroid-spawn',%" sourcekit-lsp/Utilities/build-script-helper.py
           VERSION="$(echo ${{ steps.version.outputs.tag }} | cut -f1,2 -d-)-${{ matrix.version }}"
 
           # e.g. swift-6.3-release-android-24-sdk
