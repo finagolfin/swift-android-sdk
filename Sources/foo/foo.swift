@@ -20,7 +20,7 @@
 // on FreeBSD- or imported const/let on WASI and Musl. Either way, they must not trip
 // "global shared mutable state" errors in Swift 6 mode.
 
-import Foundation
+//import Foundation
 /*#if canImport(Darwin)
 import Darwin
 #elseif canImport(Glibc)
