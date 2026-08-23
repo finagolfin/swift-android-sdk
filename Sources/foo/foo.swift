@@ -21,7 +21,7 @@
 // "global shared mutable state" errors in Swift 6 mode.
 
 import Foundation
-#if canImport(Darwin)
+/*#if canImport(Darwin)
 import Darwin
 #elseif canImport(Glibc)
 import Glibc
@@ -35,7 +35,7 @@ import WASILibc
 import CRT
 #else
 #error("Unsupported platform")
-#endif
+#endif*/
 
 func useFromAsyncFunction() async {
     _ = stdin
