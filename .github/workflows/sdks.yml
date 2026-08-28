@@ -15,7 +15,7 @@ jobs:
     env:
       SDK_ANDROID_API_LEVEL: 24
       BUNDLE_VERSION: 0.1
-      NDK_VERSION: ${{ matrix.version == 'release' && '27d' || '30-beta2' }}
+      NDK_VERSION: ${{ matrix.version == 'release' && '27d' || '30-beta3' }}
     steps:
       - name: Check for latest Swift ${{ matrix.version }} toolchain
         id: version
@@ -94,7 +94,7 @@ jobs:
           if ${{ matrix.version == 'release' }}; then
             NDK_HASH='22105e410cf29afcf163760cc95522b9fb981121'
           else
-            NDK_HASH='069427047d18cc6e44369cd7b8e711bfc2c7a3b5'
+            NDK_HASH='f66e852ac01a57f74bcf6fd96dcea04dda5ea392'
           fi
           if [ "$(sha1sum android-ndk-r$NDK_VERSION-linux.zip | cut -f1 -d" ")" != "$NDK_HASH" ]; then
             echo "NDK checksum didn't match"
