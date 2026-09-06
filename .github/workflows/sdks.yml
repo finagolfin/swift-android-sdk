@@ -133,9 +133,9 @@ jobs:
           NDK=$ANDROID_NDK_HOME
           if ${{ matrix.version != 'release' }}; then
             NDK+="/../28.2.13676358"
-            rm -rf swift-tools-protocols/
-            git clone https://github.com/swiftlang/swift-tools-protocols.git
             if ${{ matrix.version == 'devel' }}; then
+              rm -rf swift-tools-protocols/
+              git clone https://github.com/swiftlang/swift-tools-protocols.git
               pushd swift-tools-protocols
               git checkout origin/release/6.4.x
               popd
