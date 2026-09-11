@@ -10,12 +10,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [release, devel, trunk]
+        version: [devel, trunk]
         os: [ubuntu-24.04, macos-15-intel]
     env:
       SDK_ANDROID_API_LEVEL: 24
       BUNDLE_VERSION: 0.1
-      NDK_VERSION: ${{ matrix.version == 'release' && '27d' || '30-beta3' }}
+      NDK_VERSION: ${{ matrix.version == 'release' && '27d' || '30' }}
     steps:
       - name: Check for latest Swift ${{ matrix.version }} toolchain
         id: version
@@ -94,19 +94,25 @@ jobs:
           if ${{ matrix.version == 'release' }}; then
             NDK_HASH='22105e410cf29afcf163760cc95522b9fb981121'
           else
-            NDK_HASH='f66e852ac01a57f74bcf6fd96dcea04dda5ea392'
+            NDK_HASH='5107f898313790e449e87eee2183d9a20602dee9'
           fi
           if [ "$(sha1sum android-ndk-r$NDK_VERSION-linux.zip | cut -f1 -d" ")" != "$NDK_HASH" ]; then
             echo "NDK checksum didn't match"
             exit 1
           fi
           unzip -q android-ndk-r$NDK_VERSION-linux.zip
-          rm android-ndk-r$NDK_VERSION-linux.zip
           mv android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/sysroot .
           rm -r sysroot/usr/{include,lib}/{i686,riscv64}-linux-android
           mv android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/*/lib/linux sysroot
           rm -r sysroot/linux/*{i[36]86,riscv64}* android-ndk-r$NDK_VERSION
           tar cJf ~/android-sysroot.tar.xz sysroot
+
+          pwd
+          unzip -q android-ndk-r$NDK_VERSION-linux.zip
+          mv android-ndk-r$NDK_VERSION ~
+          rm android-ndk-r$NDK_VERSION-linux.zip
+          cd ~
+          pwd
       - name: Clone
         uses: actions/checkout@v7
         with:
@@ -132,7 +138,7 @@ jobs:
           ANDROID_ARCH=aarch64 BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
           NDK=$ANDROID_NDK_HOME
           if ${{ matrix.version != 'release' }}; then
-            NDK+="/../28.2.13676358"
+            NDK=~/android-ndk-r$NDK_VERSION
             if ${{ matrix.version == 'devel' }}; then
               rm -rf swift-tools-protocols/
               git clone https://github.com/swiftlang/swift-tools-protocols.git
@@ -145,8 +151,6 @@ jobs:
           git apply -C0 swift-android-ci-prebuilt.patch
           if ${{ matrix.version == 'release' }}; then
             git apply swift-android-ci-release.patch
-          elif ${{ matrix.version == 'trunk' }}; then
-            git apply swift-android-stdio.patch
           fi
 
           perl -pi -e 's%33%24%' $NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/execinfo.h
