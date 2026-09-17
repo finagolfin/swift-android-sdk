@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [release, devel, trunk]
+        version: [devel, trunk]
         os: [ubuntu-24.04, macos-15-intel]
     env:
       SDK_ANDROID_API_LEVEL: 24
@@ -87,8 +87,15 @@ jobs:
         with:
           path: ~/android-sysroot.tar.xz
           key: android-ndk-${{ env.NDK_VERSION }}
-      - name: Extract Android NDK sysroot if not cached before
-        if: ${{ steps.cache-bundle.outputs.cache-hit != 'true' && steps.cache-ndk.outputs.cache-hit != 'true' && startsWith(matrix.os, 'ubuntu') }}
+      - name: Get cached Android NDK
+        id: cache-full-ndk
+        uses: actions/cache@v5
+        if: ${{ (matrix.version != 'release' || steps.cache-ndk.outputs.cache-hit != 'true') && (steps.cache-bundle.outputs.cache-hit != 'true') && startsWith(matrix.os, 'ubuntu') }}
+        with:
+          path: ~/android-ndk-r$NDK_VERSION-linux.zip
+          key: android-full-ndk-${{ env.NDK_VERSION }}
+      - name: Download Android NDK if not cached before
+        if: ${{ steps.cache-full-ndk.outputs.cache-hit != 'true' && (matrix.version != 'release' || steps.cache-ndk.outputs.cache-hit != 'true') && (steps.cache-bundle.outputs.cache-hit != 'true') && startsWith(matrix.os, 'ubuntu') }}
         run: |
           wget -q https://dl.google.com/android/repository/android-ndk-r$NDK_VERSION-linux.zip
           if ${{ matrix.version == 'release' }}; then
@@ -100,18 +107,16 @@ jobs:
             echo "NDK checksum didn't match"
             exit 1
           fi
-          unzip -q android-ndk-r$NDK_VERSION-linux.zip
+          mv android-ndk-r$NDK_VERSION-linux.zip ~
+      - name: Extract Android NDK sysroot if not cached before
+        if: ${{ steps.cache-bundle.outputs.cache-hit != 'true' && steps.cache-ndk.outputs.cache-hit != 'true' && startsWith(matrix.os, 'ubuntu') }}
+        run: |
+          unzip -q ~/android-ndk-r$NDK_VERSION-linux.zip
           mv android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/sysroot .
           rm -r sysroot/usr/{include,lib}/{i686,riscv64}-linux-android
           mv android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/*/lib/linux sysroot
           rm -r sysroot/linux/*{i[36]86,riscv64}* android-ndk-r$NDK_VERSION
           tar cJf ~/android-sysroot.tar.xz sysroot
-
-          if ${{ matrix.version != 'release' }}; then
-            unzip -q android-ndk-r$NDK_VERSION-linux.zip
-            mv android-ndk-r$NDK_VERSION ~
-          fi
-          rm android-ndk-r$NDK_VERSION-linux.zip
       - name: Clone
         uses: actions/checkout@v7
         with:
@@ -122,6 +127,9 @@ jobs:
         env:
           SWIFT_TAG: ${{ steps.version.outputs.tag }}
         run: |
+          if ${{ matrix.version != 'release' }}; then
+            unzip -q ~/android-ndk-r$NDK_VERSION-linux.zip
+          fi
           set -x
 
           if ${{ startsWith(matrix.os, 'macos') }}; then
@@ -137,7 +145,7 @@ jobs:
           ANDROID_ARCH=aarch64 BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
           NDK=$ANDROID_NDK_HOME
           if ${{ matrix.version != 'release' }}; then
-            NDK=~/android-ndk-r$NDK_VERSION
+            NDK=../android-ndk-r$NDK_VERSION
             if ${{ matrix.version == 'devel' }}; then
               rm -rf swift-tools-protocols/
               git clone https://github.com/swiftlang/swift-tools-protocols.git
