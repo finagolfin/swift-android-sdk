@@ -1,3 +1,28 @@
+From ed8cfe9c927ad5abcd95e910967d24fccfbde3cb
+Date: Tue, 14 Jul 2026 10:32:18
+Subject: [PATCH] [android] Switch compiling Swift source in stdlib and the
+ test suite to target triples with the API level specified
+
+We were already doing this for the C/C++ source in the stdlib and linking against the
+Android libc with the API level given, resolves #85522.
+---
+
+diff --git a/swift/stdlib/cmake/modules/SwiftSource.cmake b/swift/stdlib/cmake/modules/SwiftSource.cmake
+index 8079c7e5f00fd..3e0e675e7d790 100644
+--- a/swift/stdlib/cmake/modules/SwiftSource.cmake
++++ b/swift/stdlib/cmake/modules/SwiftSource.cmake
+@@ -270,6 +270,11 @@ function(_add_target_variant_swift_compile_flags
+     if(target_variant)
+       list(APPEND result "-target-variant" "${target_variant}")
+     endif()
++  elseif("${sdk}" STREQUAL "ANDROID")
++    get_target_triple(target target_variant "${sdk}" "${arch}"
++    DEPLOYMENT_VERSION "${SWIFT_ANDROID_API_LEVEL}")
++
++    list(APPEND result "-target" "${target}")
+   else()
+     list(APPEND result
+         "-target" "${SWIFT_SDK_${sdk}_ARCH_${arch}_TRIPLE}")
 diff --git a/swift-build/Sources/SWBUtil/Lock.swift b/swift-build/Sources/SWBUtil/Lock.swift
 index 2135ce6..fbff6f6 100644
 --- a/swift-build/Sources/SWBUtil/Lock.swift
