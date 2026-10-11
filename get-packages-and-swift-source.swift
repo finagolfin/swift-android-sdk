@@ -61,6 +61,8 @@ if swiftBranch == "RELEASE" {
   sdkDir = "swift-\(swiftVersion == "" ? "trunk" : "devel")-android-\(ANDROID_ARCH)-\(swiftSnapshotDate)-24-sdk"
    if swiftVersion == "" {
     repoTags["swift-argument-parser"] = "1.8.2"
+    repoTags["swift-system"] = "1.8.1"
+    repoTags["swift-toolchain-sqlite"] = "1.0.13"
     repoTags["swift-tools-protocols"] = nil
   }
 }

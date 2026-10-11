@@ -15,7 +15,7 @@ jobs:
     env:
       SDK_ANDROID_API_LEVEL: 24
       BUNDLE_VERSION: 0.1
-      NDK_VERSION: ${{ matrix.version == 'release' && '27d' || '30' }}
+      NDK_VERSION: 30
     steps:
       - name: Check for latest Swift ${{ matrix.version }} toolchain
         id: version
@@ -87,31 +87,16 @@ jobs:
         with:
           path: ~/android-sysroot.tar.xz
           key: android-ndk-${{ env.NDK_VERSION }}
-      - name: Get cached Android NDK
-        id: cache-full-ndk
-        uses: actions/cache@v5
-        if: ${{ (matrix.version != 'release' || steps.cache-ndk.outputs.cache-hit != 'true') && (steps.cache-bundle.outputs.cache-hit != 'true') && startsWith(matrix.os, 'ubuntu') }}
-        with:
-          path: ~/android-ndk-r$NDK_VERSION-linux.zip
-          key: android-full-ndk-${{ env.NDK_VERSION }}
-      - name: Download Android NDK if not cached before
-        if: ${{ steps.cache-full-ndk.outputs.cache-hit != 'true' && (matrix.version != 'release' || steps.cache-ndk.outputs.cache-hit != 'true') && (steps.cache-bundle.outputs.cache-hit != 'true') && startsWith(matrix.os, 'ubuntu') }}
-        run: |
-          wget -q https://dl.google.com/android/repository/android-ndk-r$NDK_VERSION-linux.zip
-          if ${{ matrix.version == 'release' }}; then
-            NDK_HASH='22105e410cf29afcf163760cc95522b9fb981121'
-          else
-            NDK_HASH='5107f898313790e449e87eee2183d9a20602dee9'
-          fi
-          if [ "$(sha1sum android-ndk-r$NDK_VERSION-linux.zip | cut -f1 -d" ")" != "$NDK_HASH" ]; then
-            echo "NDK checksum didn't match"
-            exit 1
-          fi
-          mv android-ndk-r$NDK_VERSION-linux.zip ~
       - name: Extract Android NDK sysroot if not cached before
         if: ${{ steps.cache-bundle.outputs.cache-hit != 'true' && steps.cache-ndk.outputs.cache-hit != 'true' && startsWith(matrix.os, 'ubuntu') }}
         run: |
-          unzip -q ~/android-ndk-r$NDK_VERSION-linux.zip
+          wget -q https://dl.google.com/android/repository/android-ndk-r$NDK_VERSION-linux.zip
+          if [ "$(sha1sum android-ndk-r$NDK_VERSION-linux.zip | cut -f1 -d" ")" != "5107f898313790e449e87eee2183d9a20602dee9" ]; then
+            echo "NDK checksum didn't match"
+            exit 1
+          fi
+          unzip -q android-ndk-r$NDK_VERSION-linux.zip
+          rm android-ndk-r$NDK_VERSION-linux.zip
           mv android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/sysroot .
           rm -r sysroot/usr/{include,lib}/{i686,riscv64}-linux-android
           mv android-ndk-r$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/*/lib/linux sysroot
@@ -127,9 +112,6 @@ jobs:
         env:
           SWIFT_TAG: ${{ steps.version.outputs.tag }}
         run: |
-          if ${{ matrix.version != 'release' }}; then
-            unzip -q ~/android-ndk-r$NDK_VERSION-linux.zip
-          fi
           set -x
 
           if ${{ startsWith(matrix.os, 'macos') }}; then
@@ -143,16 +125,13 @@ jobs:
           cd sdk-config
 
           ANDROID_ARCH=aarch64 BUILD_SWIFT_PM=1 ${TOOLCHAIN}/bin/swift get-packages-and-swift-source.swift
-          NDK=$ANDROID_NDK_HOME
-          if ${{ matrix.version != 'release' }}; then
-            NDK=../android-ndk-r$NDK_VERSION
-            if ${{ matrix.version == 'devel' }}; then
-              rm -rf swift-tools-protocols/
-              git clone https://github.com/swiftlang/swift-tools-protocols.git
-              pushd swift-tools-protocols
-              git checkout origin/release/6.4.x
-              popd
-            fi
+          NDK=$ANDROID_NDK_LATEST_HOME
+          if ${{ matrix.version == 'devel' }}; then
+            rm -rf swift-tools-protocols/
+            git clone https://github.com/swiftlang/swift-tools-protocols.git
+            pushd swift-tools-protocols
+            git checkout origin/release/6.4.x
+            popd
           fi
           git apply -C1 swift-android.patch swift-android-ci.patch
           git apply -C0 swift-android-ci-prebuilt.patch
@@ -228,13 +207,6 @@ jobs:
           ln -s ../swift/clang $SYSROOT/usr/lib/swift_static-aarch64/clang
           ln -s ../swift/clang $SYSROOT/usr/lib/swift_static-armv7/clang
           ln -s ../swift/clang $SYSROOT/usr/lib/swift_static-x86_64/clang
-
-          # Patch a single libc++ header in NDK 27 to work around a Swift compiler bug
-          cd $SYSROOT
-          if ${{ matrix.version == 'release' }}; then
-            git apply ../../libc++-stdlib.h.patch
-          fi
-          cd ../..
 
           BUNDLE=${{ steps.version.outputs.tag }}-android-${SDK_ANDROID_API_LEVEL}-${BUNDLE_VERSION}
           BUNDLE_DIR=$BUNDLE.artifactbundle
