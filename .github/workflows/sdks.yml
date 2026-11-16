@@ -309,7 +309,7 @@ jobs:
             elif ${{ matrix.version == 'release' }}; then
               BUILD_ANDROID_API="34"
             else
-              BUILD_ANDROID_API="37"
+              BUILD_ANDROID_API="36"
             fi
           else
             if ${{ matrix.version == 'trunk' }}; then
@@ -329,6 +329,7 @@ jobs:
             ${TOOLCHAIN}/bin/swift sdk configure --show-configuration ${{ steps.version.outputs.tag }}-android-${SDK_ANDROID_API_LEVEL}-${BUNDLE_VERSION} armv7-unknown-linux-android${BUILD_ANDROID_API}
           else
             ${TOOLCHAIN}/bin/swift sdk configure --show-configuration ${{ steps.version.outputs.tag }}_android aarch64-unknown-linux-android${BUILD_ANDROID_API}
+            echo "ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV
           fi
 
           SFLAGS="--swift-sdk aarch64-unknown-linux-android${BUILD_ANDROID_API}"
@@ -496,6 +497,7 @@ jobs:
         run: |
           set -x
           # create the test runner script
+          if [ ${{ matrix.version }} = 'old' ]; then
           cat > ~/test-toolchain.sh << EOF
           adb install ~/termux-debug.apk
           adb push pack /data/local/tmp
@@ -507,12 +509,32 @@ jobs:
           adb shell "run-as com.termux sh -c 'TMPDIR=/data/data/com.termux /data/data/com.termux/pack/swift-nioPackageTests.xctest'"
           adb shell "TMPDIR=/data/local/tmp /data/local/tmp/pack/swift-systemPackageTests.xctest"
           EOF
+          else
+          cat > ~/test-toolchain.sh << EOF
+          adb install ~/termux-debug.apk
+          adb push pack /data/local/tmp
+          adb shell "run-as com.termux mkdir /data/data/com.termux/pack"
+          adb shell "run-as com.termux cp /data/local/tmp/pack/{lib*.so,NIO*Tests.so,NIO*Tests-test-runner,FileHandleTests.swift} /data/data/com.termux/pack"
+          adb shell "run-as com.termux cp -r /data/local/tmp/pack/Test\ Data /data/data/com.termux/pack"
+          adb shell "run-as com.termux ln -s README.md /data/data/com.termux/pack/Test\ Data/README.md.symlink"
+          adb shell "run-as com.termux ln -s Foo /data/data/com.termux/pack/Test\ Data/Foo.symlink"
+          adb shell "run-as com.termux sh -c 'TMPDIR=/data/data/com.termux /data/data/com.termux/pack/NIOTests-test-runner'"
+          adb shell "run-as com.termux sh -c 'TMPDIR=/data/data/com.termux /data/data/com.termux/pack/NIO*Tests-test-runner'"
+          EOF
+          fi
 
           mkdir pack
           TARGET="x86_64-unknown-linux-android$CI_ANDROID_API_LEVEL"
 
-          cp swift-argument-parser/.build/$TARGET/debug/{generate-manual,math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
+          if [ ${{ matrix.version }} = 'old' ]; then
+          cp swift-argument-parser/.build/$TARGET/debug/{color,default-as-flag,math,repeat,roll,swift-argument-parserPackageTests.xctest} pack
           echo 'adb shell /data/local/tmp/pack/swift-argument-parserPackageTests.xctest' >> ~/test-toolchain.sh
+          else
+          pushd swift-argument-parser/.build/out/Products/Debug-android-x86_64/
+          cp color default-as-flag math repeat roll *test-runner *.so ../../../../../pack
+          echo 'adb shell /data/local/tmp/pack/ArgumentParser*Tests-test-runner' >> ~/test-toolchain.sh
+          popd
+          fi
 
           wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v2.1.1/elf-cleaner.cpp
           wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v2.1.1/elf.h
@@ -520,11 +542,19 @@ jobs:
           wget -q https://raw.githubusercontent.com/termux/termux-elf-cleaner/v2.1.1/arghandling.c
           clang -c arghandling.c
           clang -o elf-cleaner arghandling.o elf-cleaner.cpp -DCOPYRIGHT=\"foo\" -DPACKAGE_NAME=\"termux-elf-cleaner\" -DPACKAGE_VERSION=\"2.2.1\"
-          ./elf-cleaner --api-level $CI_ANDROID_API_LEVEL pack/{generate-manual,math,repeat,roll} || true
+          ./elf-cleaner --api-level $CI_ANDROID_API_LEVEL pack/{color,default-as-flag,math,repeat,roll} || true
 
+          if [ ${{ matrix.version }} = 'old' ]; then
           cp swift-crypto/.build/$TARGET/debug/swift-cryptoPackageTests.xctest pack
           echo 'adb shell /data/local/tmp/pack/swift-cryptoPackageTests.xctest' >> ~/test-toolchain.sh
+          else
+          pushd swift-crypto/.build/out/Products/Debug-android-x86_64/
+          cp *test-runner *.so ../../../../../pack
+          echo 'adb shell /data/local/tmp/pack/C*Tests-test-runner' >> ~/test-toolchain.sh
+          popd
+          fi
 
+          if [ ${{ matrix.version }} = 'old' ]; then
           cp swift-nio/.build/$TARGET/debug/swift-nioPackageTests.xctest pack
 
           cp swift-numerics/.build/$TARGET/debug/swift-numericsPackageTests.xctest pack
@@ -548,6 +578,11 @@ jobs:
 
           cp sa/.build/$TARGET/debug/swift-algorithmsPackageTests.xctest pack
           echo 'adb shell /data/local/tmp/pack/swift-algorithmsPackageTests.xctest' >> ~/test-toolchain.sh
+          else
+          pushd swift-nio/.build/out/Products/Debug-android-x86_64/
+          cp *test-runner *.so ../../../../../pack
+          popd
+          fi
 
           mkdir pack/crypto-vectors pack/swift-crypto_CryptoTests.resources
           cp swift-crypto/Tests/Test\ Vectors/* swift-crypto/Tests/CryptoExtrasVectors/* pack/crypto-vectors
@@ -555,7 +590,12 @@ jobs:
           rm swift-nio/Tests/NIOFSIntegrationTests/Test\ Data/*symlink
           cp -r swift-nio/Tests/NIOFSIntegrationTests/Test\ Data/ swift-nio/Tests/NIOFSIntegrationTests/FileHandleTests.swift pack
           cp yams/Tests/YamsTests/Fixtures/SourceKitten#289/debug.yaml pack
-          cp ~/.${{ startsWith(matrix.os, 'ubuntu') && 'config/' || '' }}swiftpm/swift-sdks/${{ steps.version.outputs.tag }}-android-${SDK_ANDROID_API_LEVEL}-*.artifactbundle/swift*sdk/android*sysroot/usr/lib/x86_64-linux-android/lib*so pack
+          if [ ${{ matrix.version }} = 'old' ]; then
+          cp ~/.config/swiftpm/swift-sdks/${{ steps.version.outputs.tag }}-android-${SDK_ANDROID_API_LEVEL}-*.artifactbundle/swift*sdk/android*sysroot/usr/lib/x86_64-linux-android/lib*so pack
+          else
+          cp ~/.config/swiftpm/swift-sdks/${{ steps.version.outputs.tag }}_android.artifactbundle/swift-android/swift-resources/usr/lib/swift-x86_64/android/lib*so pack
+          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so pack
+          fi
 
           # need to free up some space or else the emulator fails to launch:
           # ERROR   | Not enough space to create userdata partition. Available: 6086.191406 MB at /home/runner/.android/avd/../avd/test.avd, need 7372.800000 MB.
